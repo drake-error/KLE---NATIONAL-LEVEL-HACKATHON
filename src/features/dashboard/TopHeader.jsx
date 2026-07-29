@@ -67,7 +67,6 @@ export default function TopHeader({ currentTab, setCurrentTab, isLoggedIn, userN
           <div className="flex items-center gap-sm cursor-pointer group">
             <div className="text-right">
               <p className="font-label-md text-label-md text-on-surface group-hover:text-primary transition-colors capitalize">{userName || 'User'}</p>
-              <p className="font-label-sm text-label-sm text-on-surface-variant">Medical Staff</p>
             </div>
             <img 
               alt={userName || 'User'}
