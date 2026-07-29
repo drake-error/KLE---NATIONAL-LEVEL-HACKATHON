@@ -10,7 +10,7 @@ export default {
       colors: {
         "outline": "#747783",
         "on-primary-container": "#88abff",
-        "surface-container-lowest": "#ffffff",
+        "surface-container-lowest": "var(--color-surface-container-lowest)",
         "on-tertiary-fixed-variant": "#643f06",
         "on-error": "#ffffff",
         "primary-fixed-dim": "#b0c6ff",

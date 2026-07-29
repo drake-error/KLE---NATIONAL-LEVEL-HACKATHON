@@ -13,6 +13,7 @@ export default function DashboardLayout() {
   const [currentTab, setCurrentTab] = useState('dashboard');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState('');
+  const [theme, setTheme] = useState(document.documentElement.classList.contains('dark') ? 'dark' : 'light');
 
   return (
     <div className="bg-background text-on-surface font-body-md overflow-hidden min-h-screen">
@@ -20,7 +21,7 @@ export default function DashboardLayout() {
       <Sidebar currentTab={currentTab} setCurrentTab={setCurrentTab} />
       
       {/* Fixed Top Control Bar */}
-      <TopHeader currentTab={currentTab} setCurrentTab={setCurrentTab} isLoggedIn={isLoggedIn} userName={userName} />
+      <TopHeader currentTab={currentTab} setCurrentTab={setCurrentTab} isLoggedIn={isLoggedIn} userName={userName} theme={theme} setTheme={setTheme} />
       
       {/* Dynamic Tab Switch Content Canvas */}
       {currentTab === 'dashboard' && (
@@ -34,7 +35,7 @@ export default function DashboardLayout() {
             <HealthVaultTable />
             
             {/* Right Section (4 cols): Live Interactive Route Map, Control Hub & AI Terminal */}
-            <LiveRouteMap />
+            <LiveRouteMap theme={theme} />
           </div>
         </main>
       )}

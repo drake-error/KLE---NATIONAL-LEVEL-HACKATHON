@@ -10,20 +10,22 @@
   --color-on-surface: #131b2e;
   --color-on-surface-variant: #434652;
   --color-outline-variant: #c3c6d3;
+  --color-surface-container-lowest: #ffffff;
   --color-surface-container-low: #f2f3ff;
   --color-surface-container: #eaedff;
 }
 
 .dark {
-  --color-background: #0f172a;
+  --color-background: #00112a;
   --color-on-background: #f8fafc;
-  --color-surface: #1e293b;
-  --color-surface-main: #0f172a;
+  --color-surface: #001636;
+  --color-surface-main: #00112a;
   --color-on-surface: #f8fafc;
-  --color-on-surface-variant: #cbd5e1;
-  --color-outline-variant: #334155;
-  --color-surface-container-low: #1e293b;
-  --color-surface-container: #0f172a;
+  --color-on-surface-variant: #b0c6ff;
+  --color-outline-variant: #003c90;
+  --color-surface-container-lowest: #001945;
+  --color-surface-container-low: #002764;
+  --color-surface-container: #00112a;
 }
 
 .material-symbols-outlined {

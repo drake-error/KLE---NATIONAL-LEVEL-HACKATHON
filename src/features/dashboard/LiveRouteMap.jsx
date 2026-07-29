@@ -10,7 +10,7 @@ const MAPBOX_ACCESS_TOKEN = `${T1}${T2}${T3}`;
 const MAPBOX_DARK_STYLE = 'mapbox://styles/mapbox/dark-v11';
 const MAPBOX_LIGHT_STYLE = 'mapbox://styles/mapbox/light-v11';
 
-export default function LiveRouteMap() {
+export default function LiveRouteMap({ theme }) {
   const [gpsCoords, setGpsCoords] = useState(null); // [lng, lat]
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -105,7 +105,7 @@ export default function LiveRouteMap() {
               scrollZoom={true}
               touchZoomRotate={true}
               style={{ width: '100%', height: '100%' }}
-              mapStyle={document.documentElement.classList.contains('dark') ? MAPBOX_DARK_STYLE : MAPBOX_LIGHT_STYLE}
+              mapStyle={theme === 'dark' ? MAPBOX_DARK_STYLE : MAPBOX_LIGHT_STYLE}
             >
               <NavigationControl position="bottom-right" showCompass={true} showZoom={true} />
 

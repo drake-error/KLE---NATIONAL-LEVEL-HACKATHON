@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 
-export default function TopHeader({ currentTab, setCurrentTab, isLoggedIn, userName }) {
+export default function TopHeader({ currentTab, setCurrentTab, isLoggedIn, userName, theme, setTheme }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showApps, setShowApps] = useState(false);
-  const [theme, setTheme] = useState(document.documentElement.classList.contains('dark') ? 'dark' : 'light');
 
   const handleSearch = (e) => {
     if (e.key === 'Enter' && e.target.value.trim() !== '') {
