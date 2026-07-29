@@ -58,7 +58,7 @@ const REGION_PRESETS = {
       { id: "hosp_stjohns", name: "St. John's Medical Center (Level 1)", coords: [77.6190, 12.9304], beds: "6 Beds Avail" }
     ],
     signals: [
-      { id: "sig_b1", name: "Jakkur Aerodrome AI Signal", coords: [77.593646, 13.056990], agentId: "AG_BLR_01" },
+      { id: "sig_b1", name: "Kodigehalli AI Signal", coords: [77.593646, 13.056990], agentId: "AG_BLR_01" },
       { id: "sig_b2", name: "Hebbal Flyover AI Signal", coords: [77.592335, 13.043984], agentId: "AG_BLR_02" },
       { id: "sig_b3", name: "CBI Junction AI Signal", coords: [77.584040, 13.006743], agentId: "AG_BLR_03" },
       { id: "sig_b4", name: "Palace Grounds AI Signal", coords: [77.587986, 12.984192], agentId: "AG_BLR_04" },
@@ -145,7 +145,8 @@ function FleetStatus() {
   const speedConfig = useMemo(() => ({
     slow: { kmh: 40, label: 'Slow (40 km/h)', durationMs: 25000, color: 'text-amber-400' },
     medium: { kmh: 60, label: 'Medium (60 km/h)', durationMs: 16000, color: 'text-emerald-400' },
-    fast: { kmh: 90, label: 'Fast (90 km/h)', durationMs: 10000, color: 'text-rose-400' }
+    fast: { kmh: 90, label: 'Fast (90 km/h)', durationMs: 10000, color: 'text-rose-400' },
+    high: { kmh: 120, label: 'High Speed (120 km/h)', durationMs: 7000, color: 'text-fuchsia-400' }
   }), []);
 
   const currentSpeed = speedConfig[simulationSpeed];
@@ -451,13 +452,13 @@ function FleetStatus() {
             } catch (e) {}
           });
 
-          // If vehicle enters sector (within 240m of traffic light)
-          if (closestDist <= 0.24 && sig.state !== 'GREEN_WAVE_ACTIVE' && closestDisp) {
+          // If vehicle approaches sector (within 500m) — turn GREEN BEFORE ambulance reaches
+          if (closestDist <= 0.50 && sig.state !== 'GREEN_WAVE_ACTIVE' && closestDisp) {
             const leadTimeSec = Math.round((closestDist / (closestDisp.speedKmh / 3600)));
             setTotalPreemptionsCount(c => c + 1);
             setAvgLeadTime(prev => Number(((prev * 9 + leadTimeSec) / 10).toFixed(1)));
 
-            const senderMsg = `🚀 Ambulance reached my sector! Signal GREEN! Alerting next agent: 'Clear your traffic and prepare Green Wave!'`;
+            const senderMsg = `🚀 Ambulance approaching! Signal GREEN! Alerting next agent: 'Clear your traffic and prepare Green Wave!'`;
             setActivePopups(pop => ({
               ...pop,
               [sig.id]: { text: senderMsg, type: 'sender', timestamp: Date.now() }
@@ -466,17 +467,26 @@ function FleetStatus() {
             addLog(`[LOG] 🤖 [GEMINI_AGENT_${sig.agentId}]: Preemption triggered by ${closestDisp.name} (Dist: ${(closestDist*1000).toFixed(0)}m). Corridors open green.`);
             triggerToast(`🟢 Corridor override green at ${sig.name}!`, 'success');
 
-            return { ...sig, state: 'GREEN_WAVE_ACTIVE' };
+            return { ...sig, state: 'GREEN_WAVE_ACTIVE', minDistSeen: closestDist };
           }
 
-          // Normal cycles resume once ambulance leaves (400m past)
-          if (closestDist > 0.38 && sig.state === 'GREEN_WAVE_ACTIVE') {
-            setActivePopups(pop => {
-              const next = { ...pop };
-              delete next[sig.id];
-              return next;
-            });
-            return { ...sig, state: 'NORMAL_CYCLE' };
+          // Track closest approach while green (ambulance getting closer)
+          if (sig.state === 'GREEN_WAVE_ACTIVE') {
+            const prevMin = sig.minDistSeen ?? closestDist;
+            const newMin = Math.min(prevMin, closestDist);
+
+            // Ambulance has passed through (was within 100m) and is now moving AWAY beyond 200m — turn RED
+            if (newMin < 0.10 && closestDist > 0.20) {
+              setActivePopups(pop => {
+                const next = { ...pop };
+                delete next[sig.id];
+                return next;
+              });
+              addLog(`[LOG] 🔴 [GEMINI_AGENT_${sig.agentId}]: Ambulance crossed signal. Reverting to normal traffic cycle.`);
+              return { ...sig, state: 'NORMAL_CYCLE', minDistSeen: undefined };
+            }
+
+            return { ...sig, minDistSeen: newMin };
           }
 
           return sig;
@@ -784,6 +794,7 @@ function FleetStatus() {
                 <option value="slow">Slow (40 km/h)</option>
                 <option value="medium">Medium (60 km/h)</option>
                 <option value="fast">Fast (90 km/h)</option>
+                <option value="high">⚡ High Speed (120 km/h)</option>
               </select>
             </div>
 
