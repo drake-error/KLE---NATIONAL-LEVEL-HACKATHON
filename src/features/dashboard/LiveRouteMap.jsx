@@ -4,7 +4,7 @@ import * as turf from '@turf/turf';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-// Reliable high-contrast dark raster style (Guarantees immediate background rendering without white screens)
+// Reliable high-contrast dark raster style
 const FREE_DARK_STYLE = {
   version: 8,
   sources: {
@@ -59,14 +59,13 @@ const REGIONAL_COMMAND = {
 export default function LiveRouteMap() {
   const [activeRegionId, setActiveRegionId] = useState('bangalore');
   const [activeUnit, setActiveUnit] = useState(null);
-  const [statusText, setStatusText] = useState('All sector Green Wave protocols armed and nominal.');
+  const [statusText, setStatusText] = useState('All sector Green Wave protocols armed. Hand Navigation Active!');
 
   const mapRef = useRef(null);
-  const isMapLoadedRef = useRef(false); // CRITICAL: Protects against React crash / white screen during initialization
+  const isMapLoadedRef = useRef(false);
 
   const activeRegion = useMemo(() => REGIONAL_COMMAND[activeRegionId], [activeRegionId]);
 
-  // Safe camera transition protected against React white screen crashes
   const safePanTo = useCallback((coords, zoomLevel = 14.5) => {
     try {
       if (!isMapLoadedRef.current || !mapRef.current) return;
@@ -85,7 +84,7 @@ export default function LiveRouteMap() {
   }, [activeRegion, safePanTo]);
 
   const handleMapLoad = useCallback(() => {
-    isMapLoadedRef.current = true; // Unlock camera animations safely
+    isMapLoadedRef.current = true;
   }, []);
 
   const routeGeoJson = useMemo(() => {
@@ -103,9 +102,15 @@ export default function LiveRouteMap() {
               Dashboard Overview: Active Emergency Corridors
             </h3>
           </div>
-          <span className="text-[11px] font-extrabold px-3 py-1 rounded-full bg-slate-950 text-emerald-400 border border-emerald-500/30">
-            👉 SWITCH TO FLEET STATUS PAGE FOR FULL 4-PHASE AI SIMULATION & OSRM GREEN WAVE
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1 bg-emerald-950 text-emerald-300 font-black text-xs rounded-xl border border-emerald-500/50 flex items-center gap-1">
+              <span className="material-symbols-outlined text-sm">pan_tool</span>
+              ✋ Hand Drag Enabled
+            </span>
+            <span className="text-[11px] font-extrabold px-3 py-1 rounded-full bg-slate-950 text-emerald-400 border border-emerald-500/30">
+              👉 SWITCH TO FLEET STATUS TAB FOR FULL 4-PHASE AI SIMULATION & OSRM GREEN WAVE
+            </span>
+          </div>
         </div>
 
         {/* Region Switches */}
@@ -127,9 +132,9 @@ export default function LiveRouteMap() {
         </div>
       </div>
 
-      {/* Map Canvas Overview */}
+      {/* Map Canvas Overview with Hand Grab styling */}
       <div className="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 shadow-2xl flex flex-col shrink-0">
-        <div className="w-full h-[380px] xl:h-[440px] rounded-xl overflow-hidden border border-slate-700/80 relative shadow-inner bg-slate-950">
+        <div className="w-full h-[380px] xl:h-[440px] rounded-xl overflow-hidden border border-slate-700/80 relative shadow-inner bg-slate-950 cursor-grab active:cursor-grabbing">
           <MapGL
             ref={mapRef}
             initialViewState={{
@@ -139,6 +144,12 @@ export default function LiveRouteMap() {
               pitch: 48,
               bearing: -12
             }}
+            interactive={true}
+            dragPan={true}
+            dragRotate={true}
+            scrollZoom={true}
+            touchZoomRotate={true}
+            cursor="grab"
             style={{ width: '100%', height: '100%' }}
             mapStyle={FREE_DARK_STYLE}
             onLoad={handleMapLoad}
@@ -174,7 +185,7 @@ export default function LiveRouteMap() {
                   onClick={() => {
                     setActiveUnit(unit);
                     safePanTo(unit.coords, 15.5);
-                    setStatusText(`Selected ${unit.name}. Current Velocity: ${unit.speed}. Green Wave priority unlocked.`);
+                    setStatusText(`Selected ${unit.name}. Current Velocity: ${unit.speed}. Hand Navigation Active!`);
                   }}
                   className="group relative flex flex-col items-center cursor-pointer hover:scale-110 transition-transform"
                 >
