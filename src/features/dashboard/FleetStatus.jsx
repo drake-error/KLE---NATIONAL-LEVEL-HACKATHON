@@ -10,105 +10,105 @@ const T3 = '.5s9Z-KPF9yvgT05nO12HOQ';
 const MAPBOX_ACCESS_TOKEN = `${T1}${T2}${T3}`;
 const MAPBOX_DARK_STYLE = 'mapbox://styles/mapbox/dark-v11';
 
-const BANGALORE_COMMAND_COORD = [77.6229, 12.9172]; // HSR Layout / Silk Board Corridor
-const BELAGAVI_COMMAND_COORD = [74.5050, 15.8550]; // Tilakwadi / Congress Road
-
-/**
- * Generates dynamic mock trauma centers around any starting GPS coordinate
- */
-function generateNearbyHospitals(originCoord) {
-  const originPoint = turf.point(originCoord);
-  const templates = [
-    { name: "St. John's Trauma & Critical Care (Level 1)", specialty: "Polytrauma & Emergency Surgical Bay", bearing: 38, distKm: 2.7, icon: "🏥", triageBeds: "6 Available" },
-    { name: "Apollo Emergency Heart & Stroke Institute", specialty: "Advanced Cardiac & Vascular Triage", bearing: 155, distKm: 3.9, icon: "🩺", triageBeds: "4 Available" },
-    { name: "Manipal Advanced Rescue & Neuro Center", specialty: "Neurology & Multi-Specialty ICU", bearing: 275, distKm: 4.6, icon: "🚑", triageBeds: "8 Available" }
-  ];
-
-  return templates.map((tpl, idx) => {
-    const dest = turf.destination(originPoint, tpl.distKm, tpl.bearing, { units: 'kilometers' });
-    return {
-      id: `fleet_hosp_${idx + 1}`,
-      name: tpl.name,
-      specialty: tpl.specialty,
-      coords: dest.geometry.coordinates,
-      straightDistKm: tpl.distKm,
-      triageBeds: tpl.triageBeds
-    };
-  });
-}
-
-/**
- * Generates 4 Autonomous AI Traffic Signal Agent junctions distributed evenly along a calculated polyline
- */
-function generateSignalNodes(routeLine, totalDistKm) {
-  const percentages = [0.18, 0.44, 0.69, 0.89];
-  const nodeNames = [
-    "AI Agent Signal 01 [Outer Perimeter]",
-    "AI Agent Signal 02 [Midway Corridor]",
-    "AI Agent Signal 03 [Inner Arterial]",
-    "AI Agent Signal 04 [Medical Gateway]"
-  ];
-
-  return percentages.map((p, index) => {
-    const pt = turf.along(routeLine, p * totalDistKm, { units: 'kilometers' });
-    return {
-      id: `signal_agent_${index}`,
-      name: nodeNames[index],
-      coords: pt.geometry.coordinates,
-      state: 'NORMAL_CYCLE', // 'NORMAL_CYCLE' (Red) | 'GREEN_WAVE_ACTIVE' (Green)
-      distanceFromStart: p * totalDistKm,
-      agentId: `AG_${201 + index}`
-    };
-  });
-}
+// Preset starting junctions for Bangalore and Belagavi regions
+const REGION_PRESETS = {
+  bangalore: {
+    name: "T. Nagar Corridor, Bangalore HQ",
+    center: [77.6229, 12.9172],
+    zoom: 14.0,
+    junctions: [
+      { id: "junc_hsr", name: "HSR Sector 1 Junction", coords: [77.6229, 12.9172] },
+      { id: "junc_silk", name: "Silk Board Intersection", coords: [77.6215, 12.9210] },
+      { id: "junc_jp", name: "JP Nagar Metro Crossing", coords: [77.6200, 12.9260] },
+      { id: "junc_koramangala", name: "Koramangala 3rd Block Junction", coords: [77.6280, 12.9220] },
+      { id: "junc_btm", name: "BTM Layout Ring Rd Crossing", coords: [77.6150, 12.9150] }
+    ],
+    hospitals: [
+      { id: "hosp_stjohns", name: "St. John's Medical Center (Level 1)", coords: [77.6190, 12.9304], beds: "6 Beds Avail" },
+      { id: "hosp_apollo", name: "Apollo Emergency Cardiac Hospital", coords: [77.5912, 12.9214], beds: "4 Beds Avail" },
+      { id: "hosp_manipal", name: "Manipal Advanced Neuro Trauma Center", coords: [77.6482, 12.9582], beds: "8 Beds Avail" }
+    ],
+    signals: [
+      { id: "sig_b1", name: "HSR Layout AI Signal", coords: [77.6225, 12.9180], agentId: "AG_BLR_01" },
+      { id: "sig_b2", name: "Silk Board Gate AI Signal", coords: [77.6215, 12.9220], agentId: "AG_BLR_02" },
+      { id: "sig_b3", name: "JP Nagar Arterial AI Signal", coords: [77.6205, 12.9255], agentId: "AG_BLR_03" },
+      { id: "sig_b4", name: "Madiwala Highway AI Signal", coords: [77.6180, 12.9280], agentId: "AG_BLR_04" }
+    ]
+  },
+  belagavi: {
+    name: "Tilakwadi Corridor, Belagavi command",
+    center: [74.5050, 15.8550],
+    zoom: 14.0,
+    junctions: [
+      { id: "junc_rpd", name: "RPD College Road Crossing", coords: [74.4977, 15.8497] },
+      { id: "junc_congress", name: "Congress Road Intersection", coords: [74.5005, 15.8520] },
+      { id: "junc_chennamma", name: "Chennamma Circle Crossing", coords: [74.5080, 15.8570] },
+      { id: "junc_tilakwadi", name: "Tilakwadi Gate Sector", coords: [74.5030, 15.8530] },
+      { id: "junc_bogarves", name: "Bogarves Circle Junction", coords: [74.5120, 15.8610] }
+    ],
+    hospitals: [
+      { id: "hosp_kles", name: "KLES Dr. Prabhakar Kore Trauma Hospital", coords: [74.5204, 15.8710], beds: "9 Beds Avail" },
+      { id: "hosp_lakeview", name: "Lakeview Goaves Cardiac Hospital", coords: [74.5050, 15.8550], beds: "3 Beds Avail" },
+      { id: "hosp_civil", name: "District Civil General Hospital", coords: [74.5120, 15.8620], beds: "7 Beds Avail" }
+    ],
+    signals: [
+      { id: "sig_bel_1", name: "RPD Circle AI Signal", coords: [74.4990, 15.8505], agentId: "AG_BEL_01" },
+      { id: "sig_bel_2", name: "Congress Road Gate AI Signal", coords: [74.5020, 15.8535], agentId: "AG_BEL_02" },
+      { id: "sig_bel_3", name: "Chennamma Circle AI Signal", coords: [74.5070, 15.8565], agentId: "AG_BEL_03" },
+      { id: "sig_bel_4", name: "Bogarves Sector AI Signal", coords: [74.5105, 15.8595], agentId: "AG_BEL_04" }
+    ]
+  }
+};
 
 export default function FleetStatus() {
   /* =====================================================================
-   * STATE: GPS ORIGIN & REGIONAL COMMAND SELECTION
+   * REGION & HIGH-ACCURACY GPS TRACKING
    * ===================================================================== */
-  const [activeRegion, setActiveRegion] = useState('bangalore');
-  const [gpsLocation, setGpsLocation] = useState(BANGALORE_COMMAND_COORD);
-  const [gpsStatus, setGpsStatus] = useState('fallback'); // 'locating', 'live', 'fallback', 'preset'
+  const [activeRegionId, setActiveRegionId] = useState('bangalore');
+  const [gpsLocation, setGpsLocation] = useState(REGION_PRESETS.bangalore.center);
+  const [gpsStatus, setGpsStatus] = useState('fallback'); // 'locating', 'live', 'fallback'
   
-  /* =====================================================================
-   * STATE: HOSPITAL ROUTING & AI DIAGNOSTICS
-   * ===================================================================== */
-  const [hospitals, setHospitals] = useState(() => generateNearbyHospitals(BANGALORE_COMMAND_COORD));
-  const [selectedHospital, setSelectedHospital] = useState(null);
-  const [routeCoords, setRouteCoords] = useState([]);
-  const [routeDistanceKm, setRouteDistanceKm] = useState(0);
-  const [isRouting, setIsRouting] = useState(false);
-  const [signalNodes, setSignalNodes] = useState([]);
-  const [aiAnalysisText, setAiAnalysisText] = useState("Awaiting route selection for Gemini 2.5 Flash neural pre-computation...");
+  const regionPreset = useMemo(() => REGION_PRESETS[activeRegionId], [activeRegionId]);
 
   /* =====================================================================
-   * STATE: SPEED SELECTOR, SIMULATION & HAND-DRAG CONTROLS
+   * DISPATCH SELECTION & SCENARIO TOGGLES
    * ===================================================================== */
-  const [simulationSpeed, setSimulationSpeed] = useState('medium'); // 'slow', 'medium', 'fast'
-  const [isSimulating, setIsSimulating] = useState(false);
-  const [animatedVehicle, setAnimatedVehicle] = useState(null);
-  const [cameraFollowVehicle, setCameraFollowVehicle] = useState(false); // Default to FREE HAND DRAGGING
+  const [selectedStartId, setSelectedStartId] = useState('junc_hsr');
+  const [selectedHospitalId, setSelectedHospitalId] = useState('hosp_stjohns');
+  const [simulationSpeed, setSimulationSpeed] = useState('medium');
+  const [autoGenerate, setAutoGenerate] = useState(false);
+
+  /* =====================================================================
+   * SIMULATION STATE ENGINE (MULTIPLE CONCURRENT DISPATCHES)
+   * ===================================================================== */
+  const [activeDispatches, setActiveDispatches] = useState([]);
+  const isSimulating = useMemo(() => activeDispatches.some(d => d.status === 'en-route'), [activeDispatches]);
+  const [signalNodes, setSignalNodes] = useState([]);
+  const [activePopups, setActivePopups] = useState({});
+  const [cameraFollowVehicle, setCameraFollowVehicle] = useState(false);
+
+  /* =====================================================================
+   * LIFELANE REAL-TIME STATS PANEL
+   * ===================================================================== */
+  const [totalDispatchesCount, setTotalDispatchesCount] = useState(0);
+  const [totalPreemptionsCount, setTotalPreemptionsCount] = useState(0);
+  const [avgLeadTime, setAvgLeadTime] = useState(12.4);
+
+  // V2X scrolling terminal logs
   const [agentLogs, setAgentLogs] = useState([
-    { time: new Date().toLocaleTimeString(), text: "[LOG] 🌐 [SYSTEM_INIT]: Mapbox Vector GL Core active. Click + / - to zoom, drag with hand cursor." }
+    { time: new Date().toLocaleTimeString(), text: "[LOG] 🌐 [SYSTEM_INIT]: LifeLane Emergency Corridor Engine armed. Click + / - to zoom, drag with hand cursor." }
   ]);
   const [activeToast, setActiveToast] = useState(null);
-  const [activePopups, setActivePopups] = useState({});
 
   const mapRef = useRef(null);
   const isMapLoadedRef = useRef(false);
   const animationFrameRef = useRef(null);
-  const startTimestampRef = useRef(null);
-  const triggerTrackerRef = useRef({});
-  const cameraFollowRef = useRef(false);
-
-  useEffect(() => {
-    cameraFollowRef.current = cameraFollowVehicle;
-  }, [cameraFollowVehicle]);
+  const recenterDoneRef = useRef(false);
 
   const speedConfig = useMemo(() => ({
-    slow: { kmh: 40, label: 'Slow (40 km/h - Cautious Transit)', durationMs: 24000, color: 'text-amber-400' },
-    medium: { kmh: 60, label: 'Medium (60 km/h - Standard Emergency)', durationMs: 16000, color: 'text-emerald-400' },
-    fast: { kmh: 90, label: 'Fast (90 km/h - Priority Overdrive)', durationMs: 10000, color: 'text-rose-400' }
+    slow: { kmh: 40, label: 'Slow (40 km/h)', durationMs: 25000, color: 'text-amber-400' },
+    medium: { kmh: 60, label: 'Medium (60 km/h)', durationMs: 16000, color: 'text-emerald-400' },
+    fast: { kmh: 90, label: 'Fast (90 km/h)', durationMs: 10000, color: 'text-rose-400' }
   }), []);
 
   const currentSpeed = speedConfig[simulationSpeed];
@@ -116,17 +116,17 @@ export default function FleetStatus() {
   // Helper: Trigger Toast Notification
   const triggerToast = useCallback((msg, type = 'info') => {
     setActiveToast({ text: msg, type });
-    const timer = setTimeout(() => setActiveToast(null), 4200);
+    const timer = setTimeout(() => setActiveToast(null), 4000);
     return () => clearTimeout(timer);
   }, []);
 
   // Helper: Append formatted V2X AI Terminal log
   const addLog = useCallback((logString) => {
-    setAgentLogs(prev => [...prev.slice(-40), { time: new Date().toLocaleTimeString(), text: logString }]);
+    setAgentLogs(prev => [...prev.slice(-45), { time: new Date().toLocaleTimeString(), text: logString }]);
   }, []);
 
   // Safe camera animation completely protected against React white screen crashes
-  const safePanTo = useCallback((coords, zoomLevel = 15.0) => {
+  const safePanTo = useCallback((coords, zoomLevel = 14.5) => {
     try {
       if (!isMapLoadedRef.current || !mapRef.current || !coords) return;
       const rawMap = typeof mapRef.current.getMap === 'function' ? mapRef.current.getMap() : mapRef.current;
@@ -138,702 +138,734 @@ export default function FleetStatus() {
     }
   }, []);
 
-  const handleSwitchRegion = (regionKey) => {
-    if (isSimulating) return;
-    setActiveRegion(regionKey);
-    const coords = regionKey === 'bangalore' ? BANGALORE_COMMAND_COORD : BELAGAVI_COMMAND_COORD;
-    setGpsLocation(coords);
-    setGpsStatus('preset');
-    const gen = generateNearbyHospitals(coords);
-    setHospitals(gen);
-    setSelectedHospital(null);
-    setRouteCoords([]);
-    setSignalNodes([]);
-    setActivePopups({});
-    safePanTo(coords, 14.2);
-    triggerToast(`Switched command to ${regionKey.toUpperCase()} Sector. Hand Navigation Active!`, 'info');
-    addLog(`[LOG] 📍 [SECTOR_SWITCH]: Anchored baseline to ${regionKey.toUpperCase()} (${coords[0].toFixed(4)}, ${coords[1].toFixed(4)}).`);
-    if (gen.length > 0) handleSelectHospital(gen[0], coords);
-  };
-
-  const fetchLiveGPS = useCallback(() => {
-    if (isSimulating) return;
+  /* ---------------------------------------------------------------------
+   * HIGH-ACCURACY GPS RECOVERY (FOR GODSAKE MAKE GPS WORK)
+   * --------------------------------------------------------------------- */
+  const triggerBrowserGPS = useCallback((forceSelect = false) => {
     setGpsStatus('locating');
-    triggerToast('Acquiring high-precision satellite GPS location...', 'info');
+    triggerToast('Interrogating device GPS satellite coordinates...', 'info');
 
-    const handleSuccessCoords = (coords, isLive = true, label = 'GPS Satellite') => {
+    const handleSuccess = (coords, isLive = true, label = 'GPS Satellite') => {
       setGpsLocation(coords);
       setGpsStatus(isLive ? 'live' : 'fallback');
-      const gen = generateNearbyHospitals(coords);
-      setHospitals(gen);
-      triggerToast(`Location Locked via ${label}. Use your hand cursor to drag map freely!`, isLive ? 'success' : 'warning');
-      addLog(`[LOG] 🛰️ [${label.toUpperCase()}_LOCK]: Ambulance origin locked at (${coords[0].toFixed(5)}, ${coords[1].toFixed(5)}).`);
+      triggerToast(`Location Locked via ${label}: [${coords[0].toFixed(5)}° E, ${coords[1].toFixed(5)}° N]. Drag map with hand cursor!`, isLive ? 'success' : 'warning');
+      addLog(`[LOG] 🛰️ [${label.toUpperCase()}_LOCK]: Calibrated GPS origin at (${coords[0].toFixed(5)}, ${coords[1].toFixed(5)}).`);
       
-      if (gen.length > 0) handleSelectHospital(gen[0], coords);
-      safePanTo(coords, 15.2);
+      if (forceSelect) {
+        setSelectedStartId('gps');
+      }
+      safePanTo(coords, 15.0);
     };
 
     if (!navigator.geolocation) {
-      handleSuccessCoords(BANGALORE_COMMAND_COORD, false, 'Command Fallback');
+      handleSuccess(REGION_PRESETS[activeRegionId].center, false, 'Baseline Preset');
       return;
     }
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        handleSuccessCoords([pos.coords.longitude, pos.coords.latitude], true, 'Satellite GPS');
+        handleSuccess([pos.coords.longitude, pos.coords.latitude], true, 'High-Accuracy Satellite GPS');
       },
       async (err) => {
-        console.warn('Browser GPS error/timeout, running instant IP geolocation backup:', err.message);
+        console.warn('Satellite GPS failed/denied, checking IP fallback:', err.message);
         try {
           const res = await fetch('https://ipapi.co/json/');
           if (res.ok) {
             const data = await res.json();
             if (data.latitude && data.longitude) {
-              handleSuccessCoords([data.longitude, data.latitude], true, 'Network IP GPS');
+              handleSuccess([data.longitude, data.latitude], true, 'IP Base Station Geolocation');
               return;
             }
           }
         } catch (ipErr) {
-          console.warn('IP geolocation unreachable, utilizing default coordinates.');
+          console.warn('IP lookup offline.');
         }
-        handleSuccessCoords(BANGALORE_COMMAND_COORD, false, 'Command Fallback');
+        handleSuccess(REGION_PRESETS[activeRegionId].center, false, 'Baseline Preset');
       },
       { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
     );
-  }, [isSimulating, triggerToast, addLog, safePanTo]);
+  }, [activeRegionId, triggerToast, addLog, safePanTo]);
 
+  // Trigger GPS lookup on initial render once style is ready
   useEffect(() => {
-    handleSwitchRegion('bangalore');
+    triggerBrowserGPS();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleSelectHospital = async (hospital, overrideOrigin = null) => {
-    if (isSimulating) return;
-    setSelectedHospital(hospital);
-    setIsRouting(true);
+  // Update signal nodes and selections when switching regions
+  useEffect(() => {
+    setSelectedStartId(regionPreset.junctions[0].id);
+    setSelectedHospitalId(regionPreset.hospitals[0].id);
+    // Initialize signals with state NORMAL_CYCLE
+    setSignalNodes(regionPreset.signals.map(s => ({ ...s, state: 'NORMAL_CYCLE' })));
     setActivePopups({});
-    const origin = overrideOrigin || gpsLocation;
-    const dest = hospital.coords;
+    setActiveDispatches([]);
+    
+    // Recenter map on region center
+    const coords = REGION_PRESETS[activeRegionId].center;
+    setGpsLocation(coords);
+    safePanTo(coords, 14.0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeRegionId, regionPreset]);
+
+  // Unified animation tick loop updating positions and preemption status of all concurrent active dispatches
+  useEffect(() => {
+    if (activeDispatches.length === 0) {
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+      return;
+    }
+
+    let lastTime = performance.now();
+    const tick = (now) => {
+      const deltaMs = now - lastTime;
+      lastTime = now;
+
+      setActiveDispatches(prevDispatches => {
+        let allCompleted = true;
+        const updated = prevDispatches.map(disp => {
+          if (disp.status === 'arrived') return disp;
+          allCompleted = false;
+
+          const speedKmsPerMs = disp.speedKmh / 3600000;
+          // Scale factor to make dispatch visual speed interactive (e.g. 50x acceleration)
+          const distDeltaKm = deltaMs * speedKmsPerMs * 45;
+          const currentDistKm = (disp.progress * disp.distanceKm) + distDeltaKm;
+          const newProgress = Math.min(currentDistKm / disp.distanceKm, 1);
+
+          if (newProgress >= 1) {
+            triggerToast(`✅ ${disp.name} arrived safely at ${disp.hospital.name}!`, 'success');
+            addLog(`[LOG] ✅ [ARRIVAL_HUD]: ${disp.name} docked in critical trauma bay at ${disp.hospital.name}.`);
+            // Set all active pre-emptions associated with this dispatch back to NORMAL
+            setSignalNodes(sigs => sigs.map(s => ({ ...s, state: 'NORMAL_CYCLE' })));
+            setActivePopups({});
+            return { ...disp, progress: 1, status: 'arrived' };
+          }
+
+          const line = turf.lineString(disp.routeCoords);
+          const currentPt = turf.along(line, newProgress * disp.distanceKm, { units: 'kilometers' });
+          const coord = currentPt.geometry.coordinates;
+
+          // Bearing angle rotation math
+          const nextDistKm = Math.min((newProgress * disp.distanceKm) + 0.005, disp.distanceKm);
+          const nextPt = turf.along(line, nextDistKm, { units: 'kilometers' });
+          let bearingDeg = disp.bearing;
+          if (coord[0] !== nextPt.geometry.coordinates[0] || coord[1] !== nextPt.geometry.coordinates[1]) {
+            bearingDeg = turf.bearing(turf.point(coord), turf.point(nextPt.geometry.coordinates));
+          }
+
+          // Follow first active en-route ambulance if follow is locked
+          if (cameraFollowVehicle && mapRef.current && isMapLoadedRef.current) {
+            try {
+              const rawMap = typeof mapRef.current.getMap === 'function' ? mapRef.current.getMap() : mapRef.current;
+              if (rawMap && typeof rawMap.jumpTo === 'function') {
+                rawMap.jumpTo({ center: coord, zoom: 15.3 });
+              }
+            } catch (e) {}
+          }
+
+          // --- V2X PRE-EMPTION OVERRIDE SENSING ---
+          setSignalNodes(signals => signals.map(sig => {
+            const distToSig = turf.distance(turf.point(coord), turf.point(sig.coords), { units: 'kilometers' });
+            
+            // If vehicle enters sector (within 240m of traffic light)
+            if (distToSig <= 0.24 && sig.state !== 'GREEN_WAVE_ACTIVE') {
+              const leadTimeSec = Math.round((distToSig / (disp.speedKmh / 3600)));
+              
+              setTotalPreemptionsCount(c => c + 1);
+              setAvgLeadTime(prev => Number(((prev * 9 + leadTimeSec) / 10).toFixed(1)));
+
+              const senderMsg = `🚀 Ambulance reached my sector! Signal GREEN! Alerting next agent: 'Clear your traffic and prepare Green Wave!'`;
+              setActivePopups(pop => ({
+                ...pop,
+                [sig.id]: { text: senderMsg, type: 'sender', timestamp: Date.now() }
+              }));
+
+              addLog(`[LOG] 🤖 [GEMINI_AGENT_${sig.agentId}]: Preemption triggered by ${disp.name} (Dist: ${(distToSig*1000).toFixed(0)}m). Corridors open green.`);
+              triggerToast(`🟢 Corridor override green at ${sig.name}!`, 'success');
+
+              return { ...sig, state: 'GREEN_WAVE_ACTIVE' };
+            }
+
+            // Normal cycles resume once ambulance leaves the intersection (400m past)
+            if (distToSig > 0.38 && sig.state === 'GREEN_WAVE_ACTIVE') {
+              setActivePopups(pop => {
+                const next = { ...pop };
+                delete next[sig.id];
+                return next;
+              });
+              return { ...sig, state: 'NORMAL_CYCLE' };
+            }
+
+            return sig;
+          }));
+
+          return {
+            ...disp,
+            progress: newProgress,
+            currentPt: coord,
+            bearing: bearingDeg
+          };
+        });
+
+        return updated;
+      });
+
+      animationFrameRef.current = requestAnimationFrame(tick);
+    };
+
+    animationFrameRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+    };
+  }, [activeDispatches.length, cameraFollowVehicle, triggerToast, addLog]);
+
+  /* ---------------------------------------------------------------------
+   * MANUAL DISPATCH FUNCTION
+   * --------------------------------------------------------------------- */
+  const dispatchEmergencyVehicle = async (customStartCoords = null, customEndCoords = null, customName = null) => {
+    let startCoords;
+    let startLabel;
+
+    if (customStartCoords) {
+      startCoords = customStartCoords;
+      startLabel = "Manual Scenario Point";
+    } else if (selectedStartId === 'gps') {
+      startCoords = gpsLocation;
+      startLabel = "satellite GPS Origin";
+    } else {
+      const match = regionPreset.junctions.find(j => j.id === selectedStartId);
+      if (!match) return;
+      startCoords = match.coords;
+      startLabel = match.name;
+    }
+
+    let targetHospital;
+    if (customEndCoords) {
+      targetHospital = { name: "Scenario Hospital Hub", coords: customEndCoords };
+    } else {
+      const match = regionPreset.hospitals.find(h => h.id === selectedHospitalId);
+      if (!match) return;
+      targetHospital = match;
+    }
+
+    const name = customName || `Lifeline ${totalDispatchesCount + 1}`;
+
+    setTotalDispatchesCount(c => c + 1);
 
     try {
-      const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${origin[0]},${origin[1]};${dest[0]},${dest[1]}?geometries=geojson&overview=full`;
+      const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${startCoords[0]},${startCoords[1]};${targetHospital.coords[0]},${targetHospital.coords[1]}?geometries=geojson&overview=full`;
       const res = await fetch(osrmUrl);
-      if (!res.ok) throw new Error(`OSRM HTTP ${res.status}`);
+      if (!res.ok) throw new Error("OSRM Offline");
       const data = await res.json();
 
       if (data.routes && data.routes.length > 0) {
         const pathCoords = data.routes[0].geometry.coordinates;
-        const distKm = data.routes[0].distance / 1000;
-        
-        setRouteCoords(pathCoords);
-        setRouteDistanceKm(distKm);
+        const distanceKm = data.routes[0].distance / 1000;
 
-        const line = turf.lineString(pathCoords);
-        const nodes = generateSignalNodes(line, distKm);
-        setSignalNodes(nodes);
+        const newDispatch = {
+          id: `dispatch_${Date.now()}`,
+          name: name,
+          status: 'en-route',
+          startName: startLabel,
+          hospital: targetHospital,
+          routeCoords: pathCoords,
+          distanceKm: distanceKm,
+          speedKmh: currentSpeed.kmh,
+          progress: 0,
+          bearing: 0,
+          currentPt: startCoords
+        };
 
-        const aiMessage = `Gemini 2.5 Flash AI Diagnostics: OSRM route to ${hospital.name} covers ${distKm.toFixed(2)} km across ${nodes.length} dense traffic signals. ChatGPT V2X Autonomous Pre-Emption Engine has armed all intersection agents to turn GREEN 15 seconds prior to ambulance arrival.`;
-        setAiAnalysisText(aiMessage);
-        addLog(`[LOG] 🧠 [GEMINI_NEURAL_ROUTING]: Shortest road path calculated via OSRM (${distKm.toFixed(2)} km). Armed ${nodes.length} Autonomous AI Signals.`);
+        setActiveDispatches(prev => [...prev, newDispatch]);
+        addLog(`[LOG] 🚀 [DISPATCH_ACTIVE]: ${name} dispatched from ${startLabel} to ${targetHospital.name} (${distanceKm.toFixed(2)} km, Speed: ${currentSpeed.kmh} km/h).`);
+        triggerToast(`🚑 ${name} dispatched successfully!`, 'success');
+
+        // Center camera once on dispatch start
+        safePanTo(startCoords, 14.8);
       }
     } catch (err) {
-      console.warn("OSRM routing offline fallback:", err.message);
-      const line = turf.lineString([origin, dest]);
-      const distKm = turf.length(line, { units: 'kilometers' });
-      const mid1 = turf.along(line, distKm * 0.33, { units: 'kilometers' }).geometry.coordinates;
-      const mid2 = turf.along(line, distKm * 0.66, { units: 'kilometers' }).geometry.coordinates;
-      const fallbackPath = [origin, mid1, mid2, dest];
-      
-      setRouteCoords(fallbackPath);
-      setRouteDistanceKm(distKm);
-      const nodes = generateSignalNodes(turf.lineString(fallbackPath), distKm);
-      setSignalNodes(nodes);
-      setAiAnalysisText(`ChatGPT V2X Backup Strategy: Direct trajectory path established to ${hospital.name} (${distKm.toFixed(2)} km). ${nodes.length} signal junctions armed.`);
-      addLog(`[LOG] 🧠 [CHATGPT_V2X_ENGINE]: Established emergency route path (${distKm.toFixed(2)} km).`);
-    } finally {
-      setIsRouting(false);
-      setAnimatedVehicle(null);
+      console.warn("Falling back to straight route geometry:", err.message);
+      const directLine = [startCoords, targetHospital.coords];
+      const dist = turf.length(turf.lineString(directLine), { units: 'kilometers' });
+
+      const newDispatch = {
+        id: `dispatch_${Date.now()}`,
+        name: name,
+        status: 'en-route',
+        startName: startLabel,
+        hospital: targetHospital,
+        routeCoords: directLine,
+        distanceKm: dist,
+        speedKmh: currentSpeed.kmh,
+        progress: 0,
+        bearing: 0,
+        currentPt: startCoords
+      };
+
+      setActiveDispatches(prev => [...prev, newDispatch]);
+      addLog(`[LOG] 🚀 [DISPATCH_ACTIVE]: ${name} dispatched via fallback routing to ${targetHospital.name}.`);
+      triggerToast(`🚑 ${name} dispatched successfully!`, 'success');
+      safePanTo(startCoords, 14.8);
     }
   };
 
-  const calculatedEtaMinutes = useMemo(() => {
-    if (!routeDistanceKm) return 0;
-    const hours = routeDistanceKm / currentSpeed.kmh;
-    return Math.max(1, Math.round(hours * 60));
-  }, [routeDistanceKm, currentSpeed.kmh]);
-
-  const routeGeoJson = useMemo(() => {
-    if (routeCoords.length < 2) return turf.featureCollection([]);
-    return turf.featureCollection([turf.lineString(routeCoords)]);
-  }, [routeCoords]);
-
-  const startAmbulanceSimulation = () => {
-    if (isSimulating || routeCoords.length < 2) return;
-    setIsSimulating(true);
-    setActivePopups({});
-    startTimestampRef.current = null;
-    triggerTrackerRef.current = {};
-
-    setSignalNodes(prev => prev.map(n => ({ ...n, state: 'NORMAL_CYCLE' })));
-
-    triggerToast(`EMERGENCY DISPATCH LIVE! Ambulance departing at ${currentSpeed.kmh} km/h. You can freely drag the map with your hand cursor!`, 'warning');
-    addLog(`[LOG] 🚀 [DISPATCH_COMMAND]: Priority Ambulance Transport launched at ${currentSpeed.kmh} km/h. Autonomous AI Signals actively listening.`);
-
-    const line = turf.lineString(routeCoords);
-    const durationMs = currentSpeed.durationMs;
-
-    const animate = (timestamp) => {
-      if (!startTimestampRef.current) startTimestampRef.current = timestamp;
-      const elapsed = timestamp - startTimestampRef.current;
-      const progress = Math.min(elapsed / durationMs, 1);
-      const currentDistKm = progress * routeDistanceKm;
-
-      const currentPt = turf.along(line, currentDistKm, { units: 'kilometers' });
-      const coord = currentPt.geometry.coordinates;
-
-      const nextDistKm = Math.min(currentDistKm + 0.005, routeDistanceKm);
-      const nextPt = turf.along(line, nextDistKm, { units: 'kilometers' });
-      let bearingDeg = 0;
-      if (coord[0] !== nextPt.geometry.coordinates[0] || coord[1] !== nextPt.geometry.coordinates[1]) {
-        bearingDeg = turf.bearing(turf.point(coord), turf.point(nextPt.geometry.coordinates));
-      }
-
-      setAnimatedVehicle({ lng: coord[0], lat: coord[1], bearing: bearingDeg });
-
-      // ONLY move camera if user chose to lock/follow camera, otherwise let them freely hand-drag!
-      try {
-        if (cameraFollowRef.current && mapRef.current && progress < 0.98 && isMapLoadedRef.current) {
-          const rawMap = typeof mapRef.current.getMap === 'function' ? mapRef.current.getMap() : mapRef.current;
-          if (rawMap && typeof rawMap.jumpTo === 'function') {
-            rawMap.jumpTo({ center: coord, zoom: 15.3 });
-          }
-        }
-      } catch (e) {
-        // Suppress errors if unmounted
-      }
-
-      // --- AUTONOMOUS SIGNAL AGENT ON-MAP SPEECH BUBBLE LOGIC ---
-      signalNodes.forEach((node, i) => {
-        const nextNode = signalNodes[i + 1];
-        const nextNodeName = nextNode ? nextNode.name : `${selectedHospital?.name} [Trauma Bay 1]`;
-        const etaRemaining = Math.max(1, Math.round(((routeDistanceKm - node.distanceFromStart) / currentSpeed.kmh) * 60));
-
-        if (!triggerTrackerRef.current[node.id] && currentDistKm >= (node.distanceFromStart - 0.22)) {
-          triggerTrackerRef.current[node.id] = true;
-
-          setSignalNodes(prev => prev.map((item, idx) => {
-            if (idx === i) return { ...item, state: 'GREEN_WAVE_ACTIVE' };
-            if (idx === i - 1) return { ...item, state: 'NORMAL_CYCLE' };
-            return item;
-          }));
-
-          const senderMsg = `🚀 Ambulance reached my sector! Signal GREEN! Alerting next agent: 'Clear your traffic and prepare Green Wave! ETA ~${etaRemaining}m'`;
-          const receiverMsg = nextNode 
-            ? `📡 Command received from ${node.name}! Acknowledging Green Wave protocol. Traffic cleared before arrival.` 
-            : `🏥 Trauma Bay 1 Emergency Alert received! Surgical doctors and triage beds cleared and standing by.`;
-
-          setActivePopups(prev => {
-            const next = { ...prev };
-            if (i > 0) delete next[signalNodes[i - 1].id];
-            next[node.id] = { text: senderMsg, type: 'sender', time: Date.now() };
-            if (nextNode) {
-              next[nextNode.id] = { text: receiverMsg, type: 'receiver', time: Date.now() };
-            }
-            return next;
-          });
-
-          if (nextNode) {
-            addLog(`[LOG] 🤖 [GEMINI_AGENT_${node.agentId}]: Signal switched GREEN. Transmitting pre-emption command to ${nextNode.name} (ETA ~${etaRemaining} mins).`);
-            setTimeout(() => {
-              addLog(`[LOG] ⚡ [CHATGPT_V2X_${nextNode.agentId}]: Command Acknowledged! Initiating Green Wave Protocol. Cross-traffic clearing.`);
-            }, 450);
-          } else {
-            addLog(`[LOG] 🤖 [GEMINI_AGENT_${node.agentId}]: Final intersection cleared! Handing off vehicle telemetry to ${selectedHospital?.name}.`);
-            setTimeout(() => {
-              addLog(`[LOG] 🏥 [TRAUMA_BAY_TRIAGE]: Acknowledged. Trauma surgical staff ready at emergency bay doors.`);
-            }, 450);
-          }
-
-          triggerToast(`GREEN WAVE OVERRIDE: ${node.name} signal cleared!`, 'success');
-        }
-      });
-
-      if (progress < 1) {
-        animationFrameRef.current = requestAnimationFrame(animate);
-      } else {
-        setIsSimulating(false);
-        setSignalNodes(prev => prev.map(n => ({ ...n, state: 'NORMAL_CYCLE' })));
-        setAnimatedVehicle(null);
-        setActivePopups({});
-        addLog(`[LOG] ✅ [MISSION_COMPLETED]: Ambulance arrived safely at ${selectedHospital?.name}. Total transit: ${calculatedEtaMinutes} mins via ${currentSpeed.kmh} km/h Green Wave.`);
-        triggerToast(`🎉 Ambulance successfully arrived at ${selectedHospital?.name}!`, 'success');
-      }
-    };
-
-    animationFrameRef.current = requestAnimationFrame(animate);
-  };
-
+  /* ---------------------------------------------------------------------
+   * AUTO GENERATE SCENARIOS (LIFELANE AUTOMATION MODE)
+   * --------------------------------------------------------------------- */
   useEffect(() => {
-    return () => {
-      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
-    };
-  }, []);
+    if (!autoGenerate) return;
+
+    const interval = setInterval(() => {
+      // Pick random preset junction and random hospital
+      const randomJunc = regionPreset.junctions[Math.floor(Math.random() * regionPreset.junctions.length)];
+      const randomHosp = regionPreset.hospitals[Math.floor(Math.random() * regionPreset.hospitals.length)];
+      const randomNameIndex = Math.floor(Math.random() * 100);
+      
+      dispatchEmergencyVehicle(randomJunc.coords, randomHosp.coords, `Rescue ${randomNameIndex}`);
+    }, 10000); // Dispatch every 10 seconds
+
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoGenerate, activeRegionId, regionPreset, totalDispatchesCount]);
 
   const handleMapLoad = useCallback(() => {
     isMapLoadedRef.current = true;
   }, []);
 
+  const activeRoutesGeoJson = useMemo(() => {
+    const lines = activeDispatches
+      .filter(d => d.status === 'en-route' && d.routeCoords.length >= 2)
+      .map(d => turf.lineString(d.routeCoords));
+    return turf.featureCollection(lines);
+  }, [activeDispatches]);
+
   return (
-    <div className="flex flex-col gap-5 p-4 bg-slate-950 text-slate-100 font-sans min-h-screen">
-      {/* Toast Notification HUD */}
-      {activeToast && (
-        <div className="fixed top-24 right-8 z-[10000] max-w-md px-4 py-3 rounded-2xl shadow-2xl border border-white/20 backdrop-blur-md font-medium text-white animate-bounce flex items-center gap-3 bg-slate-900/95 ring-2 ring-emerald-500">
-          <span className="material-symbols-outlined text-3xl text-emerald-400 animate-pulse">
-            {activeToast.type === 'success' ? 'verified' : activeToast.type === 'warning' ? 'bolt' : 'info'}
-          </span>
-          <div className="flex flex-col">
-            <span className="font-extrabold text-xs uppercase tracking-widest text-emerald-400">V2X AI Agent Alert</span>
-            <span className="text-sm text-slate-200">{activeToast.text}</span>
+    <div className="flex flex-col xl:flex-row gap-5 p-4 bg-slate-950 text-slate-100 font-sans min-h-screen">
+      
+      {/* ===================================================================
+       * LEFT COLUMN: INFORMATION/DISPATCH & LIVE STATS PANEL (30% WIDTH)
+       * =================================================================== */}
+      <div className="w-full xl:w-[400px] shrink-0 flex flex-col gap-4">
+        
+        {/* Header Block */}
+        <div className="bg-slate-900/90 p-5 rounded-3xl border border-slate-800 shadow-2xl">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-rose-600 border border-white/20 flex items-center justify-center text-white shadow-[0_0_20px_#e11d48]">
+              <span className="material-symbols-outlined text-2xl animate-pulse">emergency</span>
+            </div>
+            <div>
+              <h1 className="text-lg font-black tracking-wide text-white uppercase leading-tight">
+                LifeLane Corridor
+              </h1>
+              <p className="text-[11px] font-bold text-slate-400">
+                Ambulance-Priority Traffic Command
+              </p>
+            </div>
+          </div>
+
+          {/* Region Switch */}
+          <div className="mt-4">
+            <label className="text-[10px] uppercase font-black tracking-wider text-slate-400 block mb-1.5">Switch Demo Region</label>
+            <div className="grid grid-cols-2 gap-2 p-1 bg-slate-950 rounded-2xl border border-slate-800">
+              <button
+                onClick={() => setActiveRegionId('bangalore')}
+                disabled={isSimulating}
+                className={`py-1.5 rounded-xl text-xs font-black transition-all ${
+                  activeRegionId === 'bangalore' ? 'bg-gradient-to-r from-rose-600 to-amber-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Bengaluru HQ
+              </button>
+              <button
+                onClick={() => setActiveRegionId('belagavi')}
+                disabled={isSimulating}
+                className={`py-1.5 rounded-xl text-xs font-black transition-all ${
+                  activeRegionId === 'belagavi' ? 'bg-gradient-to-r from-rose-600 to-amber-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Belagavi Sector
+              </button>
+            </div>
           </div>
         </div>
-      )}
 
-      {/* Header & Control Center */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-slate-950 p-5 rounded-3xl border border-slate-800 shadow-2xl flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-rose-600 border border-white/20 flex items-center justify-center text-white shadow-[0_0_25px_#e11d48]">
-            <span className="material-symbols-outlined text-3xl animate-pulse">emergency</span>
-          </div>
-          <div>
-            <h1 className="text-xl font-black tracking-wide text-white uppercase flex items-center gap-2">
-              ResQ-Pulse Fleet Status & Mapbox Green Wave Command
-            </h1>
-            <p className="text-xs font-bold text-emerald-400 flex items-center gap-1.5 mt-0.5">
-              <span className="material-symbols-outlined text-sm">pan_tool</span>
-              <span>✋ HAND NAVIGATION MODE ACTIVE: Click + / - to zoom in/out, drag with your mouse hand freely!</span>
-            </p>
+        {/* Live Stats Panel (Replicated from LifeLane) */}
+        <div className="bg-slate-900/90 p-5 rounded-3xl border border-slate-800 shadow-2xl">
+          <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-sm text-emerald-400 animate-pulse">analytics</span>
+            Live operational stats
+          </h3>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-slate-950/80 p-3 rounded-2xl border border-slate-800/80">
+              <p className="text-[10px] text-slate-400 font-extrabold uppercase">Active emergencies</p>
+              <p className="text-xl font-black text-rose-500 mt-1 font-mono">
+                {activeDispatches.filter(d => d.status === 'en-route').length}
+              </p>
+            </div>
+            <div className="bg-slate-950/80 p-3 rounded-2xl border border-slate-800/80">
+              <p className="text-[10px] text-slate-400 font-extrabold uppercase">Corridors Open</p>
+              <p className="text-xl font-black text-emerald-400 mt-1 font-mono">
+                {signalNodes.filter(s => s.state === 'GREEN_WAVE_ACTIVE').length}
+              </p>
+            </div>
+            <div className="bg-slate-950/80 p-3 rounded-2xl border border-slate-800/80">
+              <p className="text-[10px] text-slate-400 font-extrabold uppercase">Total dispatches</p>
+              <p className="text-xl font-black text-slate-200 mt-1 font-mono">{totalDispatchesCount}</p>
+            </div>
+            <div className="bg-slate-950/80 p-3 rounded-2xl border border-slate-800/80">
+              <p className="text-[10px] text-slate-400 font-extrabold uppercase">Total preemptions</p>
+              <p className="text-xl font-black text-cyan-400 mt-1 font-mono">{totalPreemptionsCount}</p>
+            </div>
+            <div className="bg-slate-950/80 p-3 rounded-2xl border border-slate-800/80 col-span-2">
+              <p className="text-[10px] text-slate-400 font-extrabold uppercase">Avg. detection lead time</p>
+              <p className="text-base font-black text-amber-400 mt-1 font-mono">{avgLeadTime} seconds</p>
+            </div>
           </div>
         </div>
 
-        {/* Region & GPS Controls */}
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <div className="flex bg-slate-950 p-1 rounded-2xl border border-slate-800">
+        {/* Dispatch emergency vehicle Form */}
+        <div className="bg-slate-900/90 p-5 rounded-3xl border border-slate-800 shadow-2xl">
+          <h3 className="text-xs font-black text-slate-200 uppercase tracking-wider mb-3.5 flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-sm text-rose-500">add_alert</span>
+            Dispatch emergency vehicle
+          </h3>
+
+          <div className="space-y-3">
+            {/* Start point */}
+            <div>
+              <label className="text-[10px] uppercase font-black tracking-wider text-slate-400 block mb-1">Start Junction</label>
+              <select
+                value={selectedStartId}
+                onChange={(e) => setSelectedStartId(e.target.value)}
+                className="w-full py-2.5 px-3 bg-slate-950 border border-slate-800 rounded-xl text-xs font-bold text-slate-200 focus:outline-none focus:border-rose-500"
+              >
+                {/* HIGH-ACCURACY GPS OPTION (FOR GODSAKE MAKE GPS WORK) */}
+                <option value="gps">
+                  🎯 {gpsStatus === 'live' ? 'Live Sat GPS Location (Locked)' : 'Live GPS (Recalibrating...)'}
+                </option>
+                {regionPreset.junctions.map(j => (
+                  <option key={j.id} value={j.id}>{j.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Destination */}
+            <div>
+              <label className="text-[10px] uppercase font-black tracking-wider text-slate-400 block mb-1">End Hospital</label>
+              <select
+                value={selectedHospitalId}
+                onChange={(e) => setSelectedHospitalId(e.target.value)}
+                className="w-full py-2.5 px-3 bg-slate-950 border border-slate-800 rounded-xl text-xs font-bold text-slate-200 focus:outline-none focus:border-rose-500"
+              >
+                {regionPreset.hospitals.map(h => (
+                  <option key={h.id} value={h.id}>{h.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Dispatch Speed */}
+            <div>
+              <label className="text-[10px] uppercase font-black tracking-wider text-slate-400 block mb-1">Transit speed</label>
+              <select
+                value={simulationSpeed}
+                onChange={(e) => setSimulationSpeed(e.target.value)}
+                className="w-full py-2.5 px-3 bg-slate-950 border border-slate-800 rounded-xl text-xs font-bold text-slate-200 focus:outline-none focus:border-rose-500"
+              >
+                <option value="slow">Slow (40 km/h)</option>
+                <option value="medium">Medium (60 km/h)</option>
+                <option value="fast">Fast (90 km/h)</option>
+              </select>
+            </div>
+
+            {/* Dispatch Button */}
             <button
-              onClick={() => handleSwitchRegion('bangalore')}
-              disabled={isSimulating}
-              className={`py-1.5 px-3 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
-                activeRegion === 'bangalore' ? 'bg-gradient-to-r from-rose-600 to-amber-600 text-white shadow' : 'text-slate-400 hover:text-white'
-              }`}
+              onClick={() => dispatchEmergencyVehicle()}
+              className="w-full mt-2 py-3.5 px-4 bg-red-600 hover:bg-red-500 text-white rounded-xl font-black text-xs tracking-wider shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2 uppercase"
             >
-              <span>Bengaluru Sector</span>
+              <span className="material-symbols-outlined text-sm">emergency</span>
+              Dispatch emergency vehicle
             </button>
-            <button
-              onClick={() => handleSwitchRegion('belagavi')}
-              disabled={isSimulating}
-              className={`py-1.5 px-3 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
-                activeRegion === 'belagavi' ? 'bg-gradient-to-r from-rose-600 to-amber-600 text-white shadow' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <span>Belagavi Sector</span>
-            </button>
-          </div>
 
-          <button 
-            onClick={fetchLiveGPS} 
-            disabled={isSimulating}
-            className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white text-xs font-black rounded-2xl border border-emerald-400/40 shadow-xl flex items-center gap-2 active:scale-95 transition-all disabled:opacity-50"
-          >
-            <span className="material-symbols-outlined text-sm animate-pulse">my_location</span>
-            <span>{gpsStatus === 'locating' ? 'Locating GPS...' : '🎯 Center on My Location'}</span>
-          </button>
+            {/* Auto Generate Checkbox */}
+            <div className="flex items-center gap-2 mt-3 pt-2.5 border-t border-slate-800/80">
+              <input
+                id="auto-scenarios-check"
+                type="checkbox"
+                checked={autoGenerate}
+                onChange={(e) => setAutoGenerate(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-800 bg-slate-950 text-emerald-600 focus:ring-0 cursor-pointer"
+              />
+              <label htmlFor="auto-scenarios-check" className="text-[11px] font-black text-slate-300 uppercase tracking-wider cursor-pointer select-none">
+                Auto-generate scenarios
+              </label>
+            </div>
+          </div>
         </div>
+
+        {/* Active Dispatches Card List */}
+        {activeDispatches.length > 0 && (
+          <div className="bg-slate-900/90 p-4 rounded-3xl border border-slate-800 shadow-2xl">
+            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Active Units</h3>
+            <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+              {activeDispatches.map(disp => (
+                <div key={disp.id} className="p-3 bg-slate-950 rounded-2xl border border-slate-800 flex items-center justify-between gap-2.5">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-xl">🚑</span>
+                    <div>
+                      <p className="text-xs font-black text-slate-100">{disp.name}</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5 font-medium leading-tight">
+                        {disp.status === 'en-route' ? `En-Route to ${disp.hospital.name}` : `Arrived at Destination`}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${
+                      disp.status === 'en-route' ? 'bg-rose-950 text-rose-400 border border-rose-800 animate-pulse' : 'bg-emerald-950 text-emerald-400 border border-emerald-800'
+                    }`}>
+                      {disp.status === 'en-route' ? 'Transit' : 'Arrived'}
+                    </span>
+                    <button
+                      onClick={() => {
+                        setActiveDispatches(prev => prev.filter(d => d.id !== disp.id));
+                        addLog(`[LOG] ❌ [RECALL_COMMAND]: Recalled ${disp.name}. Simulation canceled.`);
+                      }}
+                      className="p-1 text-slate-500 hover:text-slate-300 rounded-lg hover:bg-slate-850"
+                      title="Recall vehicle"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ===================================================================
-       * MAPBOX MAP CANVAS (HAND-DRAG, ZOOM CONTROLS, DYNAMIC VECTOR STYLE)
+       * RIGHT COLUMN: DYNAMIC MAP & TELEMETRY FEEDS (70% WIDTH)
        * =================================================================== */}
-      <div className="bg-slate-900/90 p-4 rounded-3xl border border-slate-800 shadow-2xl flex flex-col shrink-0">
+      <div className="flex-1 flex flex-col gap-4">
         
-        {/* Hand Drag Mode Header Bar */}
-        <div className="flex justify-between items-center px-2 pb-3 flex-wrap gap-2 text-xs">
-          <div className="flex items-center gap-2 font-extrabold text-slate-300">
-            <span className="px-2.5 py-1 bg-emerald-900/80 text-emerald-300 border border-emerald-500/50 rounded-lg flex items-center gap-1">
-              <span className="material-symbols-outlined text-sm">pan_tool</span>
-              ✋ Mapbox Vector GL Active
-            </span>
-            <span className="text-slate-400">Click and drag with your mouse. Use Navigation controls to zoom.</span>
-          </div>
+        {/* Mapbox Canvas */}
+        <div className="bg-slate-900/90 p-4 rounded-3xl border border-slate-800 shadow-2xl flex flex-col shrink-0">
+          
+          <div className="flex justify-between items-center px-1 pb-3 flex-wrap gap-2 text-xs">
+            <div className="flex items-center gap-2 font-extrabold text-slate-300">
+              <span className="px-2.5 py-1 bg-emerald-900/80 text-emerald-300 border border-emerald-500/50 rounded-lg flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm">pan_tool</span>
+                ✋ Hand Drag & Zoom Controls Active
+              </span>
+              <span className="text-slate-400">Click and drag. Zoom using buttons or trackpad.</span>
+            </div>
 
-          {/* Toggle Camera Lock vs Free Hand Navigation */}
-          <button
-            onClick={() => setCameraFollowVehicle(prev => !prev)}
-            title="Toggle camera tracking"
-            className={`px-3 py-1 rounded-xl font-bold transition-all flex items-center gap-1.5 border ${
-              cameraFollowVehicle 
-                ? 'bg-rose-950 border-rose-500 text-rose-300 shadow-[0_0_15px_rgba(225,29,72,0.3)]' 
-                : 'bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700'
-            }`}
-          >
-            <span className="material-symbols-outlined text-sm">
-              {cameraFollowVehicle ? 'lock' : 'pan_tool_alt'}
-            </span>
-            <span>{cameraFollowVehicle ? '🎥 Camera Locked to Vehicle' : '🔓 Free Hand Map Dragging'}</span>
-          </button>
-        </div>
+            <div className="flex items-center gap-2">
+              {/* Force Recenter GPS Button (MAKE GPS WORK) */}
+              <button
+                onClick={() => triggerBrowserGPS(true)}
+                className="px-3 py-1 bg-slate-800 border border-slate-700 text-emerald-400 hover:text-emerald-300 hover:bg-slate-700 rounded-xl font-bold transition-all flex items-center gap-1.5"
+              >
+                <span className="material-symbols-outlined text-sm animate-pulse">my_location</span>
+                <span>Center GPS Location</span>
+              </button>
 
-        {/* Map Container with grab cursor */}
-        <div className="w-full h-[480px] xl:h-[560px] rounded-2xl overflow-hidden border border-slate-700/80 relative shadow-inner bg-slate-950 cursor-grab active:cursor-grabbing">
-          <MapGL
-            ref={mapRef}
-            initialViewState={{
-              longitude: gpsLocation[0],
-              latitude: gpsLocation[1],
-              zoom: 15.0,
-              pitch: 54,
-              bearing: -10
-            }}
-            mapboxAccessToken={MAPBOX_ACCESS_TOKEN}
-            interactive={true}
-            dragPan={true}
-            dragRotate={true}
-            scrollZoom={true}
-            touchZoomRotate={true}
-            cursor="grab"
-            style={{ width: '100%', height: '100%' }}
-            mapStyle={MAPBOX_DARK_STYLE}
-            onLoad={handleMapLoad}
-          >
-            {/* Standard Mapbox Zoom In, Zoom Out and Compass Control HUD */}
-            <NavigationControl position="bottom-right" showCompass={true} showZoom={true} />
-
-            {/* OSRM Driving Polyline Route */}
-            <Source id="osrm-route-layer-fleet" type="geojson" data={routeGeoJson}>
-              <Layer
-                id="osrm-route-glow-fleet"
-                type="line"
-                paint={{
-                  'line-color': isSimulating ? '#22c55e' : '#e11d48',
-                  'line-width': 12,
-                  'line-opacity': 0.4,
-                  'line-blur': 4
-                }}
-              />
-              <Layer
-                id="osrm-route-core-fleet"
-                type="line"
-                paint={{
-                  'line-color': isSimulating ? '#4ade80' : '#f43f5e',
-                  'line-width': 4.5,
-                  'line-opacity': 0.95,
-                  'line-dasharray': [2, 1.5]
-                }}
-              />
-            </Source>
-
-            {/* GPS Starting Origin Marker */}
-            <Marker longitude={gpsLocation[0]} latitude={gpsLocation[1]} anchor="bottom">
-              <div className="group relative flex flex-col items-center cursor-pointer hover:scale-105 transition-transform">
-                <div className="px-3 py-1 bg-rose-600 text-white rounded-lg text-[10px] font-extrabold shadow-2xl mb-1 border border-white/40 animate-pulse uppercase tracking-wider whitespace-nowrap">
-                  📍 GPS Dispatch Origin
-                </div>
-                <div className="w-11 h-11 p-1.5 rounded-2xl bg-slate-900 border-2 border-rose-500 flex items-center justify-center shadow-[0_0_25px_#e11d48]">
-                  <img src="/traffic-svg/ambulance_car.svg" alt="Origin Ambulance" className="w-full h-full object-contain" />
-                </div>
-              </div>
-            </Marker>
-
-            {/* DYNAMIC AI SIGNAL AGENTS WITH SPEECH BUBBLES */}
-            {signalNodes.map((node, idx) => {
-              const popupData = activePopups[node.id];
-              const isGreen = node.state === 'GREEN_WAVE_ACTIVE';
-              return (
-                <Marker key={node.id} longitude={node.coords[0]} latitude={node.coords[1]} anchor="bottom">
-                  <div className="group relative flex flex-col items-center cursor-pointer">
-                    
-                    {/* SPEECH BUBBLE POPPING FROM SIGNAL */}
-                    {popupData && (
-                      <div className={`mb-3 w-64 p-3.5 rounded-2xl shadow-2xl border text-left font-sans animate-bounce backdrop-blur-md relative z-50 ${
-                        popupData.type === 'sender'
-                          ? 'bg-slate-900/95 border-emerald-400 text-emerald-200 shadow-[0_0_35px_rgba(16,185,129,0.5)] ring-2 ring-emerald-500/50'
-                          : 'bg-slate-900/95 border-cyan-400 text-cyan-100 shadow-[0_0_35px_rgba(6,182,212,0.5)] ring-2 ring-cyan-500/50'
-                      }`}>
-                        <div className="flex items-center justify-between gap-2 font-black pb-1.5 border-b border-white/15 mb-1.5 text-[10px] uppercase tracking-wider text-white">
-                          <span className="flex items-center gap-1.5">
-                            <span className="material-symbols-outlined text-xs">{popupData.type === 'sender' ? 'smart_toy' : 'podcasts'}</span>
-                            {popupData.type === 'sender' ? '🤖 GEMINI AGENT' : '📡 CHATGPT V2X'}
-                          </span>
-                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
-                        </div>
-                        <p className="leading-snug text-xs font-black text-slate-100">{popupData.text}</p>
-                        <div className={`absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-4 h-4 rotate-45 border-r border-b bg-slate-900 ${
-                          popupData.type === 'sender' ? 'border-emerald-400' : 'border-cyan-400'
-                        }`}></div>
-                      </div>
-                    )}
-
-                    {/* SVG TRAFFIC SIGNAL MARKER ICON */}
-                    <div className={`p-1.5 bg-slate-950 rounded-2xl border ${
-                      isGreen ? 'border-emerald-400 shadow-[0_0_25px_#10b981] scale-110' : 'border-slate-700 shadow-xl'
-                    } transition-all duration-300`}>
-                      <img 
-                        src={isGreen ? '/traffic-svg/green_signal.svg' : '/traffic-svg/red_signalIcon.svg'} 
-                        alt="Traffic Signal Agent"
-                        className="w-7 h-9 object-contain drop-shadow-md"
-                      />
-                    </div>
-                    <span className={`mt-1 px-2.5 py-0.5 rounded-full text-[9px] font-black text-white shadow-xl whitespace-nowrap border ${
-                      isGreen ? 'bg-emerald-700 border-emerald-300 animate-pulse ring-2 ring-emerald-500' : 'bg-slate-900 border-slate-700 text-slate-300'
-                    }`}>
-                      {isGreen ? `🟢 ${node.name} [GREEN]` : `🔴 ${node.name}`}
-                    </span>
-                  </div>
-                </Marker>
-              );
-            })}
-
-            {/* Selected Hospital Target Marker */}
-            {selectedHospital && (
-              <Marker longitude={selectedHospital.coords[0]} latitude={selectedHospital.coords[1]} anchor="bottom">
-                <div className="flex flex-col items-center cursor-pointer hover:scale-110 transition-transform">
-                  <div className="px-3 py-1 bg-emerald-700 text-white rounded-xl text-xs font-black shadow-2xl mb-1.5 whitespace-nowrap border border-emerald-300 animate-pulse flex items-center gap-1.5">
-                    <span>🏥 {selectedHospital.name}</span>
-                    <span className="px-2 py-0.5 bg-emerald-950 rounded text-[10px] text-emerald-300 border border-emerald-500">{selectedHospital.triageBeds}</span>
-                  </div>
-                  <div className="w-12 h-12 rounded-2xl bg-slate-900 border-2 border-emerald-400 flex items-center justify-center text-2xl shadow-[0_0_30px_#10b981]">
-                    🏥
-                  </div>
-                </div>
-              </Marker>
-            )}
-
-            {/* Animated Moving Emergency Ambulance Icon */}
-            {animatedVehicle && (
-              <Marker longitude={animatedVehicle.lng} latitude={animatedVehicle.lat} anchor="center">
-                <div className="pointer-events-none flex flex-col items-center">
-                  <div className="translate-y-[-38px] px-3.5 py-1 rounded-full bg-gradient-to-r from-rose-600 via-red-600 to-amber-500 text-white font-black text-[10px] uppercase tracking-widest shadow-2xl border border-white flex items-center gap-1.5 animate-pulse whitespace-nowrap">
-                    <span className="w-2 h-2 rounded-full bg-white animate-ping"></span>
-                    <span>🚑 RESQ-PULSE AMB_09 ({currentSpeed.kmh} KM/H GREEN WAVE)</span>
-                  </div>
-                  <div 
-                    className="w-14 h-14 p-2 rounded-full bg-slate-900/95 border-2 border-rose-500 flex items-center justify-center shadow-[0_0_35px_#f43f5e] transition-transform duration-75"
-                    style={{ transform: `rotate(${animatedVehicle.bearing}deg)` }}
-                  >
-                    <img src="/traffic-svg/ambulance_car.svg" alt="Moving Ambulance" className="w-full h-full object-contain drop-shadow-xl" />
-                  </div>
-                </div>
-              </Marker>
-            )}
-          </MapGL>
-
-          {/* Top-left Telemetry HUD */}
-          <div className="absolute top-4 left-4 px-4 py-2.5 bg-slate-950/90 backdrop-blur-md rounded-2xl border border-slate-800 shadow-xl pointer-events-none flex items-center gap-3.5 z-10">
-            <div className={`w-3.5 h-3.5 rounded-full ${gpsStatus === 'live' ? 'bg-emerald-500 animate-ping' : 'bg-amber-500'}`}></div>
-            <div>
-              <p className="text-[10px] uppercase font-black text-slate-400 tracking-wider">
-                {gpsStatus === 'live' ? 'Satellite GPS Calibration' : 'Regional Command Sector Lock'}
-              </p>
-              <p className="text-xs font-black text-slate-100 font-mono">
-                {gpsLocation[0].toFixed(4)}° E, {gpsLocation[1].toFixed(4)}° N
-              </p>
+              {/* Camera Follow Toggle */}
+              <button
+                onClick={() => setCameraFollowVehicle(prev => !prev)}
+                className={`px-3 py-1 rounded-xl font-bold transition-all flex items-center gap-1.5 border ${
+                  cameraFollowVehicle 
+                    ? 'bg-rose-950 border-rose-500 text-rose-300 shadow-[0_0_15px_rgba(225,29,72,0.3)]' 
+                    : 'bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700'
+                }`}
+              >
+                <span className="material-symbols-outlined text-sm">
+                  {cameraFollowVehicle ? 'lock' : 'pan_tool_alt'}
+                </span>
+                <span>{cameraFollowVehicle ? 'Locked to Vehicle' : 'Free Camera'}</span>
+              </button>
             </div>
           </div>
 
-          {/* Top-right Floating Recenter Icon */}
-          <div className="absolute top-4 right-4 z-10 mr-12">
-            <button
-              onClick={() => safePanTo(gpsLocation)}
-              disabled={isSimulating || !gpsLocation}
-              title="Recenter Camera on Start Origin"
-              className="p-3 bg-slate-900/90 hover:bg-slate-800 text-emerald-400 hover:text-emerald-300 rounded-2xl border border-slate-700 shadow-2xl flex items-center justify-center active:scale-90 transition-all backdrop-blur-md group"
+          {/* Map canvas Container */}
+          <div className="w-full h-[520px] xl:h-[620px] rounded-2xl overflow-hidden border border-slate-700/80 relative shadow-inner bg-slate-950 cursor-grab active:cursor-grabbing">
+            <MapGL
+              ref={mapRef}
+              initialViewState={{
+                longitude: gpsLocation[0],
+                latitude: gpsLocation[1],
+                zoom: 14.0,
+                pitch: 54,
+                bearing: -10
+              }}
+              mapboxAccessToken={MAPBOX_ACCESS_TOKEN}
+              interactive={true}
+              dragPan={true}
+              dragRotate={true}
+              scrollZoom={true}
+              touchZoomRotate={true}
+              cursor="grab"
+              style={{ width: '100%', height: '100%' }}
+              mapStyle={MAPBOX_DARK_STYLE}
+              onLoad={handleMapLoad}
             >
-              <span className="material-symbols-outlined text-2xl group-hover:animate-spin">my_location</span>
-            </button>
+              {/* Replicated standard +/- zoom controls */}
+              <NavigationControl position="bottom-right" showCompass={true} showZoom={true} />
+
+              {/* Active dispatches paths */}
+              <Source id="active-corridors-layer" type="geojson" data={activeRoutesGeoJson}>
+                <Layer
+                  id="active-corridors-glow"
+                  type="line"
+                  paint={{
+                    'line-color': '#e11d48',
+                    'line-width': 10,
+                    'line-opacity': 0.35,
+                    'line-blur': 4
+                  }}
+                />
+                <Layer
+                  id="active-corridors-core"
+                  type="line"
+                  paint={{
+                    'line-color': '#f43f5e',
+                    'line-width': 4.5,
+                    'line-opacity': 0.95,
+                    'line-dasharray': [2, 1.5]
+                  }}
+                />
+              </Source>
+
+              {/* Render GPS anchor (FOR GODSAKE MAKE GPS WORK) */}
+              <Marker longitude={gpsLocation[0]} latitude={gpsLocation[1]} anchor="bottom">
+                <div className="flex flex-col items-center">
+                  <div className="px-2 py-0.5 bg-rose-600 text-white rounded text-[8px] font-black mb-1 animate-pulse border border-white/20 whitespace-nowrap">
+                    📍 {gpsStatus === 'live' ? 'SATELLITE GPS LOCK' : 'GPS BASE SECTOR'}
+                  </div>
+                  <div className="w-8 h-8 rounded-full bg-slate-900 border-2 border-rose-500 flex items-center justify-center text-sm shadow-[0_0_20px_#e11d48]">
+                    🎯
+                  </div>
+                </div>
+              </Marker>
+
+              {/* Render AI Junction Traffic Light Markers */}
+              {signalNodes.map(sig => {
+                const popup = activePopups[sig.id];
+                const isActive = sig.state === 'GREEN_WAVE_ACTIVE';
+                return (
+                  <Marker key={sig.id} longitude={sig.coords[0]} latitude={sig.coords[1]} anchor="bottom">
+                    <div className="flex flex-col items-center cursor-pointer">
+                      
+                      {/* Message bubble attached to traffic signal */}
+                      {popup && (
+                        <div className="mb-2 w-56 p-3 rounded-2xl bg-slate-900/95 border border-emerald-400 text-emerald-200 text-left font-sans text-xs shadow-2xl animate-bounce backdrop-blur-md relative z-50">
+                          <div className="flex items-center gap-1.5 font-black text-[9px] uppercase tracking-wider text-white border-b border-white/10 pb-1 mb-1">
+                            <span>🤖 AI CORRIDOR PREEMPTION</span>
+                          </div>
+                          <p className="leading-tight text-[11px] text-slate-100">{popup.text}</p>
+                          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-3.5 h-3.5 bg-slate-900 border-r border-b border-emerald-400 rotate-45"></div>
+                        </div>
+                      )}
+
+                      {/* Colored circle light representing signal state */}
+                      <div className={`p-1 bg-slate-950 rounded-full border transition-all duration-300 ${
+                        isActive ? 'border-emerald-400 shadow-[0_0_20px_#10b981]' : 'border-slate-800 shadow-md'
+                      }`}>
+                        <img 
+                          src={isActive ? '/traffic-svg/green_signal.svg' : '/traffic-svg/red_signalIcon.svg'}
+                          alt="Traffic Light"
+                          className="w-7 h-9 object-contain"
+                        />
+                      </div>
+                      <span className={`mt-0.5 px-2 py-0.5 rounded text-[8px] font-black text-white whitespace-nowrap border ${
+                        isActive ? 'bg-emerald-700 border-emerald-400 animate-pulse' : 'bg-slate-900 border-slate-700'
+                      }`}>
+                        {sig.name}
+                      </span>
+                    </div>
+                  </Marker>
+                );
+              })}
+
+              {/* Render Hospitals */}
+              {regionPreset.hospitals.map(h => {
+                const isSelected = h.id === selectedHospitalId;
+                return (
+                  <Marker key={h.id} longitude={h.coords[0]} latitude={h.coords[1]} anchor="bottom">
+                    <div className="flex flex-col items-center">
+                      <div className={`px-2 py-0.5 rounded text-[8px] font-black text-white whitespace-nowrap mb-1 ${
+                        isSelected ? 'bg-emerald-600 border border-emerald-400 animate-pulse' : 'bg-slate-900 border border-slate-700'
+                      }`}>
+                        🏥 {h.name}
+                      </div>
+                      <div className={`w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center text-sm border-2 ${
+                        isSelected ? 'border-emerald-400 shadow-[0_0_20px_#10b981]' : 'border-slate-800'
+                      }`}>
+                        🏥
+                      </div>
+                    </div>
+                  </Marker>
+                );
+              })}
+
+              {/* Render concurrent moving ambulances */}
+              {activeDispatches.map(disp => {
+                if (disp.status !== 'en-route') return null;
+                return (
+                  <Marker key={disp.id} longitude={disp.currentPt[0]} latitude={disp.currentPt[1]} anchor="center">
+                    <div className="pointer-events-none flex flex-col items-center">
+                      <div className="translate-y-[-32px] px-2.5 py-0.5 bg-rose-600 text-white font-black text-[9px] uppercase tracking-wider rounded-full shadow border border-white/20 animate-pulse whitespace-nowrap">
+                        🚑 {disp.name} ({disp.speedKmh} km/h)
+                      </div>
+                      <div 
+                        className="w-11 h-11 p-1 rounded-full bg-slate-900/90 border border-rose-500 flex items-center justify-center shadow-[0_0_20px_#f43f5e]"
+                        style={{ transform: `rotate(${disp.bearing}deg)` }}
+                      >
+                        <img src="/traffic-svg/ambulance_car.svg" alt="Ambulance" className="w-full h-full object-contain" />
+                      </div>
+                    </div>
+                  </Marker>
+                );
+              })}
+            </MapGL>
           </div>
         </div>
-      </div>
 
-      {/* AI NEURAL ENGINE BANNER */}
-      <div className="bg-gradient-to-r from-slate-900 via-emerald-950/50 to-slate-900 p-4 rounded-3xl border border-emerald-500/30 shadow-xl flex items-center gap-4 backdrop-blur-md">
-        <div className="p-3 bg-emerald-950/80 rounded-2xl border border-emerald-600/50 shrink-0 shadow-[0_0_20px_rgba(16,185,129,0.3)]">
-          <span className="material-symbols-outlined text-3xl text-emerald-400 animate-pulse">psychology</span>
-        </div>
-        <div className="flex-1">
-          <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
-            <span className="text-sm font-black uppercase tracking-wider text-emerald-400">
-              Gemini & ChatGPT AI Autonomous V2X Neural Routing Engine
-            </span>
-            <span className="text-xs font-mono font-bold px-3 py-0.5 rounded-full bg-slate-900 border border-emerald-500/40 text-emerald-300">
+        {/* AI V2X Terminal Feed */}
+        <div className="bg-slate-950 rounded-3xl border border-slate-800 shadow-2xl flex flex-col overflow-hidden min-h-[220px]">
+          <div className="p-3.5 border-b border-slate-800 flex justify-between items-center bg-slate-900 text-white flex-wrap gap-2">
+            <div className="flex items-center gap-2.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+              <span className="material-symbols-outlined text-emerald-400 text-base">terminal</span>
+              <h3 className="font-mono font-bold text-xs tracking-wider uppercase text-slate-200">
+                LifeLane V2X AI Communications Log
+              </h3>
+            </div>
+            <span className="text-[10px] font-mono text-cyan-300 font-extrabold bg-cyan-950/80 px-2.5 py-0.5 rounded border border-cyan-700/50">
               V2X PROTOCOL ACTIVE
             </span>
           </div>
-          <p className="text-xs md:text-sm text-slate-200 font-medium leading-relaxed italic">
-            "{aiAnalysisText}"
-          </p>
-        </div>
-      </div>
 
-      {/* Grid: Hospital Discovery & Route Telemetry */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        
-        {/* HOSPITAL DISCOVERY PANEL */}
-        <div className="bg-slate-900/90 p-5 rounded-3xl border border-slate-800 shadow-2xl flex flex-col justify-between backdrop-blur-md">
-          <div>
-            <h3 className="font-black text-sm text-rose-500 mb-4 flex items-center justify-between uppercase tracking-wider">
-              <span className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-xl">local_hospital</span>
-                Nearby Emergency Trauma Centers (Shortest Path)
-              </span>
-              {isRouting && <span className="text-xs text-amber-400 font-mono animate-pulse">Computing OSRM Route...</span>}
-            </h3>
-
-            <div className="space-y-3 max-h-64 overflow-y-auto custom-scrollbar pr-1">
-              {hospitals.map((hosp) => {
-                const isSelected = selectedHospital && selectedHospital.id === hosp.id;
-                return (
-                  <div
-                    key={hosp.id}
-                    onClick={() => handleSelectHospital(hosp)}
-                    className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
-                      isSelected
-                        ? 'bg-gradient-to-r from-slate-900 via-rose-950/40 to-slate-900 border-rose-500 shadow-xl ring-1 ring-rose-500 scale-[1.01]'
-                        : 'bg-slate-950/80 hover:bg-slate-800 border-slate-800/80'
-                    } ${isSimulating ? 'pointer-events-none opacity-60' : ''}`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <span className="text-3xl p-3 bg-slate-900 rounded-2xl border border-slate-800 shadow-inner">{hosp.icon}</span>
-                      <div>
-                        <p className={`font-black text-base ${isSelected ? 'text-rose-400' : 'text-slate-100'}`}>{hosp.name}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-xs text-slate-400 font-medium">{hosp.specialty}</span>
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-700/60 text-[10px] font-mono font-bold text-emerald-400">
-                            {hosp.triageBeds}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <span className="px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm font-mono font-black text-emerald-400 whitespace-nowrap shadow-md">
-                        {hosp.straightDistKm} KM
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* SPEED CONTROLS & COMMAND HUB */}
-        <div className="bg-slate-900/90 p-5 rounded-3xl border border-slate-800 shadow-2xl flex flex-col justify-between backdrop-blur-md">
-          <div>
-            <h3 className="font-black text-xs text-slate-400 mb-3 uppercase tracking-widest flex items-center justify-between">
-              <span className="flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-sm">speed</span>
-                Velocity Selection & Telemetry Metrics
-              </span>
-              <span className={`text-xs font-bold font-mono ${currentSpeed.color}`}>
-                Selected: {currentSpeed.label}
-              </span>
-            </h3>
-
-            <div className="grid grid-cols-3 gap-2.5 p-1.5 bg-slate-950 rounded-2xl border border-slate-800 mb-4">
-              {Object.entries(speedConfig).map(([key, config]) => (
-                <button
-                  key={key}
-                  onClick={() => setSimulationSpeed(key)}
-                  disabled={isSimulating}
-                  className={`py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all flex flex-col items-center justify-center gap-1 ${
-                    simulationSpeed === key
-                      ? 'bg-gradient-to-r from-slate-800 to-slate-700 text-white border border-slate-500 shadow-xl scale-[1.03]'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
-                  } disabled:opacity-50`}
-                >
-                  <span className="material-symbols-outlined text-lg">
-                    {key === 'fast' ? 'rocket_launch' : key === 'medium' ? 'directions_car' : 'time_to_leave'}
-                  </span>
-                  <span>{key === 'fast' ? '⚡ FAST (90)' : key === 'medium' ? '🚓 MED (60)' : '🐢 SLOW (40)'}</span>
-                </button>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-4 gap-3 mb-4">
-              <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 text-center shadow-inner">
-                <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Distance</p>
-                <p className="text-lg font-black text-rose-500 font-mono mt-0.5">{routeDistanceKm ? `${routeDistanceKm.toFixed(2)} KM` : '--'}</p>
-              </div>
-              <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 text-center shadow-inner">
-                <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Speed</p>
-                <p className={`text-lg font-black font-mono mt-0.5 ${currentSpeed.color}`}>{currentSpeed.kmh} KM/H</p>
-              </div>
-              <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 text-center shadow-inner">
-                <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">ETA</p>
-                <p className="text-lg font-black text-amber-400 font-mono mt-0.5">{calculatedEtaMinutes} MINS</p>
-              </div>
-              <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 text-center shadow-inner">
-                <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">AI Signals</p>
-                <p className="text-lg font-black text-cyan-400 font-mono mt-0.5">{signalNodes.length} AGENTS</p>
-              </div>
-            </div>
-          </div>
-
-          <button
-            onClick={startAmbulanceSimulation}
-            disabled={isSimulating || routeCoords.length < 2}
-            className="w-full py-4 px-6 bg-gradient-to-r from-rose-600 via-red-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white rounded-2xl font-black text-base tracking-wide shadow-[0_0_40px_rgba(225,29,72,0.4)] active:scale-[0.98] transition-all flex items-center justify-center gap-3 border border-white/20 disabled:opacity-50 disabled:pointer-events-none uppercase mt-2"
-          >
-            <span className="material-symbols-outlined text-3xl animate-bounce">rocket_launch</span>
-            <span>
-              {isSimulating ? `🚀 AMBULANCE SPEEDING EN ROUTE (${currentSpeed.kmh} KM/H)...` : `⚡ START AMBULANCE (ACTIVATE AI GREEN WAVE - ${currentSpeed.kmh} KM/H)`}
-            </span>
-          </button>
-        </div>
-      </div>
-
-      {/* V2X AGENT TERMINAL */}
-      <div className="bg-slate-950 rounded-3xl border border-slate-800 shadow-2xl flex flex-col overflow-hidden min-h-[260px]">
-        <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900 text-white flex-wrap gap-2">
-          <div className="flex items-center gap-3">
-            <span className="w-3 h-3 rounded-full bg-emerald-500 animate-ping"></span>
-            <span className="material-symbols-outlined text-emerald-400 text-xl">terminal</span>
-            <h3 className="font-mono font-bold text-sm tracking-wider uppercase text-slate-200">
-              V2X Agent Command Terminal: Gemini & ChatGPT Handoff Logs
-            </h3>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-mono text-cyan-300 font-extrabold bg-cyan-950/80 px-3 py-1 rounded-lg border border-cyan-700/60">
-              GEMINI 2.5 FLASH
-            </span>
-            <span className="text-xs font-mono text-emerald-300 font-extrabold bg-emerald-950/80 px-3 py-1 rounded-lg border border-emerald-700/60">
-              CHATGPT V2X OVERRIDE
-            </span>
-          </div>
-        </div>
-
-        <div className="p-5 bg-slate-950 text-slate-200 font-mono text-xs space-y-3 overflow-y-auto custom-scrollbar max-h-80">
-          {agentLogs.length === 0 ? (
-            <div className="text-slate-500 italic text-center py-10 font-sans text-sm">
-              No inter-agent communication transmitting. Select a trauma center above and click START AMBULANCE...
-            </div>
-          ) : (
-            agentLogs.map((item, index) => (
+          <div className="p-4 bg-slate-950 text-slate-200 font-mono text-xs space-y-2 overflow-y-auto custom-scrollbar max-h-56">
+            {agentLogs.map((item, index) => (
               <div 
                 key={index} 
-                className={`p-3 rounded-xl border-l-4 leading-relaxed transition-all ${
+                className={`p-2.5 rounded-xl border-l-4 leading-relaxed transition-all ${
                   item.text.includes('GEMINI') 
-                    ? 'border-cyan-500 bg-slate-900/90 text-cyan-200 shadow' 
+                    ? 'border-cyan-500 bg-slate-900/80 text-cyan-200' 
                     : item.text.includes('CHATGPT')
-                    ? 'border-emerald-500 bg-emerald-950/50 text-emerald-200 shadow'
-                    : item.text.includes('🚀') || item.text.includes('🛰️')
-                    ? 'border-rose-500 bg-slate-900/60 text-slate-200 font-bold'
+                    ? 'border-emerald-500 bg-emerald-950/50 text-emerald-200'
+                    : item.text.includes('🚀') || item.text.includes('ARRIVAL')
+                    ? 'border-rose-500 bg-slate-900/50 text-slate-200 font-bold'
                     : 'border-slate-600 bg-slate-900/40 text-slate-300'
                 }`}
               >
-                <span className="text-[11px] text-slate-500 font-extrabold mr-2.5">[{item.time}]</span>
+                <span className="text-[10px] text-slate-500 font-extrabold mr-2">[{item.time}]</span>
                 <span className="font-mono">{item.text}</span>
               </div>
-            ))
-          )}
+            ))}
+          </div>
         </div>
+
       </div>
     </div>
   );
