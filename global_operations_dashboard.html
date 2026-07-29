@@ -1,0 +1,524 @@
+<!DOCTYPE html><html class="light" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>ResQ-Plus HQ | Emergency Command Center</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .pulse-emerald {
+            animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: .5; transform: scale(1.1); }
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #434652;
+            border-radius: 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline": "#747783",
+                        "on-primary-container": "#88abff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed-variant": "#643f06",
+                        "on-error": "#ffffff",
+                        "primary-fixed-dim": "#b0c6ff",
+                        "tertiary-fixed-dim": "#f4bc7a",
+                        "surface-tint": "#315baf",
+                        "surface-container-low": "#f2f3ff",
+                        "on-surface-variant": "#434652",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed": "#001945",
+                        "tertiary-fixed": "#ffddb8",
+                        "secondary": "#006c49",
+                        "inverse-surface": "#283044",
+                        "background": "#faf8ff",
+                        "primary": "#002764",
+                        "surface-dim": "#d2d9f4",
+                        "secondary-fixed": "#9df4c8",
+                        "on-secondary": "#ffffff",
+                        "inverse-primary": "#b0c6ff",
+                        "on-secondary-fixed-variant": "#005236",
+                        "surface-main": "#faf8ff",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#5d3901",
+                        "on-surface": "#131b2e",
+                        "status-emergency": "#ba1a1a",
+                        "surface-container": "#eaedff",
+                        "secondary-fixed-dim": "#81d8ad",
+                        "error": "#ba1a1a",
+                        "primary-fixed": "#d9e2ff",
+                        "on-tertiary-container": "#d8a363",
+                        "tertiary": "#3f2500",
+                        "on-primary-fixed-variant": "#0e4296",
+                        "telemetry-bg": "#0f172a",
+                        "outline-variant": "#c3c6d3",
+                        "error-container": "#ffdad6",
+                        "surface-bright": "#faf8ff",
+                        "surface-container-highest": "#dae2fc",
+                        "primary-container": "#003c90",
+                        "on-secondary-fixed": "#002113",
+                        "on-background": "#131b2e",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-container": "#0c714d",
+                        "surface-variant": "#dae2fc",
+                        "inverse-on-surface": "#eef0ff",
+                        "secondary-container": "#9af2c5",
+                        "on-tertiary-fixed": "#2a1700",
+                        "surface": "#faf8ff",
+                        "surface-container-high": "#e1e7ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "md": "24px",
+                        "margin-desktop": "32px",
+                        "lg": "40px",
+                        "gutter": "24px",
+                        "base": "4px",
+                        "sm": "16px",
+                        "xs": "8px",
+                        "margin-mobile": "16px",
+                        "xl": "64px"
+                    },
+                    "fontFamily": {
+                        "display-lg-mobile": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "telemetry-mono": ["JetBrains Mono"],
+                        "label-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "display-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "display-lg-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "telemetry-mono": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-hidden">
+<!-- SideNavBar Anchor -->
+<aside class="w-64 h-screen fixed left-0 top-0 bg-surface-container-lowest border-r border-outline-variant shadow-sm flex flex-col p-sm z-50">
+<div class="flex items-center gap-xs mb-lg px-xs">
+<img alt="ResQ-Plus Agency Logo" class="w-10 h-10 object-contain" src="https://lh3.googleusercontent.com/aida/AP1WRLuNUP0gN1xnxHmlZ1LJaLoWSpkrBqfl9iaA-LFCSTmKUjmj_Ah0xR85-BmnbDW52VyMalAeshuU8kO946RVr55UUWNdcwZ-uLiHXg4hf46adfHPGfvWqOXX8C7ukXkU2MzVoN0K_h6_LWgLUOeVH--ZKQfpe6rpwkoLCcZtydUyklWz7dE3HwPRTjjSbN_N_t5Evb6zseMbrVLGfIPWEZf3lI33FtM8UsWa6dTeW7WbzXYyeEE2B2XpGQcp">
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">ResQ-Plus</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Command Center</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-sm px-sm py-xs bg-surface-container-high text-on-surface font-bold rounded-xl transition-transform duration-200 scale-[0.99]" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-sm px-sm py-xs text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-xl" href="#">
+<span class="material-symbols-outlined" data-icon="emergency">emergency</span>
+<span class="font-body-md text-body-md">Patient Flow</span>
+</a>
+<a class="flex items-center gap-sm px-sm py-xs text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-xl" href="#">
+<span class="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
+<span class="font-body-md text-body-md">Fleet Status</span>
+</a>
+<a class="flex items-center gap-sm px-sm py-xs text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-xl" href="#">
+<span class="material-symbols-outlined" data-icon="terminal">terminal</span>
+<span class="font-body-md text-body-md">Comms Log</span>
+</a>
+<a class="flex items-center gap-sm px-sm py-xs text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-xl" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-body-md text-body-md">Analytics</span>
+</a>
+<a class="flex items-center gap-sm px-sm py-xs text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-xl" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+</nav>
+<button class="mb-lg w-full py-sm bg-primary text-on-primary rounded-xl font-label-md text-label-md shadow-md active:scale-95 transition-transform">
+        New Dispatch
+    </button>
+<div class="space-y-1 pt-sm border-t border-outline-variant">
+<a class="flex items-center gap-sm px-sm py-xs text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-xl" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+<a class="flex items-center gap-sm px-sm py-xs text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-xl" href="#">
+<span class="material-symbols-outlined" data-icon="pulse">switch_account</span>
+<span class="font-label-md text-label-md">System Status</span>
+</a>
+</div>
+</aside>
+<!-- TopNavBar Anchor -->
+<header class="h-16 fixed top-0 right-0 w-[calc(100%-16rem)] bg-surface border-b border-outline-variant z-40 flex justify-between items-center px-margin-desktop">
+<div class="flex items-center gap-md flex-1">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline" data-icon="search">search</span>
+<input class="w-full pl-xl pr-sm py-xs bg-surface-container-low border-none focus:ring-2 focus:ring-primary rounded-xl text-body-sm font-body-sm" placeholder="Search incidents, fleets, or staff..." type="text">
+</div>
+</div>
+<div class="flex items-center gap-md">
+<div class="flex items-center gap-sm">
+<button class="p-xs text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors active:scale-95">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-xs text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors active:scale-95">
+<span class="material-symbols-outlined" data-icon="settings_suggest">settings_suggest</span>
+</button>
+<button class="p-xs text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors active:scale-95">
+<span class="material-symbols-outlined" data-icon="apps">apps</span>
+</button>
+</div>
+<div class="h-8 w-[1px] bg-outline-variant mx-xs"></div>
+<div class="flex items-center gap-sm cursor-pointer group">
+<div class="text-right">
+<p class="font-label-md text-label-md text-on-surface group-hover:text-primary transition-colors">Dr. Sarah Chen</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Chief Medical Officer</p>
+</div>
+<img class="w-10 h-10 rounded-full border-2 border-primary-container object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwrv4IcFTxGzoNFBB5dMq_e7Y_zF5qYTW6Wqeewl5Q7dTs2NrXdJVel1FTpwU6Rhdr55UQDsLyxlqVjrgKEiC33ho2GJPbke5S7fk6D_Wgy2xLfM0ViMmmRpV5IhpcF3LoVejYfj2SYPt70URiG903Cfp1CI0P466mQUnK5Xv5XVfbYYH-fqkJZg-zngqqGSgyoYHpjua0OOyZ8gUD2bynlm32_XKpPvW_oXQZTKHwCFqRiK4Uo0t2Cg">
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 mt-16 p-md h-[calc(100vh-4rem)] overflow-hidden flex flex-col gap-gutter">
+<!-- KPI Row -->
+<div class="grid grid-cols-4 gap-gutter">
+<div class="bg-surface-container-lowest p-sm rounded-xl border border-outline-variant shadow-sm flex items-center gap-sm">
+<div class="w-12 h-12 rounded-xl bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[28px]" data-icon="health_and_safety">health_and_safety</span>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Active Response</p>
+<div class="flex items-baseline gap-xs">
+<span class="font-headline-sm text-headline-sm text-on-surface">12</span>
+<span class="text-secondary font-label-sm text-label-sm flex items-center"><span class="material-symbols-outlined text-[14px]" data-icon="trending_up">trending_up</span> 4%</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-sm rounded-xl border border-outline-variant shadow-sm flex items-center gap-sm">
+<div class="w-12 h-12 rounded-xl bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed-variant">
+<span class="material-symbols-outlined text-[28px]" data-icon="timer">timer</span>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Avg. Clear Time</p>
+<div class="flex items-baseline gap-xs">
+<span class="font-headline-sm text-headline-sm text-on-surface">4m 22s</span>
+<span class="text-secondary font-label-sm text-label-sm flex items-center"><span class="material-symbols-outlined text-[14px]" data-icon="trending_down">trending_down</span> 12s</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-sm rounded-xl border border-outline-variant shadow-sm flex items-center gap-sm">
+<div class="w-12 h-12 rounded-xl bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed-variant">
+<span class="material-symbols-outlined text-[28px]" data-icon="hub">hub</span>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Node Integrity</p>
+<div class="flex items-baseline gap-xs">
+<span class="font-headline-sm text-headline-sm text-on-surface">99.98%</span>
+<span class="text-outline font-label-sm text-label-sm">Stable</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-sm rounded-xl border border-outline-variant shadow-sm flex items-center gap-sm">
+<div class="w-12 h-12 rounded-xl bg-error-container flex items-center justify-center text-status-emergency">
+<span class="material-symbols-outlined text-[28px]" data-icon="emergency_share">emergency_share</span>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Critical Redirection</p>
+<div class="flex items-baseline gap-xs">
+<span class="font-headline-sm text-headline-sm text-on-surface">3</span>
+<span class="text-status-emergency font-label-sm text-label-sm">Active</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Dashboard Body: Topology & Analytics + Comms + Control -->
+<div class="flex-1 grid grid-cols-12 gap-gutter overflow-hidden">
+<!-- Left Section: Topology & Analytics -->
+<div class="col-span-8 flex flex-col gap-gutter overflow-y-auto custom-scrollbar pr-1">
+<!-- System Topology & AI Agents -->
+<section class="bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm">
+<div class="flex justify-between items-center mb-md">
+<h3 class="font-headline-sm text-headline-sm text-primary flex items-center gap-xs">
+<span class="material-symbols-outlined" data-icon="lan">lan</span>
+                        System Topology &amp; AI Agents
+                    </h3>
+<div class="flex items-center gap-xs">
+<span class="flex h-2 w-2 rounded-full bg-secondary"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">All Nodes Optimal</span>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-sm">
+<!-- Silk Board Node -->
+<div class="p-sm bg-surface-container-low rounded-xl border border-outline-variant/30">
+<div class="flex justify-between items-start mb-sm">
+<div>
+<h4 class="font-label-md text-label-md text-on-surface">Silk Board Node</h4>
+<p class="text-[10px] font-telemetry-mono text-on-surface-variant uppercase">ID: BLR-SB-01</p>
+</div>
+<span class="material-symbols-outlined text-secondary text-[20px] pulse-emerald" data-icon="check_circle">check_circle</span>
+</div>
+<div class="space-y-xs">
+<div class="flex justify-between text-[11px]">
+<span class="text-on-surface-variant">Load Metric</span>
+<span class="font-bold text-on-surface">42%</span>
+</div>
+<div class="w-full bg-outline-variant/20 h-1 rounded-full">
+<div class="bg-primary h-full w-[42%] rounded-full"></div>
+</div>
+<div class="flex items-center gap-xs mt-xs">
+<span class="px-1.5 py-0.5 bg-secondary-container/50 text-on-secondary-container text-[10px] font-bold rounded uppercase">Clearance Active</span>
+</div>
+</div>
+</div>
+<!-- HSR Layout Relay -->
+<div class="p-sm bg-surface-container-low rounded-xl border border-outline-variant/30">
+<div class="flex justify-between items-start mb-sm">
+<div>
+<h4 class="font-label-md text-label-md text-on-surface">HSR Layout Relay</h4>
+<p class="text-[10px] font-telemetry-mono text-on-surface-variant uppercase">ID: BLR-HSR-04</p>
+</div>
+<span class="material-symbols-outlined text-secondary text-[20px]" data-icon="check_circle">check_circle</span>
+</div>
+<div class="space-y-xs">
+<div class="flex justify-between text-[11px]">
+<span class="text-on-surface-variant">Load Metric</span>
+<span class="font-bold text-on-surface">68%</span>
+</div>
+<div class="w-full bg-outline-variant/20 h-1 rounded-full">
+<div class="bg-primary h-full w-[68%] rounded-full"></div>
+</div>
+<div class="flex items-center gap-xs mt-xs text-on-surface-variant text-[10px]">
+<span class="material-symbols-outlined text-[12px]" data-icon="router">router</span>
+                                14 Active Up-links
+                            </div>
+</div>
+</div>
+<!-- JP Nagar Critical -->
+<div class="p-sm bg-surface-container-low rounded-xl border border-status-emergency/30">
+<div class="flex justify-between items-start mb-sm">
+<div>
+<h4 class="font-label-md text-label-md text-on-surface">JP Nagar Critical</h4>
+<p class="text-[10px] font-telemetry-mono text-on-surface-variant uppercase">ID: BLR-JPN-02</p>
+</div>
+<span class="material-symbols-outlined text-status-emergency text-[20px] animate-pulse" data-icon="warning">warning</span>
+</div>
+<div class="space-y-xs">
+<div class="flex justify-between text-[11px]">
+<span class="text-on-surface-variant">Load Metric</span>
+<span class="font-bold text-status-emergency">91%</span>
+</div>
+<div class="w-full bg-outline-variant/20 h-1 rounded-full">
+<div class="bg-status-emergency h-full w-[91%] rounded-full"></div>
+</div>
+<div class="flex items-center gap-xs mt-xs">
+<span class="px-1.5 py-0.5 bg-error-container text-status-emergency text-[10px] font-bold rounded uppercase">Priority Alpha</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Emergency Response Analytics -->
+<section class="bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm flex-1">
+<div class="flex justify-between items-center mb-md">
+<h3 class="font-headline-sm text-headline-sm text-primary flex items-center gap-xs">
+<span class="material-symbols-outlined" data-icon="query_stats">query_stats</span>
+                        Emergency Response Analytics
+                    </h3>
+<div class="flex gap-sm">
+<button class="text-label-sm font-label-sm px-sm py-1 bg-surface-container-low rounded-full border border-outline-variant/30 hover:bg-surface-container-high">24H</button>
+<button class="text-label-sm font-label-sm px-sm py-1 bg-primary text-white rounded-full border border-primary">LIVE</button>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-gutter h-64">
+<!-- Response Time Trends -->
+<div class="flex flex-col">
+<p class="font-label-md text-label-md text-on-surface-variant mb-xs">Response Time Trends (sec)</p>
+<div class="flex-1 relative flex items-end justify-between border-b border-l border-outline-variant/30 p-2">
+<!-- Simple Bar Chart Representation -->
+<div class="w-[12%] bg-primary-container h-[40%] rounded-t-sm" title="08:00"></div>
+<div class="w-[12%] bg-primary-container h-[55%] rounded-t-sm" title="09:00"></div>
+<div class="w-[12%] bg-primary-container h-[35%] rounded-t-sm" title="10:00"></div>
+<div class="w-[12%] bg-primary h-[85%] rounded-t-sm" title="Current"></div>
+<div class="w-[12%] bg-primary-container h-[45%] rounded-t-sm" title="Proj +1"></div>
+<div class="w-[12%] bg-primary-container h-[40%] rounded-t-sm" title="Proj +2"></div>
+<div class="absolute -left-6 top-0 h-full flex flex-col justify-between text-[10px] font-telemetry-mono text-on-surface-variant">
+<span class="">600</span>
+<span class="">300</span>
+<span class="">0</span>
+</div>
+</div>
+<div class="flex justify-between px-2 mt-xs text-[10px] font-telemetry-mono text-on-surface-variant">
+<span class="">08:00</span><span class="">09:00</span><span class="">10:00</span><span class="">NOW</span><span class="">11:00</span><span class="">12:00</span>
+</div>
+</div>
+<!-- Traffic Clearance Efficiency -->
+<div class="flex flex-col">
+<p class="font-label-md text-label-md text-on-surface-variant mb-xs">Traffic Clearance Efficiency (%)</p>
+<div class="flex-1 relative flex items-center justify-center p-2">
+<!-- SVG Multi-Series Trend Line -->
+<svg class="w-full h-full" preserveAspectRatio="none" viewBox="0 0 200 100">
+<!-- Grid Lines -->
+<line stroke="#e1e7ff" stroke-width="0.5" x1="0" x2="200" y1="25" y2="25"></line>
+<line stroke="#e1e7ff" stroke-width="0.5" x1="0" x2="200" y1="50" y2="50"></line>
+<line stroke="#e1e7ff" stroke-width="0.5" x1="0" x2="200" y1="75" y2="75"></line>
+<!-- Series 1: AI Optimized -->
+<path d="M0,80 Q50,70 80,40 T150,20 T200,10" fill="none" stroke="#006c49" stroke-width="2"></path>
+<!-- Series 2: Baseline -->
+<path d="M0,85 Q50,88 100,75 T200,65" fill="none" stroke="#747783" stroke-dasharray="2,2" stroke-width="1.5"></path>
+</svg>
+<div class="absolute top-0 right-0 flex flex-col gap-1 text-[9px] font-bold">
+<div class="flex items-center gap-1"><span class="w-2 h-0.5 bg-secondary"></span> AI OPTIMIZED</div>
+<div class="flex items-center gap-1"><span class="w-2 h-0.5 bg-outline border-dashed"></span> HISTORIC</div>
+</div>
+</div>
+<div class="mt-xs p-xs bg-surface-container-low rounded-lg flex justify-around text-[11px]">
+<div class="text-center">
+<p class="text-on-surface-variant text-[9px] uppercase">Efficiency Gain</p>
+<p class="font-bold text-secondary">+28.4%</p>
+</div>
+<div class="border-l border-outline-variant/30 h-full"></div>
+<div class="text-center">
+<p class="text-on-surface-variant text-[9px] uppercase">Peak Flow</p>
+<p class="font-bold text-primary">88.2 veh/s</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column: Comms + Control -->
+<div class="col-span-4 flex flex-col gap-gutter h-full">
+<!-- Control Center Widget -->
+<div class="bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm">
+<h3 class="font-headline-sm text-headline-sm text-primary mb-md flex items-center gap-xs">
+<span class="material-symbols-outlined" data-icon="settings_input_component">settings_input_component</span>
+                    Control Hub
+                </h3>
+<div class="space-y-md">
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-xs">Priority Destination</label>
+<select class="w-full bg-surface-container-low border-none focus:ring-2 focus:ring-primary rounded-xl py-xs px-sm font-body-sm appearance-none cursor-pointer">
+<option>St. John's Medical Center</option>
+<option>Apollo Hospitals - Jayanagar</option>
+<option>Manipal Hospital - Old Airport Rd</option>
+<option>Fortis Hospital - Bannerghatta</option>
+</select>
+</div>
+<div class="flex gap-sm">
+<button class="flex-1 py-sm bg-status-emergency text-on-error rounded-xl font-label-md hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-xs">
+<span class="material-symbols-outlined" data-icon="bolt">bolt</span>
+                            Emergency Clearance
+                        </button>
+</div>
+<div class="p-sm bg-secondary-container/30 rounded-xl border border-secondary/20">
+<div class="flex justify-between items-center mb-xs">
+<span class="font-label-sm text-label-sm text-on-secondary-container">Signal Pre-emption</span>
+<span class="px-2 py-0.5 bg-secondary text-white text-[10px] rounded-full uppercase font-bold">Active</span>
+</div>
+<div class="w-full bg-outline-variant/30 h-1.5 rounded-full overflow-hidden">
+<div class="bg-secondary h-full w-3/4 rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Signal Comms Terminal -->
+
+<div class="flex-1 bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm flex flex-col overflow-hidden">
+    <div class="p-sm border-b border-outline-variant flex justify-between items-center bg-surface-container-low">
+        <div class="flex items-center gap-xs">
+            <span class="material-symbols-outlined text-primary" data-icon="sparkles">sparkles</span>
+            <h3 class="font-label-md text-label-md text-on-surface">AI Command Assistant</h3>
+        </div>
+        <div class="flex items-center gap-1">
+            <span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+            <span class="text-[10px] font-bold text-secondary uppercase">Online</span>
+        </div>
+    </div>
+    <div class="flex-1 p-sm space-y-sm overflow-y-auto custom-scrollbar font-body-sm text-body-sm">
+        <div class="flex flex-col items-start gap-1">
+            <div class="bg-surface-container-high p-xs rounded-lg rounded-tl-none max-w-[85%] text-on-surface-variant">
+                Monitoring all AI nodes. Ready for coordination.
+            </div>
+            <span class="text-[9px] text-outline ml-1">System • Just now</span>
+        </div>
+        <div class="flex flex-col items-end gap-1">
+            <div class="bg-primary text-on-primary p-xs rounded-lg rounded-tr-none max-w-[85%]">
+                Status of JP Nagar corridor?
+            </div>
+            <span class="text-[9px] text-outline mr-1">You • 1m ago</span>
+        </div>
+        <div class="flex flex-col items-start gap-1">
+            <div class="bg-surface-container-high p-xs rounded-lg rounded-tl-none max-w-[85%] text-on-surface-variant">
+                JP Nagar Node 02 reporting 91% load. Signal pre-emption standby.
+            </div>
+            <span class="text-[9px] text-outline ml-1">System • 45s ago</span>
+        </div>
+    </div>
+    <div class="p-sm border-t border-outline-variant bg-surface-container-lowest">
+        <div class="flex gap-xs">
+            <input type="text" placeholder="Ask AI Assistant..." class="flex-1 bg-surface-container-low border-none focus:ring-1 focus:ring-primary rounded-lg py-1 px-sm text-body-sm font-body-sm">
+            <button class="p-1 bg-primary text-on-primary rounded-lg hover:opacity-90 transition-opacity">
+                <span class="material-symbols-outlined" data-icon="send">send</span>
+            </button>
+        </div>
+    </div>
+</div></div>
+</div>
+</main>
+<!-- Micro-interaction JS -->
+<script>
+    // Fake real-time log updates
+    const log = document.getElementById('commsLog');
+    const phrases = [
+        "[08:45:01] DATA_FLOW: Ingesting sensor array 09B",
+        "[08:45:10] SIGNAL_LOCK: JP_Nagar signal set to Priority_Alpha",
+        "[08:45:15] FLEET_UPDATE: AMB_09 status - ON_SCENE",
+        "[08:45:22] AI_AGENT: Recalibrating traffic weighted averages",
+        "[08:45:30] SYSTEM: Snapshot taken. Integrity 99.98%"
+    ];
+    let i = 0;
+    setInterval(() => {
+        const div = document.createElement('div');
+        div.innerHTML = phrases[i % phrases.length];
+        div.className = "opacity-0 transition-opacity duration-500";
+        log.appendChild(div);
+        setTimeout(() => div.classList.remove('opacity-0'), 50);
+        log.scrollTop = log.scrollHeight;
+        i++;
+    }, 4000);
+</script>
+
+
+</body></html>
