@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef, Component } from 'react';
 import { Map as MapGL, Source, Layer, Marker, NavigationControl } from 'react-map-gl/mapbox';
 import * as turf from '@turf/turf';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -9,6 +9,41 @@ const T2 = 'ZWNmYTc3MDYzMjA0MjBmY2E5NGU3YmQ0MDYifQ';
 const T3 = '.5s9Z-KPF9yvgT05nO12HOQ';
 const MAPBOX_ACCESS_TOKEN = `${T1}${T2}${T3}`;
 const MAPBOX_DARK_STYLE = 'mapbox://styles/mapbox/dark-v11';
+
+// Error Boundary to prevent white screen crashes
+class FleetErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, info) {
+    console.error('FleetStatus crash caught:', error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-screen bg-slate-950 text-white p-8">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h2 className="text-xl font-black mb-2">Fleet Status Render Error</h2>
+          <p className="text-sm text-slate-400 mb-4 text-center max-w-md">
+            A rendering error occurred in the Fleet Status module. This is typically caused by invalid map data or coordinate calculations.
+          </p>
+          <pre className="text-xs text-red-400 bg-slate-900 p-3 rounded-xl max-w-lg overflow-auto mb-4">{this.state.error?.message}</pre>
+          <button
+            onClick={() => this.setState({ hasError: false, error: null })}
+            className="px-6 py-3 bg-rose-600 hover:bg-rose-500 rounded-xl font-black text-sm uppercase tracking-wider"
+          >
+            Retry Fleet Status
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 // Preset starting junctions for Bangalore and Belagavi regions
 const REGION_PRESETS = {
@@ -60,7 +95,7 @@ const REGION_PRESETS = {
   }
 };
 
-export default function FleetStatus() {
+function FleetStatus() {
   /* =====================================================================
    * REGION & HIGH-ACCURACY GPS TRACKING
    * ===================================================================== */
@@ -277,7 +312,16 @@ export default function FleetStatus() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeRegionId, regionPreset]);
 
-  // Unified animation tick loop updating positions and preemption status of all concurrent active dispatches
+  // Refs to collect side-effects from the animation tick without nesting state updates
+  const pendingSignalUpdatesRef = useRef([]);
+  const pendingLogsRef = useRef([]);
+  const pendingToastsRef = useRef([]);
+  const pendingPopupsRef = useRef([]);
+  const pendingArrivalsRef = useRef([]);
+  const pendingPreemptCountRef = useRef(0);
+  const pendingLeadTimesRef = useRef([]);
+
+  // Unified animation tick loop — SAFE: no nested setState calls
   useEffect(() => {
     if (activeDispatches.length === 0) {
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
@@ -286,97 +330,78 @@ export default function FleetStatus() {
 
     let lastTime = performance.now();
     const tick = (now) => {
-      const deltaMs = now - lastTime;
+      const deltaMs = Math.min(now - lastTime, 100); // Cap delta to prevent huge jumps
       lastTime = now;
 
+      // Reset pending side-effects for this frame
+      pendingSignalUpdatesRef.current = [];
+      pendingLogsRef.current = [];
+      pendingToastsRef.current = [];
+      pendingPopupsRef.current = [];
+      pendingArrivalsRef.current = [];
+      pendingPreemptCountRef.current = 0;
+      pendingLeadTimesRef.current = [];
+
       setActiveDispatches(prevDispatches => {
-        let allCompleted = true;
-        const updated = prevDispatches.map(disp => {
-          if (disp.status === 'arrived') return disp;
-          allCompleted = false;
+        try {
+          const updated = prevDispatches.map(disp => {
+            if (disp.status === 'arrived') return disp;
+            if (!disp.routeCoords || disp.routeCoords.length < 2) return { ...disp, status: 'arrived' };
 
-          const speedKmsPerMs = disp.speedKmh / 3600000;
-          // Scale factor to make dispatch visual speed interactive (e.g. 50x acceleration)
-          const distDeltaKm = deltaMs * speedKmsPerMs * 45;
-          const currentDistKm = (disp.progress * disp.distanceKm) + distDeltaKm;
-          const newProgress = Math.min(currentDistKm / disp.distanceKm, 1);
-
-          if (newProgress >= 1) {
-            triggerToast(`✅ ${disp.name} arrived safely at ${disp.hospital.name}!`, 'success');
-            addLog(`[LOG] ✅ [ARRIVAL_HUD]: ${disp.name} docked in critical trauma bay at ${disp.hospital.name}.`);
-            // Set all active pre-emptions associated with this dispatch back to NORMAL
-            setSignalNodes(sigs => sigs.map(s => ({ ...s, state: 'NORMAL_CYCLE' })));
-            setActivePopups({});
-            return { ...disp, progress: 1, status: 'arrived' };
-          }
-
-          const line = turf.lineString(disp.routeCoords);
-          const currentPt = turf.along(line, newProgress * disp.distanceKm, { units: 'kilometers' });
-          const coord = currentPt.geometry.coordinates;
-
-          // Bearing angle rotation math
-          const nextDistKm = Math.min((newProgress * disp.distanceKm) + 0.005, disp.distanceKm);
-          const nextPt = turf.along(line, nextDistKm, { units: 'kilometers' });
-          let bearingDeg = disp.bearing;
-          if (coord[0] !== nextPt.geometry.coordinates[0] || coord[1] !== nextPt.geometry.coordinates[1]) {
-            bearingDeg = turf.bearing(turf.point(coord), turf.point(nextPt.geometry.coordinates));
-          }
-
-          // Follow first active en-route ambulance if follow is locked
-          if (cameraFollowVehicle && mapRef.current && isMapLoadedRef.current) {
             try {
-              const rawMap = typeof mapRef.current.getMap === 'function' ? mapRef.current.getMap() : mapRef.current;
-              if (rawMap && typeof rawMap.jumpTo === 'function') {
-                rawMap.jumpTo({ center: coord, zoom: 15.3 });
+              const speedKmsPerMs = disp.speedKmh / 3600000;
+              const distDeltaKm = deltaMs * speedKmsPerMs * 45;
+              const currentDistKm = (disp.progress * disp.distanceKm) + distDeltaKm;
+              const newProgress = Math.min(currentDistKm / disp.distanceKm, 1);
+
+              if (newProgress >= 1) {
+                // Queue arrival side-effects (will be applied in separate effect)
+                pendingArrivalsRef.current.push(disp);
+                return { ...disp, progress: 1, status: 'arrived', currentPt: disp.routeCoords[disp.routeCoords.length - 1] };
               }
-            } catch (e) {}
-          }
 
-          // --- V2X PRE-EMPTION OVERRIDE SENSING ---
-          setSignalNodes(signals => signals.map(sig => {
-            const distToSig = turf.distance(turf.point(coord), turf.point(sig.coords), { units: 'kilometers' });
-            
-            // If vehicle enters sector (within 240m of traffic light)
-            if (distToSig <= 0.24 && sig.state !== 'GREEN_WAVE_ACTIVE') {
-              const leadTimeSec = Math.round((distToSig / (disp.speedKmh / 3600)));
-              
-              setTotalPreemptionsCount(c => c + 1);
-              setAvgLeadTime(prev => Number(((prev * 9 + leadTimeSec) / 10).toFixed(1)));
+              const line = turf.lineString(disp.routeCoords);
+              const currentPt = turf.along(line, newProgress * disp.distanceKm, { units: 'kilometers' });
+              const coord = currentPt.geometry.coordinates;
 
-              const senderMsg = `🚀 Ambulance reached my sector! Signal GREEN! Alerting next agent: 'Clear your traffic and prepare Green Wave!'`;
-              setActivePopups(pop => ({
-                ...pop,
-                [sig.id]: { text: senderMsg, type: 'sender', timestamp: Date.now() }
-              }));
+              if (!coord || coord.length < 2 || isNaN(coord[0]) || isNaN(coord[1])) {
+                return disp; // Skip this frame if coordinates are invalid
+              }
 
-              addLog(`[LOG] 🤖 [GEMINI_AGENT_${sig.agentId}]: Preemption triggered by ${disp.name} (Dist: ${(distToSig*1000).toFixed(0)}m). Corridors open green.`);
-              triggerToast(`🟢 Corridor override green at ${sig.name}!`, 'success');
+              // Bearing
+              const nextDistKm = Math.min((newProgress * disp.distanceKm) + 0.005, disp.distanceKm);
+              const nextPt = turf.along(line, nextDistKm, { units: 'kilometers' });
+              let bearingDeg = disp.bearing || 0;
+              if (coord[0] !== nextPt.geometry.coordinates[0] || coord[1] !== nextPt.geometry.coordinates[1]) {
+                bearingDeg = turf.bearing(turf.point(coord), turf.point(nextPt.geometry.coordinates));
+              }
 
-              return { ...sig, state: 'GREEN_WAVE_ACTIVE' };
+              // Camera follow (safe, no state update)
+              if (cameraFollowVehicle && mapRef.current && isMapLoadedRef.current) {
+                try {
+                  const rawMap = typeof mapRef.current.getMap === 'function' ? mapRef.current.getMap() : mapRef.current;
+                  if (rawMap && typeof rawMap.jumpTo === 'function') {
+                    rawMap.jumpTo({ center: coord, zoom: 15.3 });
+                  }
+                } catch (e) {}
+              }
+
+              return {
+                ...disp,
+                progress: newProgress,
+                currentPt: coord,
+                bearing: bearingDeg
+              };
+            } catch (turfErr) {
+              console.warn('Turf calculation error for dispatch:', disp.id, turfErr.message);
+              return disp;
             }
-
-            // Normal cycles resume once ambulance leaves the intersection (400m past)
-            if (distToSig > 0.38 && sig.state === 'GREEN_WAVE_ACTIVE') {
-              setActivePopups(pop => {
-                const next = { ...pop };
-                delete next[sig.id];
-                return next;
-              });
-              return { ...sig, state: 'NORMAL_CYCLE' };
-            }
-
-            return sig;
-          }));
-
-          return {
-            ...disp,
-            progress: newProgress,
-            currentPt: coord,
-            bearing: bearingDeg
-          };
-        });
-
-        return updated;
+          });
+          return updated;
+        } catch (outerErr) {
+          console.error('Animation tick fatal error:', outerErr);
+          return prevDispatches;
+        }
       });
 
       animationFrameRef.current = requestAnimationFrame(tick);
@@ -386,7 +411,83 @@ export default function FleetStatus() {
     return () => {
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     };
-  }, [activeDispatches.length, cameraFollowVehicle, triggerToast, addLog]);
+  }, [activeDispatches.length, cameraFollowVehicle]);
+
+  // Separate effect for V2X signal preemption sensing — runs OUTSIDE the animation updater
+  useEffect(() => {
+    if (activeDispatches.length === 0) return;
+
+    const enRouteDispatches = activeDispatches.filter(d => d.status === 'en-route' && d.currentPt);
+    if (enRouteDispatches.length === 0) return;
+
+    // Check arrivals
+    const justArrived = activeDispatches.filter(d => d.status === 'arrived' && d._notifiedArrival !== true);
+    justArrived.forEach(disp => {
+      triggerToast(`✅ ${disp.name} arrived safely at ${disp.hospital.name}!`, 'success');
+      addLog(`[LOG] ✅ [ARRIVAL_HUD]: ${disp.name} docked in critical trauma bay at ${disp.hospital.name}.`);
+    });
+    if (justArrived.length > 0) {
+      // Mark arrivals as notified so we don't re-fire
+      setActiveDispatches(prev => prev.map(d =>
+        d.status === 'arrived' && !d._notifiedArrival ? { ...d, _notifiedArrival: true } : d
+      ));
+      setSignalNodes(sigs => sigs.map(s => ({ ...s, state: 'NORMAL_CYCLE' })));
+      setActivePopups({});
+    }
+
+    // V2X pre-emption check against signal nodes
+    setSignalNodes(prevSignals => {
+      try {
+        return prevSignals.map(sig => {
+          let closestDist = Infinity;
+          let closestDisp = null;
+
+          enRouteDispatches.forEach(disp => {
+            try {
+              const dist = turf.distance(turf.point(disp.currentPt), turf.point(sig.coords), { units: 'kilometers' });
+              if (dist < closestDist) {
+                closestDist = dist;
+                closestDisp = disp;
+              }
+            } catch (e) {}
+          });
+
+          // If vehicle enters sector (within 240m of traffic light)
+          if (closestDist <= 0.24 && sig.state !== 'GREEN_WAVE_ACTIVE' && closestDisp) {
+            const leadTimeSec = Math.round((closestDist / (closestDisp.speedKmh / 3600)));
+            setTotalPreemptionsCount(c => c + 1);
+            setAvgLeadTime(prev => Number(((prev * 9 + leadTimeSec) / 10).toFixed(1)));
+
+            const senderMsg = `🚀 Ambulance reached my sector! Signal GREEN! Alerting next agent: 'Clear your traffic and prepare Green Wave!'`;
+            setActivePopups(pop => ({
+              ...pop,
+              [sig.id]: { text: senderMsg, type: 'sender', timestamp: Date.now() }
+            }));
+
+            addLog(`[LOG] 🤖 [GEMINI_AGENT_${sig.agentId}]: Preemption triggered by ${closestDisp.name} (Dist: ${(closestDist*1000).toFixed(0)}m). Corridors open green.`);
+            triggerToast(`🟢 Corridor override green at ${sig.name}!`, 'success');
+
+            return { ...sig, state: 'GREEN_WAVE_ACTIVE' };
+          }
+
+          // Normal cycles resume once ambulance leaves (400m past)
+          if (closestDist > 0.38 && sig.state === 'GREEN_WAVE_ACTIVE') {
+            setActivePopups(pop => {
+              const next = { ...pop };
+              delete next[sig.id];
+              return next;
+            });
+            return { ...sig, state: 'NORMAL_CYCLE' };
+          }
+
+          return sig;
+        });
+      } catch (e) {
+        console.warn('Signal preemption error:', e);
+        return prevSignals;
+      }
+    });
+  }, [activeDispatches, signalNodes.length, triggerToast, addLog]);
 
   /* ---------------------------------------------------------------------
    * MANUAL DISPATCH FUNCTION
@@ -504,10 +605,15 @@ export default function FleetStatus() {
   }, []);
 
   const activeRoutesGeoJson = useMemo(() => {
-    const lines = activeDispatches
-      .filter(d => d.status === 'en-route' && d.routeCoords.length >= 2)
-      .map(d => turf.lineString(d.routeCoords));
-    return turf.featureCollection(lines);
+    try {
+      const lines = activeDispatches
+        .filter(d => d.status === 'en-route' && d.routeCoords && Array.isArray(d.routeCoords) && d.routeCoords.length >= 2)
+        .map(d => turf.lineString(d.routeCoords));
+      return turf.featureCollection(lines);
+    } catch (e) {
+      console.warn('GeoJSON route computation error:', e);
+      return turf.featureCollection([]);
+    }
   }, [activeDispatches]);
 
   return (
@@ -918,6 +1024,7 @@ export default function FleetStatus() {
               {/* Render concurrent moving ambulances */}
               {activeDispatches.map(disp => {
                 if (disp.status !== 'en-route') return null;
+                if (!disp.currentPt || !Array.isArray(disp.currentPt) || disp.currentPt.length < 2) return null;
                 return (
                   <Marker key={disp.id} longitude={disp.currentPt[0]} latitude={disp.currentPt[1]} anchor="center">
                     <div className="pointer-events-none flex flex-col items-center">
@@ -976,5 +1083,14 @@ export default function FleetStatus() {
 
       </div>
     </div>
+  );
+}
+
+// Wrap the component in ErrorBoundary for white-screen crash protection
+export default function FleetStatusWithBoundary() {
+  return (
+    <FleetErrorBoundary>
+      <FleetStatus />
+    </FleetErrorBoundary>
   );
 }
