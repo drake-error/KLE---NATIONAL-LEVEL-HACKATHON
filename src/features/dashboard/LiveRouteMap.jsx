@@ -164,58 +164,79 @@ export default function LiveRouteMap() {
   }, []);
 
   /* ---------------------------------------------------------------------
-   * PHASE 1 EXECUTION: FETCH BROWSER GPS ON MOUNT
+   * PHASE 1 EXECUTION: HIGH-PRECISION GPS & MAP PANNING
    * --------------------------------------------------------------------- */
+  // Reliable Map Centering Helper accessing underlying MapLibre GL instance
+  const centerMap = useCallback((targetCoords) => {
+    if (mapRef.current && targetCoords) {
+      const rawMap = typeof mapRef.current.getMap === 'function' ? mapRef.current.getMap() : mapRef.current;
+      if (rawMap && typeof rawMap.flyTo === 'function') {
+        rawMap.flyTo({ center: targetCoords, zoom: 14.8, pitch: 52, bearing: -10, duration: 1400 });
+      } else if (typeof mapRef.current.easeTo === 'function') {
+        mapRef.current.easeTo({ center: targetCoords, zoom: 14.8, duration: 1400 });
+      }
+    }
+  }, []);
+
   const fetchLiveGPS = useCallback(() => {
     setGpsStatus('locating');
-    triggerToast('Acquiring high-precision satellite GPS coordinates...', 'info');
+    triggerToast('Detecting precise live GPS location...', 'info');
+
+    const handleSuccessCoords = (coords, isLive = true, label = 'GPS Satellite') => {
+      setGpsLocation(coords);
+      setGpsStatus(isLive ? 'live' : 'fallback');
+      const generated = generateNearbyHospitals(coords);
+      setHospitals(generated);
+      triggerToast(`Location Locked: [${coords[0].toFixed(4)}° E, ${coords[1].toFixed(4)}° N]`, isLive ? 'success' : 'warning');
+      addLog(`[LOG] 🛰️ [${label}_LOCK]: Emergency Ambulance anchor centered at (${coords[0].toFixed(5)}, ${coords[1].toFixed(5)}).`);
+      
+      if (generated.length > 0) {
+        handleSelectHospital(generated[0], coords);
+      }
+      centerMap(coords);
+    };
 
     if (!navigator.geolocation) {
-      setGpsLocation(BANGALORE_FALLBACK_COORD);
-      setGpsStatus('fallback');
-      setHospitals(generateNearbyHospitals(BANGALORE_FALLBACK_COORD));
-      triggerToast('Geolocation unsupported. Loaded Bangalore Command fallback coordinate.', 'warning');
+      handleSuccessCoords(BANGALORE_FALLBACK_COORD, false, 'Command Fallback');
       return;
     }
 
+    // Windows Desktop friendly setting: enableHighAccuracy=false responds instantly without timing out over hardware GPS
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const liveCoords = [pos.coords.longitude, pos.coords.latitude];
-        setGpsLocation(liveCoords);
-        setGpsStatus('live');
-        const generated = generateNearbyHospitals(liveCoords);
-        setHospitals(generated);
-        triggerToast(`Live GPS Acquired: [${liveCoords[0].toFixed(4)}° E, ${liveCoords[1].toFixed(4)}° N]`, 'success');
-        addLog(`[LOG] 🛰️ [GPS_SATELLITE_LOCK]: Emergency Ambulance anchor initialized at live position (${liveCoords[0].toFixed(5)}, ${liveCoords[1].toFixed(5)}).`);
-        
-        // Auto-select first hospital and compute route
-        if (generated.length > 0) {
-          handleSelectHospital(generated[0], liveCoords);
-        }
-
-        if (mapRef.current) {
-          mapRef.current.easeTo({ center: liveCoords, zoom: 14.5, pitch: 52, bearing: -10, duration: 1500 });
-        }
+        handleSuccessCoords([pos.coords.longitude, pos.coords.latitude], true, 'Satellite GPS');
       },
-      (err) => {
-        console.warn('GPS permission denied or failed, using Bangalore fallback:', err.message);
-        setGpsLocation(BANGALORE_FALLBACK_COORD);
-        setGpsStatus('fallback');
-        const generated = generateNearbyHospitals(BANGALORE_FALLBACK_COORD);
-        setHospitals(generated);
-        triggerToast('GPS Permission Denied/Unavailable. Initialized Bangalore HSR/Silk Board sector.', 'warning');
-        addLog(`[LOG] 📍 [COMMAND_CENTER]: Loaded fallback Bangalore Emergency sector lock at (${BANGALORE_FALLBACK_COORD[0]}, ${BANGALORE_FALLBACK_COORD[1]}).`);
-        if (generated.length > 0) {
-          handleSelectHospital(generated[0], BANGALORE_FALLBACK_COORD);
+      async (err) => {
+        console.warn('Browser GPS permission denied or timed out, trying IP geolocation backup:', err.message);
+        try {
+          // Fast IP geolocation backup if browser permission is disabled
+          const res = await fetch('https://ipapi.co/json/');
+          if (res.ok) {
+            const data = await res.json();
+            if (data.latitude && data.longitude) {
+              handleSuccessCoords([data.longitude, data.latitude], true, 'Network IP GPS');
+              return;
+            }
+          }
+        } catch (ipErr) {
+          console.warn('IP geolocation unreachable, reverting to default coordinates.');
         }
+        handleSuccessCoords(BANGALORE_FALLBACK_COORD, false, 'Command Fallback');
       },
-      { enableHighAccuracy: true, timeout: 5000, maximumAge: 10000 }
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
     );
-  }, [triggerToast, addLog]);
+  }, [triggerToast, addLog, centerMap]);
 
   useEffect(() => {
     fetchLiveGPS();
   }, [fetchLiveGPS]);
+
+  // Ensure map flies directly to user location whenever coordinates change or map reloads
+  useEffect(() => {
+    if (!isSimulating && gpsLocation) {
+      centerMap(gpsLocation);
+    }
+  }, [gpsLocation, isSimulating, centerMap]);
 
   /* ---------------------------------------------------------------------
    * PHASE 2 EXECUTION: FETCH OSRM ROUTE & GENERATE SIGNAL NODES
@@ -451,12 +472,15 @@ export default function LiveRouteMap() {
             </h3>
           </div>
           <button 
-            onClick={fetchLiveGPS} 
+            onClick={() => {
+              fetchLiveGPS();
+              centerMap(gpsLocation);
+            }} 
             disabled={isSimulating}
-            className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold rounded-lg border border-slate-700 flex items-center gap-1 transition-all"
+            className="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white text-xs font-black rounded-xl border border-emerald-400/40 shadow-lg flex items-center gap-1.5 active:scale-95 transition-all disabled:opacity-50"
           >
-            <span className="material-symbols-outlined text-xs">my_location</span>
-            <span>{gpsStatus === 'live' ? 'GPS Lock Live' : 'Fallback GPS'}</span>
+            <span className="material-symbols-outlined text-sm animate-pulse">my_location</span>
+            <span>{gpsStatus === 'locating' ? 'Locating...' : 'Center on My Location'}</span>
           </button>
         </div>
 
@@ -575,6 +599,18 @@ export default function LiveRouteMap() {
                 {gpsLocation[0].toFixed(4)}° E, {gpsLocation[1].toFixed(4)}° N
               </p>
             </div>
+          </div>
+
+          {/* Top-right Floating Interactive Recenter Button */}
+          <div className="absolute top-3 right-3 z-10">
+            <button
+              onClick={() => centerMap(gpsLocation)}
+              disabled={isSimulating || !gpsLocation}
+              title="Jump directly to current GPS coordinates"
+              className="p-2.5 bg-slate-900/90 hover:bg-slate-800 text-emerald-400 hover:text-emerald-300 rounded-xl border border-slate-700 shadow-2xl flex items-center justify-center active:scale-90 transition-all backdrop-blur-md group"
+            >
+              <span className="material-symbols-outlined text-xl group-hover:animate-spin">my_location</span>
+            </button>
           </div>
         </div>
       </div>
