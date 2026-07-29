@@ -350,7 +350,7 @@ function FleetStatus() {
 
             try {
               const speedKmsPerMs = disp.speedKmh / 3600000;
-              const distDeltaKm = deltaMs * speedKmsPerMs * 6; // Drastically reduced for demo observability
+              const distDeltaKm = deltaMs * speedKmsPerMs * 2.5; // Slowed down for better observability by judges
               const currentDistKm = (disp.progress * disp.distanceKm) + distDeltaKm;
               const newProgress = Math.min(currentDistKm / disp.distanceKm, 1);
 
@@ -431,7 +431,7 @@ function FleetStatus() {
       setActiveDispatches(prev => prev.map(d =>
         d.status === 'arrived' && !d._notifiedArrival ? { ...d, _notifiedArrival: true } : d
       ));
-      setSignalNodes(sigs => sigs.map(s => ({ ...s, state: 'NORMAL_CYCLE', passed: false, minDistSeen: undefined })));
+      setSignalNodes(sigs => sigs.map(s => ({ ...s, state: 'NORMAL_CYCLE', passed: false, minDistSeen: undefined, crossedTime: undefined })));
       setActivePopups({});
     }
 
@@ -476,16 +476,27 @@ function FleetStatus() {
             const prevMin = sig.minDistSeen ?? closestDist;
             const newMin = Math.min(prevMin, closestDist);
 
-            // Ambulance has crossed the signal — distance is now increasing (moved 50m past closest point)
-            if (closestDist > newMin + 0.05) {
-              setActivePopups(pop => {
-                const next = { ...pop };
-                delete next[sig.id];
-                return next;
-              });
-              addLog(`[LOG] 🔴 [GEMINI_AGENT_${sig.agentId}]: Ambulance crossed signal. Reverting to normal traffic cycle.`);
-              triggerToast(`🔴 ${sig.name} reverted to normal cycle`, 'warning');
-              return { ...sig, state: 'NORMAL_CYCLE', minDistSeen: undefined, passed: true };
+            // Check if ambulance has crossed the signal (moved 50m past closest point)
+            const hasCrossed = closestDist > newMin + 0.05;
+
+            if (hasCrossed || sig.crossedTime) {
+              const crossedTime = sig.crossedTime || Date.now();
+              const elapsed = Date.now() - crossedTime;
+
+              if (elapsed < 3000) {
+                // Keep green light active and keep popup visible for 3 seconds
+                return { ...sig, minDistSeen: newMin, crossedTime };
+              } else {
+                // After 3 seconds, turn off green and clear popup
+                setActivePopups(pop => {
+                  const next = { ...pop };
+                  delete next[sig.id];
+                  return next;
+                });
+                addLog(`[LOG] 🔴 [GEMINI_AGENT_${sig.agentId}]: Ambulance crossed signal. Reverting to normal traffic cycle.`);
+                triggerToast(`🔴 ${sig.name} reverted to normal cycle`, 'warning');
+                return { ...sig, state: 'NORMAL_CYCLE', minDistSeen: undefined, crossedTime: undefined, passed: true };
+              }
             }
 
             return { ...sig, minDistSeen: newMin };
