@@ -431,7 +431,7 @@ function FleetStatus() {
       setActiveDispatches(prev => prev.map(d =>
         d.status === 'arrived' && !d._notifiedArrival ? { ...d, _notifiedArrival: true } : d
       ));
-      setSignalNodes(sigs => sigs.map(s => ({ ...s, state: 'NORMAL_CYCLE' })));
+      setSignalNodes(sigs => sigs.map(s => ({ ...s, state: 'NORMAL_CYCLE', passed: false, minDistSeen: undefined })));
       setActivePopups({});
     }
 
@@ -453,7 +453,8 @@ function FleetStatus() {
           });
 
           // If vehicle approaches sector (within 500m) — turn GREEN BEFORE ambulance reaches
-          if (closestDist <= 0.50 && sig.state !== 'GREEN_WAVE_ACTIVE' && closestDisp) {
+          // Skip if this signal was already passed (prevents green/red flicker)
+          if (closestDist <= 0.50 && sig.state !== 'GREEN_WAVE_ACTIVE' && !sig.passed && closestDisp) {
             const leadTimeSec = Math.round((closestDist / (closestDisp.speedKmh / 3600)));
             setTotalPreemptionsCount(c => c + 1);
             setAvgLeadTime(prev => Number(((prev * 9 + leadTimeSec) / 10).toFixed(1)));
@@ -467,7 +468,7 @@ function FleetStatus() {
             addLog(`[LOG] 🤖 [GEMINI_AGENT_${sig.agentId}]: Preemption triggered by ${closestDisp.name} (Dist: ${(closestDist*1000).toFixed(0)}m). Corridors open green.`);
             triggerToast(`🟢 Corridor override green at ${sig.name}!`, 'success');
 
-            return { ...sig, state: 'GREEN_WAVE_ACTIVE', minDistSeen: closestDist };
+            return { ...sig, state: 'GREEN_WAVE_ACTIVE', minDistSeen: closestDist, passed: false };
           }
 
           // Track closest approach while green (ambulance getting closer)
@@ -475,8 +476,8 @@ function FleetStatus() {
             const prevMin = sig.minDistSeen ?? closestDist;
             const newMin = Math.min(prevMin, closestDist);
 
-            // Ambulance has crossed the signal — distance is now increasing (moved 30m past closest point)
-            if (closestDist > newMin + 0.03) {
+            // Ambulance has crossed the signal — distance is now increasing (moved 50m past closest point)
+            if (closestDist > newMin + 0.05) {
               setActivePopups(pop => {
                 const next = { ...pop };
                 delete next[sig.id];
@@ -484,7 +485,7 @@ function FleetStatus() {
               });
               addLog(`[LOG] 🔴 [GEMINI_AGENT_${sig.agentId}]: Ambulance crossed signal. Reverting to normal traffic cycle.`);
               triggerToast(`🔴 ${sig.name} reverted to normal cycle`, 'warning');
-              return { ...sig, state: 'NORMAL_CYCLE', minDistSeen: undefined };
+              return { ...sig, state: 'NORMAL_CYCLE', minDistSeen: undefined, passed: true };
             }
 
             return { ...sig, minDistSeen: newMin };
