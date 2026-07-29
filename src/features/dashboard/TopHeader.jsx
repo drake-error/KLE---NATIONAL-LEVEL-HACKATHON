@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 export default function TopHeader({ currentTab, setCurrentTab, isLoggedIn, userName }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showApps, setShowApps] = useState(false);
 
   const handleSearch = (e) => {
     if (e.key === 'Enter' && e.target.value.trim() !== '') {
@@ -57,9 +58,46 @@ export default function TopHeader({ currentTab, setCurrentTab, isLoggedIn, userN
             )}
           </div>
           
-          <button className="p-xs text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors active:scale-95">
-            <span className="material-symbols-outlined" data-icon="apps">apps</span>
-          </button>
+          {/* Apps Grid */}
+          <div className="relative">
+            <button 
+              onClick={() => { setShowApps(!showApps); setShowNotifications(false); setShowSettings(false); }}
+              className={`p-xs rounded-full transition-colors active:scale-95 ${showApps ? 'bg-primary-container text-primary' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
+            >
+              <span className="material-symbols-outlined" data-icon="apps">apps</span>
+            </button>
+            {showApps && (
+              <div className="absolute right-0 mt-2 w-72 bg-surface border border-outline-variant rounded-xl shadow-lg z-50 p-4 animate-fadeIn">
+                <h4 className="font-bold text-label-md border-b border-outline-variant pb-2 mb-3">Healthcare Modules</h4>
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <button onClick={() => { setCurrentTab('dashboard'); setShowApps(false); }} className="flex flex-col items-center gap-1.5 p-2 hover:bg-surface-container-low rounded-xl transition-all">
+                    <span className="material-symbols-outlined text-primary text-2xl" data-icon="dashboard">dashboard</span>
+                    <span className="text-[10px] font-bold text-on-surface leading-tight">Dashboard</span>
+                  </button>
+                  <button onClick={() => { setCurrentTab('fleet'); setShowApps(false); }} className="flex flex-col items-center gap-1.5 p-2 hover:bg-surface-container-low rounded-xl transition-all">
+                    <span className="material-symbols-outlined text-info text-2xl" data-icon="local_shipping">local_shipping</span>
+                    <span className="text-[10px] font-bold text-on-surface leading-tight">Fleet Status</span>
+                  </button>
+                  <button onClick={() => { setCurrentTab('patient-flow'); setShowApps(false); }} className="flex flex-col items-center gap-1.5 p-2 hover:bg-surface-container-low rounded-xl transition-all">
+                    <span className="material-symbols-outlined text-rose-500 text-2xl" data-icon="psychology">psychology</span>
+                    <span className="text-[10px] font-bold text-on-surface leading-tight">Clinical AI</span>
+                  </button>
+                  <button onClick={() => { setCurrentTab('not-found'); setShowApps(false); }} className="flex flex-col items-center gap-1.5 p-2 hover:bg-surface-container-low rounded-xl transition-all opacity-60">
+                    <span className="material-symbols-outlined text-slate-400 text-2xl" data-icon="folder_shared">folder_shared</span>
+                    <span className="text-[10px] font-bold text-on-surface leading-tight">Health Vault</span>
+                  </button>
+                  <button onClick={() => { setCurrentTab('not-found'); setShowApps(false); }} className="flex flex-col items-center gap-1.5 p-2 hover:bg-surface-container-low rounded-xl transition-all opacity-60">
+                    <span className="material-symbols-outlined text-slate-400 text-2xl" data-icon="biotech">biotech</span>
+                    <span className="text-[10px] font-bold text-on-surface leading-tight">Radiology</span>
+                  </button>
+                  <button onClick={() => { setCurrentTab('not-found'); setShowApps(false); }} className="flex flex-col items-center gap-1.5 p-2 hover:bg-surface-container-low rounded-xl transition-all opacity-60">
+                    <span className="material-symbols-outlined text-slate-400 text-2xl" data-icon="vaccines">vaccines</span>
+                    <span className="text-[10px] font-bold text-on-surface leading-tight">Pharmacy</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
         <div className="h-8 w-[1px] bg-outline-variant mx-xs"></div>
         
