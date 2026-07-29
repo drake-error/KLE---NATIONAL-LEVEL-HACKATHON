@@ -475,14 +475,15 @@ function FleetStatus() {
             const prevMin = sig.minDistSeen ?? closestDist;
             const newMin = Math.min(prevMin, closestDist);
 
-            // Ambulance has passed through (was within 100m) and is now moving AWAY beyond 200m — turn RED
-            if (newMin < 0.10 && closestDist > 0.20) {
+            // Ambulance has crossed the signal — distance is now increasing (moved 30m past closest point)
+            if (closestDist > newMin + 0.03) {
               setActivePopups(pop => {
                 const next = { ...pop };
                 delete next[sig.id];
                 return next;
               });
               addLog(`[LOG] 🔴 [GEMINI_AGENT_${sig.agentId}]: Ambulance crossed signal. Reverting to normal traffic cycle.`);
+              triggerToast(`🔴 ${sig.name} reverted to normal cycle`, 'warning');
               return { ...sig, state: 'NORMAL_CYCLE', minDistSeen: undefined };
             }
 
