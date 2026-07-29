@@ -6,7 +6,7 @@ export default function Sidebar({ currentTab, setCurrentTab }) {
       <div className="flex items-center gap-xs mb-lg px-xs">
         <img 
           alt="ResQ-Plus Agency Logo" 
-          className="w-10 h-10 object-contain" 
+          className="w-10 h-10 object-contain bg-white rounded-lg p-1" 
           src="https://lh3.googleusercontent.com/aida/AP1WRLuNUP0gN1xnxHmlZ1LJaLoWSpkrBqfl9iaA-LFCSTmKUjmj_Ah0xR85-BmnbDW52VyMalAeshuU8kO946RVr55UUWNdcwZ-uLiHXg4hf46adfHPGfvWqOXX8C7ukXkU2MzVoN0K_h6_LWgLUOeVH--ZKQfpe6rpwkoLCcZtydUyklWz7dE3HwPRTjjSbN_N_t5Evb6zseMbrVLGfIPWEZf3lI33FtM8UsWa6dTeW7WbzXYyeEE2B2XpGQcp" 
         />
         <div>

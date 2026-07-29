@@ -24,7 +24,7 @@ export default {
         "secondary": "#006c49",
         "inverse-surface": "#283044",
         "background": "var(--color-background)",
-        "primary": "#002764",
+        "primary": "var(--color-primary)",
         "surface-dim": "#d2d9f4",
         "secondary-fixed": "#9df4c8",
         "on-secondary": "#ffffff",
@@ -57,7 +57,7 @@ export default {
         "secondary-container": "#9af2c5",
         "on-tertiary-fixed": "#2a1700",
         "surface": "var(--color-surface)",
-        "surface-container-high": "#e1e7ff"
+        "surface-container-high": "var(--color-surface-container-high)"
       },
       borderRadius: {
         "DEFAULT": "0.125rem",

@@ -13,6 +13,8 @@
   --color-surface-container-lowest: #ffffff;
   --color-surface-container-low: #f2f3ff;
   --color-surface-container: #eaedff;
+  --color-primary: #002764;
+  --color-surface-container-high: #e1e7ff;
 }
 
 .dark {
@@ -26,6 +28,8 @@
   --color-surface-container-lowest: #18181b;
   --color-surface-container-low: #27272a;
   --color-surface-container: #18181b;
+  --color-primary: #b0c6ff;
+  --color-surface-container-high: #3f3f46;
 }
 
 .material-symbols-outlined {
