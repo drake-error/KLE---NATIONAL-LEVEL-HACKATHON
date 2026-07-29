@@ -12,6 +12,7 @@ import NotFound from './NotFound';
 export default function DashboardLayout() {
   const [currentTab, setCurrentTab] = useState('dashboard');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userName, setUserName] = useState('');
 
   return (
     <div className="bg-background text-on-surface font-body-md overflow-hidden min-h-screen">
@@ -19,7 +20,7 @@ export default function DashboardLayout() {
       <Sidebar currentTab={currentTab} setCurrentTab={setCurrentTab} />
       
       {/* Fixed Top Control Bar */}
-      <TopHeader currentTab={currentTab} setCurrentTab={setCurrentTab} isLoggedIn={isLoggedIn} />
+      <TopHeader currentTab={currentTab} setCurrentTab={setCurrentTab} isLoggedIn={isLoggedIn} userName={userName} />
       
       {/* Dynamic Tab Switch Content Canvas */}
       {currentTab === 'dashboard' && (
@@ -52,7 +53,7 @@ export default function DashboardLayout() {
 
       {currentTab === 'login' && (
         <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
-          <Login setCurrentTab={setCurrentTab} setIsLoggedIn={setIsLoggedIn} />
+          <Login setCurrentTab={setCurrentTab} setIsLoggedIn={setIsLoggedIn} setUserName={setUserName} />
         </main>
       )}
 

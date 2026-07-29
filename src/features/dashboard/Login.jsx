@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 
-export default function Login({ setCurrentTab, setIsLoggedIn }) {
+export default function Login({ setCurrentTab, setIsLoggedIn, setUserName }) {
   const [isLogin, setIsLogin] = useState(true);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-8rem)] bg-background p-4 animate-fadeIn">
@@ -23,13 +25,20 @@ export default function Login({ setCurrentTab, setIsLoggedIn }) {
           </p>
         </div>
 
-        <form className="flex flex-col gap-4" onSubmit={(e) => { e.preventDefault(); setIsLoggedIn(true); setCurrentTab('dashboard'); }}>
+        <form className="flex flex-col gap-4" onSubmit={(e) => { 
+          e.preventDefault(); 
+          setIsLoggedIn(true); 
+          setUserName(name || email.split('@')[0] || 'Guest');
+          setCurrentTab('dashboard'); 
+        }}>
           {!isLogin && (
             <div>
               <label className="block text-label-md font-medium text-on-surface mb-1">Full Name</label>
               <input 
                 type="text" 
-                placeholder="Dr. Sarah Chen"
+                placeholder="E.g. Alex Johnson"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className="w-full bg-surface-container-low border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary rounded-xl px-4 py-3 text-body-md transition-all"
                 required
               />
@@ -40,7 +49,9 @@ export default function Login({ setCurrentTab, setIsLoggedIn }) {
             <label className="block text-label-md font-medium text-on-surface mb-1">Email Address</label>
             <input 
               type="email" 
-              placeholder="doctor@resqplus.med"
+              placeholder="user@resqplus.med"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-surface-container-low border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary rounded-xl px-4 py-3 text-body-md transition-all"
               required
             />

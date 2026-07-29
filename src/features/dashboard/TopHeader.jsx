@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function TopHeader({ currentTab, setCurrentTab, isLoggedIn }) {
+export default function TopHeader({ currentTab, setCurrentTab, isLoggedIn, userName }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
@@ -66,13 +66,13 @@ export default function TopHeader({ currentTab, setCurrentTab, isLoggedIn }) {
         {isLoggedIn ? (
           <div className="flex items-center gap-sm cursor-pointer group">
             <div className="text-right">
-              <p className="font-label-md text-label-md text-on-surface group-hover:text-primary transition-colors">Dr. Sarah Chen</p>
-              <p className="font-label-sm text-label-sm text-on-surface-variant">Chief Medical Officer</p>
+              <p className="font-label-md text-label-md text-on-surface group-hover:text-primary transition-colors capitalize">{userName || 'User'}</p>
+              <p className="font-label-sm text-label-sm text-on-surface-variant">Medical Staff</p>
             </div>
             <img 
-              alt="Dr. Sarah Chen"
-              className="w-10 h-10 rounded-full border-2 border-primary-container object-cover" 
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwrv4IcFTxGzoNFBB5dMq_e7Y_zF5qYTW6Wqeewl5Q7dTs2NrXdJVel1FTpwU6Rhdr55UQDsLyxlqVjrgKEiC33ho2GJPbke5S7fk6D_Wgy2xLfM0ViMmmRpV5IhpcF3LoVejYfj2SYPt70URiG903Cfp1CI0P466mQUnK5Xv5XVfbYYH-fqkJZg-zngqqGSgyoYHpjua0OOyZ8gUD2bynlm32_XKpPvW_oXQZTKHwCFqRiK4Uo0t2Cg" 
+              alt={userName || 'User'}
+              className="w-10 h-10 rounded-full border-2 border-primary-container bg-surface-container object-cover" 
+              src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${userName || 'User'}&backgroundColor=e2e8f0`} 
             />
           </div>
         ) : (
