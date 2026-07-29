@@ -4,6 +4,7 @@ export default function TopHeader({ currentTab, setCurrentTab, isLoggedIn, userN
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showApps, setShowApps] = useState(false);
+  const [theme, setTheme] = useState(document.documentElement.classList.contains('dark') ? 'dark' : 'light');
 
   const handleSearch = (e) => {
     if (e.key === 'Enter' && e.target.value.trim() !== '') {
@@ -29,19 +30,19 @@ export default function TopHeader({ currentTab, setCurrentTab, isLoggedIn, userN
           <button 
             onClick={() => {
               const html = document.documentElement;
-              if (html.classList.contains('dark')) {
-                html.classList.remove('dark');
-              } else {
+              const nextTheme = theme === 'dark' ? 'light' : 'dark';
+              setTheme(nextTheme);
+              if (nextTheme === 'dark') {
                 html.classList.add('dark');
+              } else {
+                html.classList.remove('dark');
               }
-              // Force local re-render to change icon
-              setShowSettings(prev => prev); 
             }}
             className="p-xs text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors active:scale-95"
             title="Toggle Light/Dark Mode"
           >
             <span className="material-symbols-outlined">
-              {document.documentElement.classList.contains('dark') ? 'light_mode' : 'dark_mode'}
+              {theme === 'dark' ? 'light_mode' : 'dark_mode'}
             </span>
           </button>
 
