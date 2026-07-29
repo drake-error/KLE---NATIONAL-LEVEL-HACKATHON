@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function Sidebar() {
+export default function Sidebar({ currentTab, setCurrentTab }) {
   return (
     <aside className="w-64 h-screen fixed left-0 top-0 bg-surface-container-lowest border-r border-outline-variant shadow-sm flex flex-col p-sm z-50">
       <div className="flex items-center gap-xs mb-lg px-xs">
@@ -15,18 +15,28 @@ export default function Sidebar() {
         </div>
       </div>
       <nav className="flex-1 space-y-1">
-        <a className="flex items-center gap-sm px-sm py-xs bg-surface-container-high text-on-surface font-bold rounded-xl transition-transform duration-200 scale-[0.99]" href="#">
+        <button 
+          onClick={() => setCurrentTab('dashboard')}
+          className={`w-full flex items-center gap-sm px-sm py-xs font-bold rounded-xl transition-all duration-200 ${
+            currentTab === 'dashboard' ? 'bg-surface-container-high text-on-surface scale-[0.99]' : 'text-on-surface-variant hover:bg-surface-container-low'
+          }`}
+        >
           <span className="material-symbols-outlined" data-icon="dashboard">dashboard</span>
           <span className="font-body-md text-body-md">Dashboard</span>
-        </a>
+        </button>
         <a className="flex items-center gap-sm px-sm py-xs text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-xl" href="#">
           <span className="material-symbols-outlined" data-icon="emergency">emergency</span>
           <span className="font-body-md text-body-md">Patient Flow</span>
         </a>
-        <a className="flex items-center gap-sm px-sm py-xs text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-xl" href="#">
+        <button 
+          onClick={() => setCurrentTab('fleet')}
+          className={`w-full flex items-center gap-sm px-sm py-xs font-bold rounded-xl transition-all duration-200 ${
+            currentTab === 'fleet' ? 'bg-surface-container-high text-on-surface scale-[0.99]' : 'text-on-surface-variant hover:bg-surface-container-low'
+          }`}
+        >
           <span className="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
           <span className="font-body-md text-body-md">Fleet Status</span>
-        </a>
+        </button>
         <a className="flex items-center gap-sm px-sm py-xs text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-xl" href="#">
           <span className="material-symbols-outlined" data-icon="terminal">terminal</span>
           <span className="font-body-md text-body-md">Comms Log</span>
