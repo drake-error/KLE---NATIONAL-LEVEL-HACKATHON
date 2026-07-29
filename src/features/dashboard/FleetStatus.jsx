@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import MapGL, { Source, Layer, Marker } from 'react-map-gl/maplibre';
 import * as turf from '@turf/turf';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-// CartoDB styles for zero-token evaluation map backdrop
+// Zero-token CARTO Dark Matter raster tile specification (Guarantees immediate rendering without white screen crashes)
 const FREE_DARK_STYLE = {
   version: 8,
   sources: {
-    osm_raster_tiles: {
+    carto_dark_raster: {
       type: 'raster',
       tiles: [
         'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
@@ -15,502 +16,823 @@ const FREE_DARK_STYLE = {
         'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png'
       ],
       tileSize: 256,
-      attribution: '&copy; OpenStreetMap &copy; CARTO'
+      attribution: '&copy; OpenStreetMap &copy; CARTO &copy; ResQ-Pulse AI'
     }
   },
   layers: [
     {
-      id: 'osm_raster_layer',
+      id: 'carto_dark_raster_layer',
       type: 'raster',
-      source: 'osm_raster_tiles',
+      source: 'carto_dark_raster',
       minzoom: 0,
       maxzoom: 22
     }
   ]
 };
 
-// Karnataka regions coordinate catalog
-const KARNATAKA_REGIONS = {
-  bangalore: {
-    name: "Bangalore (HSR & Silk Board)",
-    center: [77.6210, 12.9235],
-    hospitals: [
-      { name: "St. John's Medical Center", coords: [77.6190, 12.9304], type: "Trauma Level 1" },
-      { name: "Apollo Hospitals - Jayanagar", coords: [77.5912, 12.9214], type: "Cardiac Emergency" },
-      { name: "Manipal Hospital - Old Airport Rd", coords: [77.6482, 12.9582], type: "Multi-Specialty" }
-    ],
-    signals: [
-      { id: "sig-hsr", name: "HSR Layout Agent", coords: [77.6228, 12.9175], state: "red" },
-      { id: "sig-silk", name: "Silk Board Agent", coords: [77.6215, 12.9210], state: "red" },
-      { id: "sig-jpng", name: "JP Nagar Agent", coords: [77.6200, 12.9260], state: "red" }
-    ]
-  },
-  belagavi: {
-    name: "Belagavi (Tilakwadi & Congress Rd)",
-    center: [74.4977, 15.8497],
-    hospitals: [
-      { name: "KLES Dr. Prabhakar Kore Hospital", coords: [74.5204, 15.8710], type: "Trauma Level 1" },
-      { name: "Lakeview Goaves Hospital", coords: [74.5050, 15.8550], type: "Cardiac Emergency" },
-      { name: "District Government Hospital", coords: [74.5120, 15.8620], type: "General Emergency" }
-    ],
-    signals: [
-      { id: "sig-rpd", name: "RPD College Road Agent", coords: [74.4977, 15.8497], state: "red" },
-      { id: "sig-congress", name: "Congress Road Agent", coords: [74.5005, 15.8520], state: "red" },
-      { id: "sig-chennamma", name: "Chennamma Circle Agent", coords: [74.5080, 15.8570], state: "red" }
-    ]
-  }
-};
+const BANGALORE_COMMAND_COORD = [77.6229, 12.9172]; // HSR Layout / Silk Board Corridor
+const BELAGAVI_COMMAND_COORD = [74.5050, 15.8550]; // Tilakwadi / Congress Road
+
+/**
+ * Generates dynamic mock trauma centers around any starting GPS coordinate
+ */
+function generateNearbyHospitals(originCoord) {
+  const originPoint = turf.point(originCoord);
+  const templates = [
+    { name: "St. John's Trauma & Critical Care (Level 1)", specialty: "Polytrauma & Emergency Surgical Bay", bearing: 38, distKm: 2.7, icon: "🏥", triageBeds: "6 Available" },
+    { name: "Apollo Emergency Heart & Stroke Institute", specialty: "Advanced Cardiac & Vascular Triage", bearing: 155, distKm: 3.9, icon: "🩺", triageBeds: "4 Available" },
+    { name: "Manipal Advanced Rescue & Neuro Center", specialty: "Neurology & Multi-Specialty ICU", bearing: 275, distKm: 4.6, icon: "🚑", triageBeds: "8 Available" }
+  ];
+
+  return templates.map((tpl, idx) => {
+    const dest = turf.destination(originPoint, tpl.distKm, tpl.bearing, { units: 'kilometers' });
+    return {
+      id: `fleet_hosp_${idx + 1}`,
+      name: tpl.name,
+      specialty: tpl.specialty,
+      coords: dest.geometry.coordinates,
+      straightDistKm: tpl.distKm,
+      triageBeds: tpl.triageBeds
+    };
+  });
+}
+
+/**
+ * Generates 4 Autonomous AI Traffic Signal Agent junctions distributed evenly along a calculated polyline
+ */
+function generateSignalNodes(routeLine, totalDistKm) {
+  const percentages = [0.18, 0.44, 0.69, 0.89];
+  const nodeNames = [
+    "AI Agent Signal 01 [Outer Perimeter]",
+    "AI Agent Signal 02 [Midway Corridor]",
+    "AI Agent Signal 03 [Inner Arterial]",
+    "AI Agent Signal 04 [Medical Gateway]"
+  ];
+
+  return percentages.map((p, index) => {
+    const pt = turf.along(routeLine, p * totalDistKm, { units: 'kilometers' });
+    return {
+      id: `signal_agent_${index}`,
+      name: nodeNames[index],
+      coords: pt.geometry.coordinates,
+      state: 'NORMAL_CYCLE', // 'NORMAL_CYCLE' (Red) | 'GREEN_WAVE_ACTIVE' (Green)
+      distanceFromStart: p * totalDistKm,
+      agentId: `AG_${201 + index}`
+    };
+  });
+}
 
 export default function FleetStatus() {
-  const [selectedRegion, setSelectedRegion] = useState("bangalore");
-  const regionData = useMemo(() => KARNATAKA_REGIONS[selectedRegion], [selectedRegion]);
-
-  const [pickupCoords, setPickupCoords] = useState(regionData.signals[0].coords);
-  const [selectedHospital, setSelectedHospital] = useState(regionData.hospitals[0]);
-  const [isGpsLoading, setIsGpsLoading] = useState(false);
-  const [isSimulating, setIsSimulating] = useState(false);
-  const [animatedVehicle, setAnimatedVehicle] = useState(null);
+  /* =====================================================================
+   * STATE: GPS ORIGIN & REGIONAL COMMAND SELECTION
+   * ===================================================================== */
+  const [activeRegion, setActiveRegion] = useState('bangalore');
+  const [gpsLocation, setGpsLocation] = useState(BANGALORE_COMMAND_COORD);
+  const [gpsStatus, setGpsStatus] = useState('fallback'); // 'locating', 'live', 'fallback', 'preset'
   
-  const [signals, setSignals] = useState(regionData.signals);
-  const [agentLogs, setAgentLogs] = useState([]);
-  const [toasts, setToasts] = useState([]);
-
-  const mapRef = useRef(null);
-  const animationFrameId = useRef(null);
-  const startTimestampRef = useRef(null);
-
-  // Synchronize state when selected region changes
-  useEffect(() => {
-    setPickupCoords(regionData.signals[0].coords);
-    setSelectedHospital(regionData.hospitals[0]);
-    setSignals(regionData.signals);
-    setAgentLogs([
-      { time: new Date().toLocaleTimeString(), message: `SYSTEM: Switched operational region to ${regionData.name}.` }
-    ]);
-    setToasts([]);
-    setAnimatedVehicle(null);
-    if (animationFrameId.current) {
-      cancelAnimationFrame(animationFrameId.current);
-    }
-  }, [selectedRegion, regionData]);
-
-  // Toast Notification helper
-  const addToast = useCallback((msg, type = "info") => {
-    const id = Date.now() + Math.random();
-    setToasts(prev => [...prev, { id, message: msg, type }]);
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
-    }, 4500);
-  }, []);
-
-  // AI Agent Log Helper
-  const addLog = useCallback((msg) => {
-    setAgentLogs(prev => [
-      { time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }), message: msg },
-      ...prev.slice(0, 49)
-    ]);
-  }, []);
-
-  // GPS Simulation Trigger
-  const triggerGpsLookup = () => {
-    setIsGpsLoading(true);
-    addLog("GPS: Querying mobile emergency base station...");
-    setTimeout(() => {
-      setIsGpsLoading(false);
-      // Anchor near first signal corridor with slight offset
-      const jitterCoords = [
-        regionData.signals[0].coords[0] - 0.0015 + Math.random() * 0.003,
-        regionData.signals[0].coords[1] - 0.0015 + Math.random() * 0.003
-      ];
-      setPickupCoords(jitterCoords);
-      addLog(`GPS: Pickup lock verified at [${jitterCoords[0].toFixed(5)}, ${jitterCoords[1].toFixed(5)}]`);
-      addToast("GPS Location auto-detected successfully!", "success");
-      
-      // Smoothly pan map to new pickup
-      if (mapRef.current) {
-        mapRef.current.easeTo({ center: jitterCoords, zoom: 15.5, duration: 1500 });
-      }
-    }, 1200);
-  };
-
-  // Generate dynamic routing path
-  const routePoints = useMemo(() => {
-    const coords = [pickupCoords];
-    signals.forEach(s => coords.push(s.coords));
-    coords.push(selectedHospital.coords);
-    return coords;
-  }, [pickupCoords, signals, selectedHospital]);
-
-  const routeGeoJson = useMemo(() => {
-    return turf.featureCollection([turf.lineString(routePoints)]);
-  }, [routePoints]);
-
-  const totalDistance = useMemo(() => {
-    return turf.length(turf.lineString(routePoints), { units: 'kilometers' });
-  }, [routePoints]);
+  /* =====================================================================
+   * STATE: HOSPITAL ROUTING & AI DIAGNOSTICS
+   * ===================================================================== */
+  const [hospitals, setHospitals] = useState(() => generateNearbyHospitals(BANGALORE_COMMAND_COORD));
+  const [selectedHospital, setSelectedHospital] = useState(null);
+  const [routeCoords, setRouteCoords] = useState([]);
+  const [routeDistanceKm, setRouteDistanceKm] = useState(0);
+  const [isRouting, setIsRouting] = useState(false);
+  const [signalNodes, setSignalNodes] = useState([]);
+  const [aiAnalysisText, setAiAnalysisText] = useState("Awaiting route selection for Gemini 2.5 Flash neural pre-computation...");
 
   /* =====================================================================
-   * INTER-AGENT SIGNAL PRE-EMPTION SIMULATION LOOP
+   * STATE: SPEED SELECTOR, SIMULATION & DIRECT SIGNAL POPUPS
    * ===================================================================== */
-  const startCorridorSimulation = () => {
+  const [simulationSpeed, setSimulationSpeed] = useState('medium'); // 'slow', 'medium', 'fast'
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [animatedVehicle, setAnimatedVehicle] = useState(null);
+  const [agentLogs, setAgentLogs] = useState([
+    { time: new Date().toLocaleTimeString(), text: "[LOG] 🌐 [SYSTEM_INIT]: ResQ-Pulse Fleet AI Command Online. All autonomous traffic signal agents in standby." }
+  ]);
+  const [activeToast, setActiveToast] = useState(null);
+  const [activePopups, setActivePopups] = useState({}); // Direct on-map signal speech bubbles
+
+  const mapRef = useRef(null);
+  const isMapLoadedRef = useRef(false); // CRITICAL: Prevents React runtime white screen crashes
+  const animationFrameRef = useRef(null);
+  const startTimestampRef = useRef(null);
+  const triggerTrackerRef = useRef({});
+
+  // Speed telemetry lookup configuration
+  const speedConfig = useMemo(() => ({
+    slow: { kmh: 40, label: 'Slow (40 km/h - Cautious Transit)', durationMs: 24000, color: 'text-amber-400', badge: 'bg-amber-600' },
+    medium: { kmh: 60, label: 'Medium (60 km/h - Standard Emergency)', durationMs: 16000, color: 'text-emerald-400', badge: 'bg-emerald-600' },
+    fast: { kmh: 90, label: 'Fast (90 km/h - Priority Overdrive)', durationMs: 10000, color: 'text-rose-400', badge: 'bg-rose-600' }
+  }), []);
+
+  const currentSpeed = speedConfig[simulationSpeed];
+
+  // Helper: Trigger Toast Notification
+  const triggerToast = useCallback((msg, type = 'info') => {
+    setActiveToast({ text: msg, type });
+    const timer = setTimeout(() => setActiveToast(null), 4200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Helper: Append formatted V2X AI Terminal log
+  const addLog = useCallback((logString) => {
+    setAgentLogs(prev => [...prev.slice(-40), { time: new Date().toLocaleTimeString(), text: logString }]);
+  }, []);
+
+  // Safe camera animation completely protected against React white screen crashes
+  const safePanTo = useCallback((coords, zoomLevel = 15.0) => {
+    try {
+      if (!isMapLoadedRef.current || !mapRef.current || !coords) return;
+      const rawMap = typeof mapRef.current.getMap === 'function' ? mapRef.current.getMap() : mapRef.current;
+      if (rawMap && typeof rawMap.flyTo === 'function') {
+        rawMap.flyTo({ center: coords, zoom: zoomLevel, pitch: 54, bearing: -10, duration: 1400 });
+      }
+    } catch (err) {
+      console.warn("Deferred camera transition:", err.message);
+    }
+  }, []);
+
+  /* ---------------------------------------------------------------------
+   * GPS DETECTION WITH IP BACKUP & PRESET TOGGLING
+   * --------------------------------------------------------------------- */
+  const handleSwitchRegion = (regionKey) => {
     if (isSimulating) return;
-    setIsSimulating(true);
-    setSignals(regionData.signals.map(s => ({ ...s, state: "red" })));
-    startTimestampRef.current = null;
-    
-    addLog(`AI DISPATCH: Initializing Green Wave pre-emption corridor for ${selectedHospital.name}.`);
-    addToast("Emergency clearance route active!", "warning");
+    setActiveRegion(regionKey);
+    const coords = regionKey === 'bangalore' ? BANGALORE_COMMAND_COORD : BELAGAVI_COMMAND_COORD;
+    setGpsLocation(coords);
+    setGpsStatus('preset');
+    const gen = generateNearbyHospitals(coords);
+    setHospitals(gen);
+    setSelectedHospital(null);
+    setRouteCoords([]);
+    setSignalNodes([]);
+    setActivePopups({});
+    safePanTo(coords, 14.2);
+    triggerToast(`Switched operational command to ${regionKey.toUpperCase()} Sector.`, 'info');
+    addLog(`[LOG] 📍 [COMMAND_SECTOR_SWITCH]: Anchored baseline to ${regionKey.toUpperCase()} (${coords[0].toFixed(4)}, ${coords[1].toFixed(4)}).`);
+    if (gen.length > 0) handleSelectHospital(gen[0], coords);
+  };
 
-    const line = turf.lineString(routePoints);
-    const durationMs = 15000; // 15-second simulation run
+  const fetchLiveGPS = useCallback(() => {
+    if (isSimulating) return;
+    setGpsStatus('locating');
+    triggerToast('Acquiring high-precision satellite GPS location...', 'info');
 
-    // Tracks which agents have already pre-empted or handed off
-    const preemptionTrackRef = {
-      sig0: false,
-      sig1: false,
-      sig2: false
+    const handleSuccessCoords = (coords, isLive = true, label = 'GPS Satellite') => {
+      setGpsLocation(coords);
+      setGpsStatus(isLive ? 'live' : 'fallback');
+      const gen = generateNearbyHospitals(coords);
+      setHospitals(gen);
+      triggerToast(`Location Locked via ${label}: [${coords[0].toFixed(4)}° E, ${coords[1].toFixed(4)}° N]`, isLive ? 'success' : 'warning');
+      addLog(`[LOG] 🛰️ [${label.toUpperCase()}_LOCK]: Ambulance starting origin locked at (${coords[0].toFixed(5)}, ${coords[1].toFixed(5)}).`);
+      
+      if (gen.length > 0) handleSelectHospital(gen[0], coords);
+      safePanTo(coords, 15.2);
     };
+
+    if (!navigator.geolocation) {
+      handleSuccessCoords(BANGALORE_COMMAND_COORD, false, 'Command Fallback');
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        handleSuccessCoords([pos.coords.longitude, pos.coords.latitude], true, 'Satellite GPS');
+      },
+      async (err) => {
+        console.warn('Browser GPS error/timeout, running instant IP geolocation backup:', err.message);
+        try {
+          const res = await fetch('https://ipapi.co/json/');
+          if (res.ok) {
+            const data = await res.json();
+            if (data.latitude && data.longitude) {
+              handleSuccessCoords([data.longitude, data.latitude], true, 'Network IP GPS');
+              return;
+            }
+          }
+        } catch (ipErr) {
+          console.warn('IP geolocation unreachable, utilizing default coordinates.');
+        }
+        handleSuccessCoords(BANGALORE_COMMAND_COORD, false, 'Command Fallback');
+      },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
+    );
+  }, [isSimulating, triggerToast, addLog, safePanTo]);
+
+  useEffect(() => {
+    // Auto initialize Bangalore preset on mount
+    handleSwitchRegion('bangalore');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /* ---------------------------------------------------------------------
+   * OSRM ROAD ROUTING & AI AGENT SIGNAL GENERATION
+   * --------------------------------------------------------------------- */
+  const handleSelectHospital = async (hospital, overrideOrigin = null) => {
+    if (isSimulating) return;
+    setSelectedHospital(hospital);
+    setIsRouting(true);
+    setActivePopups({});
+    const origin = overrideOrigin || gpsLocation;
+    const dest = hospital.coords;
+
+    try {
+      const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${origin[0]},${origin[1]};${dest[0]},${dest[1]}?geometries=geojson&overview=full`;
+      const res = await fetch(osrmUrl);
+      if (!res.ok) throw new Error(`OSRM HTTP ${res.status}`);
+      const data = await res.json();
+
+      if (data.routes && data.routes.length > 0) {
+        const pathCoords = data.routes[0].geometry.coordinates;
+        const distKm = data.routes[0].distance / 1000;
+        
+        setRouteCoords(pathCoords);
+        setRouteDistanceKm(distKm);
+
+        const line = turf.lineString(pathCoords);
+        const nodes = generateSignalNodes(line, distKm);
+        setSignalNodes(nodes);
+
+        const aiMessage = `Gemini 2.5 Flash AI Diagnostics: OSRM route to ${hospital.name} covers ${distKm.toFixed(2)} km across ${nodes.length} dense traffic signals. ChatGPT V2X Autonomous Pre-Emption Engine has armed all intersection agents to turn GREEN 15 seconds prior to ambulance arrival.`;
+        setAiAnalysisText(aiMessage);
+        addLog(`[LOG] 🧠 [GEMINI_NEURAL_ROUTING]: Shortest road path calculated via OSRM (${distKm.toFixed(2)} km). Armed ${nodes.length} Autonomous AI Signals with Green Wave authority.`);
+      }
+    } catch (err) {
+      console.warn("OSRM routing offline fallback:", err.message);
+      const line = turf.lineString([origin, dest]);
+      const distKm = turf.length(line, { units: 'kilometers' });
+      const mid1 = turf.along(line, distKm * 0.33, { units: 'kilometers' }).geometry.coordinates;
+      const mid2 = turf.along(line, distKm * 0.66, { units: 'kilometers' }).geometry.coordinates;
+      const fallbackPath = [origin, mid1, mid2, dest];
+      
+      setRouteCoords(fallbackPath);
+      setRouteDistanceKm(distKm);
+      const nodes = generateSignalNodes(turf.lineString(fallbackPath), distKm);
+      setSignalNodes(nodes);
+      setAiAnalysisText(`ChatGPT V2X Backup Strategy: Direct trajectory path established to ${hospital.name} (${distKm.toFixed(2)} km). ${nodes.length} signal junctions armed for autonomous overrides.`);
+      addLog(`[LOG] 🧠 [CHATGPT_V2X_ENGINE]: Established emergency route path (${distKm.toFixed(2)} km).`);
+    } finally {
+      setIsRouting(false);
+      setAnimatedVehicle(null);
+    }
+  };
+
+  const calculatedEtaMinutes = useMemo(() => {
+    if (!routeDistanceKm) return 0;
+    const hours = routeDistanceKm / currentSpeed.kmh;
+    return Math.max(1, Math.round(hours * 60));
+  }, [routeDistanceKm, currentSpeed.kmh]);
+
+  const routeGeoJson = useMemo(() => {
+    if (routeCoords.length < 2) return turf.featureCollection([]);
+    return turf.featureCollection([turf.lineString(routeCoords)]);
+  }, [routeCoords]);
+
+  /* ---------------------------------------------------------------------
+   * SIMULATION & REAL-TIME ON-MAP SIGNAL SPEECH BUBBLES
+   * --------------------------------------------------------------------- */
+  const startAmbulanceSimulation = () => {
+    if (isSimulating || routeCoords.length < 2) return;
+    setIsSimulating(true);
+    setActivePopups({});
+    startTimestampRef.current = null;
+    triggerTrackerRef.current = {};
+
+    // Reset all signals to NORMAL_CYCLE (Red SVG)
+    setSignalNodes(prev => prev.map(n => ({ ...n, state: 'NORMAL_CYCLE' })));
+
+    triggerToast(`EMERGENCY DISPATCH LIVE! Ambulance speeding out at ${currentSpeed.kmh} km/h (${simulationSpeed.toUpperCase()} override).`, 'warning');
+    addLog(`[LOG] 🚀 [DISPATCH_COMMAND]: Priority Ambulance Transport launched at ${currentSpeed.kmh} km/h. Autonomous AI Signals actively listening.`);
+
+    const line = turf.lineString(routeCoords);
+    const durationMs = currentSpeed.durationMs;
 
     const animate = (timestamp) => {
       if (!startTimestampRef.current) startTimestampRef.current = timestamp;
       const elapsed = timestamp - startTimestampRef.current;
       const progress = Math.min(elapsed / durationMs, 1);
-      const currentDist = progress * totalDistance;
+      const currentDistKm = progress * routeDistanceKm;
 
-      const point = turf.along(line, currentDist, { units: 'kilometers' }).geometry.coordinates;
+      const currentPt = turf.along(line, currentDistKm, { units: 'kilometers' });
+      const coord = currentPt.geometry.coordinates;
 
-      // Dynamic Bearing Calculation
-      const nextDist = Math.min(currentDist + 0.01, totalDistance);
-      const nextPoint = turf.along(line, nextDist, { units: 'kilometers' }).geometry.coordinates;
-      let bearing = 0;
-      if (point[0] !== nextPoint[0] || point[1] !== nextPoint[1]) {
-        bearing = turf.bearing(turf.point(point), turf.point(nextPoint));
+      const nextDistKm = Math.min(currentDistKm + 0.005, routeDistanceKm);
+      const nextPt = turf.along(line, nextDistKm, { units: 'kilometers' });
+      let bearingDeg = 0;
+      if (coord[0] !== nextPt.geometry.coordinates[0] || coord[1] !== nextPt.geometry.coordinates[1]) {
+        bearingDeg = turf.bearing(turf.point(coord), turf.point(nextPt.geometry.coordinates));
       }
 
-      setAnimatedVehicle({ coords: point, bearing });
+      setAnimatedVehicle({ lng: coord[0], lat: coord[1], bearing: bearingDeg });
 
-      // Pan map smoothly behind vehicle using raw Maplibre instance to prevent viewState sync crashes
-      if (mapRef.current && progress < 0.98) {
-        const rawMap = mapRef.current.getMap();
-        if (rawMap) {
-          rawMap.jumpTo({ center: point, zoom: 15 });
+      // Follow camera safely without white screen crash risks
+      try {
+        if (mapRef.current && progress < 0.98 && isMapLoadedRef.current) {
+          const rawMap = typeof mapRef.current.getMap === 'function' ? mapRef.current.getMap() : mapRef.current;
+          if (rawMap && typeof rawMap.jumpTo === 'function') {
+            rawMap.jumpTo({ center: coord, zoom: 15.3 });
+          }
         }
+      } catch (e) {
+        // Suppress camera jumps if canvas unmounted
       }
 
-      // --- MULTI-AGENT STATE & HAND-OFF LOGIC ---
-      // Signal 0 (e.g. HSR Agent) Pre-emption when close
-      if (progress > 0.05 && progress < 0.25 && !preemptionTrackRef.sig0) {
-        preemptionTrackRef.sig0 = true;
-        setSignals(prev => prev.map((s, idx) => idx === 0 ? { ...s, state: "green" } : s));
-        addLog(`[${signals[0].name}]: Approaching vehicle detected. Pre-empting signal to GREEN!`);
-        addToast(`${signals[0].name}: Pre-emption Active!`, "success");
-      }
+      // --- AUTONOMOUS SIGNAL AGENT ON-MAP SPEECH BUBBLE LOGIC ---
+      signalNodes.forEach((node, i) => {
+        const nextNode = signalNodes[i + 1];
+        const nextNodeName = nextNode ? nextNode.name : `${selectedHospital?.name} [Trauma Bay 1]`;
+        const etaRemaining = Math.max(1, Math.round(((routeDistanceKm - node.distanceFromStart) / currentSpeed.kmh) * 60));
 
-      // Signal 0 Hand-off to Signal 1 (e.g. Silk Board Agent)
-      if (progress >= 0.25 && progress < 0.35 && preemptionTrackRef.sig0 && !preemptionTrackRef.sig1) {
-        preemptionTrackRef.sig1 = true;
-        setSignals(prev => prev.map((s, idx) => 
-          idx === 0 ? { ...s, state: "red" } : idx === 1 ? { ...s, state: "green" } : s
-        ));
-        addLog(`[${signals[0].name}] ➜ [${signals[1].name}]: "Ambulance cleared sector. Handing off command. Clear your intersection!"`);
-        addLog(`[${signals[1].name}]: Overriding normal signal cycles. Signal set to GREEN!`);
-        addToast(`${signals[1].name}: Green Corridor Pre-empted!`, "success");
-      }
+        // Trigger threshold (~0.28 km before intersection)
+        if (!triggerTrackerRef.current[node.id] && currentDistKm >= (node.distanceFromStart - 0.22)) {
+          triggerTrackerRef.current[node.id] = true;
 
-      // Signal 1 Hand-off to Signal 2 (e.g. JP Nagar Agent)
-      if (progress >= 0.55 && progress < 0.65 && preemptionTrackRef.sig1 && !preemptionTrackRef.sig2) {
-        preemptionTrackRef.sig2 = true;
-        setSignals(prev => prev.map((s, idx) => 
-          idx === 1 ? { ...s, state: "red" } : idx === 2 ? { ...s, state: "green" } : s
-        ));
-        addLog(`[${signals[1].name}] ➜ [${signals[2].name}]: "Ambulance approaching JP Nagar intersection. Clear the signal!"`);
-        addLog(`[${signals[2].name}]: Pre-emption engaged. Switched signal to GREEN!`);
-        addToast(`${signals[2].name}: Intersection Cleared!`, "success");
-      }
+          // 1. Switch signal icon to GREEN
+          setSignalNodes(prev => prev.map((item, idx) => {
+            if (idx === i) return { ...item, state: 'GREEN_WAVE_ACTIVE' };
+            if (idx === i - 1) return { ...item, state: 'NORMAL_CYCLE' }; // return prior signal to red
+            return item;
+          }));
 
-      // Route Completion
+          // 2. TRIGGER DIRECT ON-MAP SPEECH BUBBLES POPPING OUT FROM THE TRAFFIC SIGNAL ITSELF
+          const senderMsg = `🚀 Ambulance reached my sector! Signal GREEN! Alerting next agent: 'Clear your traffic and prepare Green Wave! ETA ~${etaRemaining}m'`;
+          const receiverMsg = nextNode 
+            ? `📡 Command received from ${node.name}! Acknowledging Green Wave protocol. Traffic cleared before arrival.` 
+            : `🏥 Trauma Bay 1 Emergency Alert received! Surgical doctors and triage beds cleared and standing by.`;
+
+          setActivePopups(prev => {
+            const next = { ...prev };
+            if (i > 0) delete next[signalNodes[i - 1].id];
+            next[node.id] = { text: senderMsg, type: 'sender', time: Date.now() };
+            if (nextNode) {
+              next[nextNode.id] = { text: receiverMsg, type: 'receiver', time: Date.now() };
+            }
+            return next;
+          });
+
+          // 3. Append Gemini & ChatGPT AI Terminal logs
+          if (nextNode) {
+            addLog(`[LOG] 🤖 [GEMINI_AGENT_${node.agentId}]: Signal switched GREEN. Transmitting pre-emption command to ${nextNode.name} (ETA ~${etaRemaining} mins).`);
+            setTimeout(() => {
+              addLog(`[LOG] ⚡ [CHATGPT_V2X_${nextNode.agentId}]: Command Acknowledged! Initiating Green Wave Protocol. Cross-traffic clearing.`);
+            }, 450);
+          } else {
+            addLog(`[LOG] 🤖 [GEMINI_AGENT_${node.agentId}]: Final intersection cleared! Handing off vehicle telemetry to ${selectedHospital?.name}.`);
+            setTimeout(() => {
+              addLog(`[LOG] 🏥 [TRAUMA_BAY_TRIAGE]: Acknowledged. Trauma surgical staff ready at emergency bay doors.`);
+            }, 450);
+          }
+
+          triggerToast(`GREEN WAVE OVERRIDE: ${node.name} signal cleared!`, 'success');
+        }
+      });
+
       if (progress < 1) {
-        animationFrameId.current = requestAnimationFrame(animate);
+        animationFrameRef.current = requestAnimationFrame(animate);
       } else {
         setIsSimulating(false);
-        setSignals(regionData.signals);
-        addLog(`AI DISPATCH: Ambulance successfully arrived at ${selectedHospital.name}. Emergency corridor stand-down.`);
-        addToast("Ambulance Arrived at Hospital!", "success");
+        setSignalNodes(prev => prev.map(n => ({ ...n, state: 'NORMAL_CYCLE' })));
         setAnimatedVehicle(null);
+        setActivePopups({});
+        addLog(`[LOG] ✅ [MISSION_COMPLETED]: Ambulance arrived safely at ${selectedHospital?.name}. Total transit: ${calculatedEtaMinutes} mins via ${currentSpeed.kmh} km/h Green Wave.`);
+        triggerToast(`🎉 Ambulance successfully arrived at ${selectedHospital?.name}!`, 'success');
       }
     };
 
-    animationFrameId.current = requestAnimationFrame(animate);
+    animationFrameRef.current = requestAnimationFrame(animate);
   };
 
   useEffect(() => {
     return () => {
-      if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     };
   }, []);
 
+  const handleMapLoad = useCallback(() => {
+    isMapLoadedRef.current = true; // Unlock camera transitions safely
+  }, []);
+
   return (
-    <div className="flex-1 grid grid-cols-12 gap-gutter text-on-surface">
-      {/* Dynamic Toasts Overlay */}
-      <div className="fixed top-20 right-6 z-[9999] flex flex-col gap-sm pointer-events-none">
-        {toasts.map(t => (
-          <div 
-            key={t.id} 
-            className={`px-md py-sm rounded-xl shadow-lg border border-outline-variant text-white font-label-md text-label-md animate-slide-in pointer-events-auto flex items-center gap-xs ${
-              t.type === "success" ? "bg-status-success" : t.type === "warning" ? "bg-status-emergency" : "bg-primary"
-            }`}
-          >
-            <span className="material-symbols-outlined">
-              {t.type === "success" ? "check_circle" : t.type === "warning" ? "bolt" : "info"}
-            </span>
-            {t.message}
+    <div className="flex flex-col gap-5 p-4 bg-slate-950 text-slate-100 font-sans min-h-screen">
+      {/* Toast Notification HUD */}
+      {activeToast && (
+        <div className="fixed top-24 right-8 z-[10000] max-w-md px-4 py-3 rounded-2xl shadow-2xl border border-white/20 backdrop-blur-md font-medium text-white animate-bounce flex items-center gap-3 bg-slate-900/95 ring-2 ring-emerald-500">
+          <span className="material-symbols-outlined text-3xl text-emerald-400 animate-pulse">
+            {activeToast.type === 'success' ? 'verified' : activeToast.type === 'warning' ? 'bolt' : 'info'}
+          </span>
+          <div className="flex flex-col">
+            <span className="font-extrabold text-xs uppercase tracking-widest text-emerald-400">V2X AI Agent Alert</span>
+            <span className="text-sm text-slate-200">{activeToast.text}</span>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      {/* LEFT COLUMN: Input controls & routing HUD */}
-      <div className="col-span-4 flex flex-col gap-gutter">
-        {/* Region & GPS Selector */}
-        <section className="bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm">
-          <h2 className="font-headline-sm text-headline-sm text-primary mb-md flex items-center gap-xs">
-            <span className="material-symbols-outlined">map</span>
-            Operational Region
-          </h2>
-          <div className="space-y-md">
-            <div>
-              <label className="block font-label-sm text-label-sm text-on-surface-variant mb-xs">Active Karnataka District</label>
-              <select 
-                value={selectedRegion}
-                onChange={(e) => setSelectedRegion(e.target.value)}
-                className="w-full bg-surface-container-low border-none focus:ring-2 focus:ring-primary rounded-xl py-xs px-sm font-body-sm text-on-surface appearance-none cursor-pointer"
-              >
-                <option value="bangalore">Bangalore (Bengaluru)</option>
-                <option value="belagavi">Belagavi (Belgaum)</option>
-              </select>
-            </div>
-
-            <div className="flex gap-sm">
-              <button 
-                onClick={triggerGpsLookup}
-                disabled={isGpsLoading || isSimulating}
-                className="flex-1 py-xs bg-secondary text-white rounded-xl font-label-md hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-xs shadow-md disabled:opacity-50 disabled:pointer-events-none"
-              >
-                <span className="material-symbols-outlined">{isGpsLoading ? 'autorenew' : 'my_location'}</span>
-                {isGpsLoading ? 'Locating...' : 'Auto-Detect GPS Pickup'}
-              </button>
-            </div>
+      {/* Header & Control Center */}
+      <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-slate-950 p-5 rounded-3xl border border-slate-800 shadow-2xl flex items-center justify-between flex-wrap gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-rose-600 border border-white/20 flex items-center justify-center text-white shadow-[0_0_25px_#e11d48]">
+            <span className="material-symbols-outlined text-3xl animate-pulse">emergency</span>
           </div>
-        </section>
-
-        {/* Hospital & Route Selection */}
-        <section className="bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm flex-1 flex flex-col justify-between">
           <div>
-            <h2 className="font-headline-sm text-headline-sm text-primary mb-md flex items-center gap-xs">
-              <span className="material-symbols-outlined">local_hospital</span>
-              Hospital Routing
-            </h2>
-            
-            <div className="space-y-md mb-md">
-              <div>
-                <label className="block font-label-sm text-label-sm text-on-surface-variant mb-xs">Select Trauma Center</label>
-                <select 
-                  value={selectedHospital.name}
-                  onChange={(e) => {
-                    const hosp = regionData.hospitals.find(h => h.name === e.target.value);
-                    if (hosp) setSelectedHospital(hosp);
-                  }}
-                  className="w-full bg-surface-container-low border-none focus:ring-2 focus:ring-primary rounded-xl py-xs px-sm font-body-sm text-on-surface appearance-none cursor-pointer"
-                >
-                  {regionData.hospitals.map(h => (
-                    <option key={h.name} value={h.name}>{h.name} ({h.type})</option>
-                  ))}
-                </select>
-              </div>
+            <h1 className="text-xl font-black tracking-wide text-white uppercase flex items-center gap-2">
+              ResQ-Pulse Fleet Status & Autonomous Green Wave Command
+            </h1>
+            <p className="text-xs font-bold text-slate-400">
+              Industry-Standard Simulation powered by Gemini & ChatGPT V2X AI Agents
+            </p>
+          </div>
+        </div>
 
-              {/* Dynamic Path Information */}
-              <div className="p-sm bg-surface-container-low rounded-xl space-y-xs">
-                <div className="flex justify-between font-label-sm text-label-sm text-on-surface-variant">
-                  <span>Routing Strategy:</span>
-                  <span className="text-secondary font-bold">Shortest Safe Corridor</span>
-                </div>
-                <div className="flex justify-between font-body-sm text-body-sm">
-                  <span>Distance:</span>
-                  <span className="font-bold">{totalDistance.toFixed(2)} km</span>
-                </div>
-                <div className="flex justify-between font-body-sm text-body-sm">
-                  <span>Est. Response Time:</span>
-                  <span className="text-status-success font-bold font-mono">
-                    {isSimulating ? "Clear Corridor Active" : `${(totalDistance * 1.5).toFixed(1)} mins`}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* List of Traffic Signal Nodes on Path */}
-            <div>
-              <h3 className="font-label-md text-label-md text-on-surface mb-xs flex items-center gap-xs">
-                <span className="material-symbols-outlined text-outline">traffic</span>
-                Signal Agents on Path
-              </h3>
-              <div className="space-y-sm max-h-48 overflow-y-auto pr-xs custom-scrollbar">
-                {signals.map((sig, idx) => (
-                  <div key={sig.id} className="flex justify-between items-center p-xs bg-surface-container-low rounded-lg border border-outline-variant/50">
-                    <div>
-                      <p className="font-label-md text-label-md">{sig.name}</p>
-                      <p className="text-[10px] text-outline">Sequence Node 0{idx + 1}</p>
-                    </div>
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold text-white uppercase ${
-                      sig.state === 'green' ? 'bg-status-success animate-pulse' : 'bg-status-emergency'
-                    }`}>
-                      {sig.state === 'green' ? 'Pre-empted' : 'Normal Cycle'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
+        {/* Region & GPS Controls */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex bg-slate-950 p-1 rounded-2xl border border-slate-800">
+            <button
+              onClick={() => handleSwitchRegion('bangalore')}
+              disabled={isSimulating}
+              className={`py-1.5 px-3 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+                activeRegion === 'bangalore' ? 'bg-gradient-to-r from-rose-600 to-amber-600 text-white shadow' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <span>Bengaluru Sector</span>
+            </button>
+            <button
+              onClick={() => handleSwitchRegion('belagavi')}
+              disabled={isSimulating}
+              className={`py-1.5 px-3 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+                activeRegion === 'belagavi' ? 'bg-gradient-to-r from-rose-600 to-amber-600 text-white shadow' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <span>Belagavi Sector</span>
+            </button>
           </div>
 
           <button 
-            onClick={startCorridorSimulation}
+            onClick={fetchLiveGPS} 
             disabled={isSimulating}
-            className="w-full mt-lg py-sm bg-status-emergency text-white rounded-xl font-label-lg text-label-lg shadow-md hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-xs disabled:opacity-50 disabled:pointer-events-none"
+            className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white text-xs font-black rounded-2xl border border-emerald-400/40 shadow-xl flex items-center gap-2 active:scale-95 transition-all disabled:opacity-50"
           >
-            <span className="material-symbols-outlined animate-pulse">bolt</span>
-            Launch Clear Corridor Simulation
+            <span className="material-symbols-outlined text-sm animate-pulse">my_location</span>
+            <span>{gpsStatus === 'locating' ? 'Locating GPS...' : '🎯 Center on My Location'}</span>
           </button>
-        </section>
+        </div>
       </div>
 
-      {/* RIGHT COLUMN: 3D Map, Toasts HUD & Logs Terminal */}
-      <div className="col-span-8 flex flex-col gap-gutter">
-        {/* Mapbox 3D Container */}
-        <section className="bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm flex-1 flex flex-col">
-          <div className="flex justify-between items-center mb-md">
-            <h2 className="font-headline-sm text-headline-sm text-primary flex items-center gap-xs">
-              <span className="material-symbols-outlined">3d_rotation</span>
-              3D AI Agent Routing View (Tilted WebGL)
-            </h2>
-            <span className={`px-2 py-0.5 rounded text-[10px] font-bold text-white uppercase ${
-              isSimulating ? 'bg-status-emergency animate-pulse' : 'bg-status-success'
-            }`}>
-              {isSimulating ? 'Corridor pre-emption live' : 'AI network monitoring'}
-            </span>
-          </div>
+      {/* ===================================================================
+       * PHASE 1 & 4: LIVE MAP CANVAS (WITH ON-MAP SPEECH BUBBLES & SVG ICONS)
+       * =================================================================== */}
+      <div className="bg-slate-900/90 p-4 rounded-3xl border border-slate-800 shadow-2xl flex flex-col shrink-0">
+        <div className="w-full h-[460px] xl:h-[540px] rounded-2xl overflow-hidden border border-slate-700/80 relative shadow-inner bg-slate-950">
+          <MapGL
+            ref={mapRef}
+            initialViewState={{
+              longitude: gpsLocation[0],
+              latitude: gpsLocation[1],
+              zoom: 15.0,
+              pitch: 54,
+              bearing: -10
+            }}
+            style={{ width: '100%', height: '100%' }}
+            mapStyle={FREE_DARK_STYLE}
+            onLoad={handleMapLoad}
+          >
+            {/* OSRM Driving Polyline Route */}
+            <Source id="osrm-route-layer-fleet" type="geojson" data={routeGeoJson}>
+              <Layer
+                id="osrm-route-glow-fleet"
+                type="line"
+                paint={{
+                  'line-color': isSimulating ? '#22c55e' : '#e11d48',
+                  'line-width': 12,
+                  'line-opacity': 0.4,
+                  'line-blur': 4
+                }}
+              />
+              <Layer
+                id="osrm-route-core-fleet"
+                type="line"
+                paint={{
+                  'line-color': isSimulating ? '#4ade80' : '#f43f5e',
+                  'line-width': 4.5,
+                  'line-opacity': 0.95,
+                  'line-dasharray': [2, 1.5]
+                }}
+              />
+            </Source>
 
-          {/* Map Container */}
-          <div className="w-full flex-1 min-h-[380px] rounded-xl overflow-hidden border border-outline-variant relative shadow-inner">
-            <MapGL
-              ref={mapRef}
-              initialViewState={{
-                longitude: regionData.center[0],
-                latitude: regionData.center[1],
-                zoom: 14.5,
-                pitch: 55, // 55° visual tilt
-                bearing: -10
-              }}
-              style={{ width: '100%', height: '100%' }}
-              mapStyle={FREE_DARK_STYLE}
-            >
-              {/* Draw Route Polyline */}
-              <Source id="clear-route" type="geojson" data={routeGeoJson}>
-                <Layer 
-                  id="route-glow" 
-                  type="line" 
-                  paint={{ 
-                    'line-color': isSimulating ? '#ef4444' : '#006c49', 
-                    'line-width': 8, 
-                    'line-opacity': 0.7 
-                  }} 
-                />
-                <Layer 
-                  id="route-centerline" 
-                  type="line" 
-                  paint={{ 
-                    'line-color': '#ffffff', 
-                    'line-width': 2, 
-                    'line-opacity': 0.9,
-                    'line-dasharray': [2, 2]
-                  }} 
-                />
-              </Source>
+            {/* PHASE 1: GPS Starting Origin Marker (With SVG Ambulance Icon) */}
+            <Marker longitude={gpsLocation[0]} latitude={gpsLocation[1]} anchor="bottom">
+              <div className="group relative flex flex-col items-center cursor-pointer hover:scale-105 transition-transform">
+                <div className="px-3 py-1 bg-rose-600 text-white rounded-lg text-[10px] font-extrabold shadow-2xl mb-1 border border-white/40 animate-pulse uppercase tracking-wider whitespace-nowrap">
+                  📍 Live GPS Origin
+                </div>
+                <div className="w-11 h-11 p-1.5 rounded-2xl bg-slate-900 border-2 border-rose-500 flex items-center justify-center shadow-[0_0_25px_#e11d48]">
+                  <img src="/traffic-svg/ambulance_car.svg" alt="Origin Ambulance" className="w-full h-full object-contain" />
+                </div>
+              </div>
+            </Marker>
 
-              {/* Signals Markers */}
-              {signals.map(sig => (
-                <Marker key={sig.id} longitude={sig.coords[0]} latitude={sig.coords[1]} anchor="bottom">
-                  <div className="flex flex-col items-center">
-                    <div className={`px-1.5 py-0.5 bg-slate-900 border border-slate-700 text-white rounded text-[8px] font-bold shadow-md mb-1 whitespace-nowrap ${
-                      sig.state === 'green' ? 'ring-2 ring-emerald-500 animate-pulse' : ''
+            {/* PHASE 2 & 4: DYNAMIC AI SIGNAL AGENTS WITH SPEECH BUBBLES POPPING DIRECTLY FROM THE TRAFFIC SIGNAL */}
+            {signalNodes.map((node, idx) => {
+              const popupData = activePopups[node.id];
+              const isGreen = node.state === 'GREEN_WAVE_ACTIVE';
+              return (
+                <Marker key={node.id} longitude={node.coords[0]} latitude={node.coords[1]} anchor="bottom">
+                  <div className="group relative flex flex-col items-center cursor-pointer">
+                    
+                    {/* DIRECT ON-MAP SPEECH BUBBLE POPPING FROM THE TRAFFIC SIGNAL ITSELF */}
+                    {popupData && (
+                      <div className={`mb-3 w-64 p-3.5 rounded-2xl shadow-2xl border text-left font-sans animate-bounce backdrop-blur-md relative z-50 ${
+                        popupData.type === 'sender'
+                          ? 'bg-slate-900/95 border-emerald-400 text-emerald-200 shadow-[0_0_35px_rgba(16,185,129,0.5)] ring-2 ring-emerald-500/50'
+                          : 'bg-slate-900/95 border-cyan-400 text-cyan-100 shadow-[0_0_35px_rgba(6,182,212,0.5)] ring-2 ring-cyan-500/50'
+                      }`}>
+                        <div className="flex items-center justify-between gap-2 font-black pb-1.5 border-b border-white/15 mb-1.5 text-[10px] uppercase tracking-wider text-white">
+                          <span className="flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-xs">{popupData.type === 'sender' ? 'smart_toy' : 'podcasts'}</span>
+                            {popupData.type === 'sender' ? '🤖 GEMINI AGENT OVERRIDE' : '📡 CHATGPT V2X RECEIVER'}
+                          </span>
+                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+                        </div>
+                        <p className="leading-snug text-xs font-black text-slate-100">{popupData.text}</p>
+                        {/* Callout arrow attached directly to signal */}
+                        <div className={`absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-4 h-4 rotate-45 border-r border-b bg-slate-900 ${
+                          popupData.type === 'sender' ? 'border-emerald-400' : 'border-cyan-400'
+                        }`}></div>
+                      </div>
+                    )}
+
+                    {/* SVG TRAFFIC SIGNAL MARKER ICON */}
+                    <div className={`p-1.5 bg-slate-950 rounded-2xl border ${
+                      isGreen ? 'border-emerald-400 shadow-[0_0_25px_#10b981] scale-110' : 'border-slate-700 shadow-xl'
+                    } transition-all duration-300`}>
+                      <img 
+                        src={isGreen ? '/traffic-svg/green_signal.svg' : '/traffic-svg/red_signalIcon.svg'} 
+                        alt="Traffic Signal Agent"
+                        className="w-7 h-9 object-contain drop-shadow-md"
+                      />
+                    </div>
+                    <span className={`mt-1 px-2.5 py-0.5 rounded-full text-[9px] font-black text-white shadow-xl whitespace-nowrap border ${
+                      isGreen ? 'bg-emerald-700 border-emerald-300 animate-pulse ring-2 ring-emerald-500' : 'bg-slate-900 border-slate-700 text-slate-300'
                     }`}>
-                      {sig.name}
-                    </div>
-                    <div className="flex flex-col items-center p-1 bg-slate-950 rounded border border-slate-800 shadow-xl gap-0.5">
-                      <span className={`w-2 h-2 rounded-full ${sig.state === 'red' ? 'bg-red-500 shadow-[0_0_6px_#ef4444]' : 'bg-slate-700'}`} />
-                      <span className={`w-2 h-2 rounded-full ${sig.state === 'green' ? 'bg-emerald-500 shadow-[0_0_6px_#22c55e]' : 'bg-slate-700'}`} />
-                    </div>
-                    <div className="w-0.5 h-3 bg-slate-800"></div>
+                      {isGreen ? `🟢 ${node.name} [GREEN CLEARED]` : `🔴 ${node.name}`}
+                    </span>
                   </div>
                 </Marker>
-              ))}
+              );
+            })}
 
-              {/* Hospital Marker */}
+            {/* Selected Hospital Target Marker */}
+            {selectedHospital && (
               <Marker longitude={selectedHospital.coords[0]} latitude={selectedHospital.coords[1]} anchor="bottom">
-                <div className="flex flex-col items-center">
-                  <div className="px-2 py-0.5 bg-secondary text-white rounded text-[9px] font-bold shadow-lg mb-1 whitespace-nowrap border border-white/20">
-                    {selectedHospital.name} (Destination)
+                <div className="flex flex-col items-center cursor-pointer hover:scale-110 transition-transform">
+                  <div className="px-3 py-1 bg-emerald-700 text-white rounded-xl text-xs font-black shadow-2xl mb-1.5 whitespace-nowrap border border-emerald-300 animate-pulse flex items-center gap-1.5">
+                    <span>🏥 {selectedHospital.name}</span>
+                    <span className="px-2 py-0.5 bg-emerald-950 rounded text-[10px] text-emerald-300 border border-emerald-500">{selectedHospital.triageBeds}</span>
                   </div>
-                  <div className="w-8 h-8 rounded-xl bg-secondary border-2 border-white flex items-center justify-center text-white text-base shadow-xl hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-900 border-2 border-emerald-400 flex items-center justify-center text-2xl shadow-[0_0_30px_#10b981]">
                     🏥
                   </div>
                 </div>
               </Marker>
+            )}
 
-              {/* Animated Ambulance Marker */}
-              {animatedVehicle && (
-                <Marker longitude={animatedVehicle.coords[0]} latitude={animatedVehicle.coords[1]} anchor="center">
+            {/* PHASE 4: Animated Moving Emergency Ambulance Icon */}
+            {animatedVehicle && (
+              <Marker longitude={animatedVehicle.lng} latitude={animatedVehicle.lat} anchor="center">
+                <div className="pointer-events-none flex flex-col items-center">
+                  <div className="translate-y-[-38px] px-3.5 py-1 rounded-full bg-gradient-to-r from-rose-600 via-red-600 to-amber-500 text-white font-black text-[10px] uppercase tracking-widest shadow-2xl border border-white flex items-center gap-1.5 animate-pulse whitespace-nowrap">
+                    <span className="w-2 h-2 rounded-full bg-white animate-ping"></span>
+                    <span>🚑 RESQ-PULSE AMB_09 (${currentSpeed.kmh} KM/H GREEN WAVE)</span>
+                  </div>
                   <div 
-                    className="flex flex-col items-center transition-transform duration-75"
+                    className="w-14 h-14 p-2 rounded-full bg-slate-900/95 border-2 border-rose-500 flex items-center justify-center shadow-[0_0_35px_#f43f5e] transition-transform duration-75"
                     style={{ transform: `rotate(${animatedVehicle.bearing}deg)` }}
                   >
-                    <div className="w-10 h-10 rounded-full bg-status-emergency border-2 border-white flex items-center justify-center text-xl shadow-2xl animate-pulse">
-                      🚑
+                    <img src="/traffic-svg/ambulance_car.svg" alt="Moving Ambulance" className="w-full h-full object-contain drop-shadow-xl" />
+                  </div>
+                </div>
+              </Marker>
+            )}
+          </MapGL>
+
+          {/* Top-left Telemetry HUD */}
+          <div className="absolute top-4 left-4 px-4 py-2.5 bg-slate-950/90 backdrop-blur-md rounded-2xl border border-slate-800 shadow-xl pointer-events-none flex items-center gap-3.5 z-10">
+            <div className={`w-3.5 h-3.5 rounded-full ${gpsStatus === 'live' ? 'bg-emerald-500 animate-ping' : 'bg-amber-500'}`}></div>
+            <div>
+              <p className="text-[10px] uppercase font-black text-slate-400 tracking-wider">
+                {gpsStatus === 'live' ? 'Satellite GPS Calibration' : 'Regional Command Sector Lock'}
+              </p>
+              <p className="text-xs font-black text-slate-100 font-mono">
+                {gpsLocation[0].toFixed(4)}° E, {gpsLocation[1].toFixed(4)}° N
+              </p>
+            </div>
+          </div>
+
+          {/* Top-right Floating Recenter Icon */}
+          <div className="absolute top-4 right-4 z-10">
+            <button
+              onClick={() => safePanTo(gpsLocation)}
+              disabled={isSimulating || !gpsLocation}
+              title="Recenter Camera"
+              className="p-3 bg-slate-900/90 hover:bg-slate-800 text-emerald-400 hover:text-emerald-300 rounded-2xl border border-slate-700 shadow-2xl flex items-center justify-center active:scale-90 transition-all backdrop-blur-md group"
+            >
+              <span className="material-symbols-outlined text-2xl group-hover:animate-spin">my_location</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ===================================================================
+       * AI NEURAL ENGINE BANNER (GEMINI & CHATGPT STRATEGY EVALUATION)
+       * =================================================================== */}
+      <div className="bg-gradient-to-r from-slate-900 via-emerald-950/50 to-slate-900 p-4 rounded-3xl border border-emerald-500/30 shadow-xl flex items-center gap-4 backdrop-blur-md">
+        <div className="p-3 bg-emerald-950/80 rounded-2xl border border-emerald-600/50 shrink-0 shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+          <span className="material-symbols-outlined text-3xl text-emerald-400 animate-pulse">psychology</span>
+        </div>
+        <div className="flex-1">
+          <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
+            <span className="text-sm font-black uppercase tracking-wider text-emerald-400">
+              Gemini & ChatGPT AI Autonomous V2X Neural Routing Engine
+            </span>
+            <span className="text-xs font-mono font-bold px-3 py-0.5 rounded-full bg-slate-900 border border-emerald-500/40 text-emerald-300">
+              V2X PROTOCOL ACTIVE
+            </span>
+          </div>
+          <p className="text-xs md:text-sm text-slate-200 font-medium leading-relaxed italic">
+            "{aiAnalysisText}"
+          </p>
+        </div>
+      </div>
+
+      {/* Grid: Hospital Discovery (Left) & Route Telemetry/Speed Controls (Right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        
+        {/* PHASE 2: DYNAMIC HOSPITAL DISCOVERY & ROUTING PANEL */}
+        <div className="bg-slate-900/90 p-5 rounded-3xl border border-slate-800 shadow-2xl flex flex-col justify-between backdrop-blur-md">
+          <div>
+            <h3 className="font-black text-sm text-rose-500 mb-4 flex items-center justify-between uppercase tracking-wider">
+              <span className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-xl">local_hospital</span>
+                Nearby Emergency Trauma Centers (Shortest Path Selection)
+              </span>
+              {isRouting && <span className="text-xs text-amber-400 font-mono animate-pulse">Computing OSRM Route...</span>}
+            </h3>
+
+            <div className="space-y-3 max-h-64 overflow-y-auto custom-scrollbar pr-1">
+              {hospitals.map((hosp) => {
+                const isSelected = selectedHospital && selectedHospital.id === hosp.id;
+                return (
+                  <div
+                    key={hosp.id}
+                    onClick={() => handleSelectHospital(hosp)}
+                    className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
+                      isSelected
+                        ? 'bg-gradient-to-r from-slate-900 via-rose-950/40 to-slate-900 border-rose-500 shadow-xl ring-1 ring-rose-500 scale-[1.01]'
+                        : 'bg-slate-950/80 hover:bg-slate-800 border-slate-800/80'
+                    } ${isSimulating ? 'pointer-events-none opacity-60' : ''}`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <span className="text-3xl p-3 bg-slate-900 rounded-2xl border border-slate-800 shadow-inner">{hosp.icon}</span>
+                      <div>
+                        <p className={`font-black text-base ${isSelected ? 'text-rose-400' : 'text-slate-100'}`}>{hosp.name}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-slate-400 font-medium">{hosp.specialty}</span>
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-700/60 text-[10px] font-mono font-bold text-emerald-400">
+                            {hosp.triageBeds}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm font-mono font-black text-emerald-400 whitespace-nowrap shadow-md">
+                        {hosp.straightDistKm} KM
+                      </span>
                     </div>
                   </div>
-                </Marker>
-              )}
-            </MapGL>
+                );
+              })}
+            </div>
+          </div>
+        </div>
 
-            {/* GPS Pickup Marker (Tethered statically to coordinate) */}
-            {!isSimulating && (
-              <div className="absolute top-2 left-2 p-2 bg-surface-container-highest/95 border border-outline-variant shadow-md rounded-xl text-xs flex flex-col gap-1 z-50">
-                <span className="font-bold flex items-center gap-1">
-                  <span className="w-2.5 h-2.5 rounded-full bg-secondary animate-ping"></span>
-                  Pickup Coordinates Lock
-                </span>
-                <span className="font-mono text-[10px]">{pickupCoords[0].toFixed(5)}° E, {pickupCoords[1].toFixed(5)}° N</span>
+        {/* PHASE 3: SPEED CONTROLS & ROUTE TELEMETRY COMMAND HUB */}
+        <div className="bg-slate-900/90 p-5 rounded-3xl border border-slate-800 shadow-2xl flex flex-col justify-between backdrop-blur-md">
+          <div>
+            <h3 className="font-black text-xs text-slate-400 mb-3 uppercase tracking-widest flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-sm">speed</span>
+                Velocity Selection & Telemetry Metrics
+              </span>
+              <span className={`text-xs font-bold font-mono ${currentSpeed.color}`}>
+                Selected: {currentSpeed.label}
+              </span>
+            </h3>
+
+            {/* Interactive Speed Selector Tabs */}
+            <div className="grid grid-cols-3 gap-2.5 p-1.5 bg-slate-950 rounded-2xl border border-slate-800 mb-4">
+              {Object.entries(speedConfig).map(([key, config]) => (
+                <button
+                  key={key}
+                  onClick={() => setSimulationSpeed(key)}
+                  disabled={isSimulating}
+                  className={`py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all flex flex-col items-center justify-center gap-1 ${
+                    simulationSpeed === key
+                      ? 'bg-gradient-to-r from-slate-800 to-slate-700 text-white border border-slate-500 shadow-xl scale-[1.03]'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
+                  } disabled:opacity-50`}
+                >
+                  <span className="material-symbols-outlined text-lg">
+                    {key === 'fast' ? 'rocket_launch' : key === 'medium' ? 'directions_car' : 'time_to_leave'}
+                  </span>
+                  <span>{key === 'fast' ? '⚡ FAST (90)' : key === 'medium' ? '🚓 MED (60)' : '🐢 SLOW (40)'}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* 4-Metric Pre-Computation Grid */}
+            <div className="grid grid-cols-4 gap-3 mb-4">
+              <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 text-center shadow-inner">
+                <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Distance</p>
+                <p className="text-lg font-black text-rose-500 font-mono mt-0.5">{routeDistanceKm ? `${routeDistanceKm.toFixed(2)} KM` : '--'}</p>
               </div>
-            )}
+              <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 text-center shadow-inner">
+                <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">Speed</p>
+                <p className={`text-lg font-black font-mono mt-0.5 ${currentSpeed.color}`}>{currentSpeed.kmh} KM/H</p>
+              </div>
+              <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 text-center shadow-inner">
+                <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">ETA</p>
+                <p className="text-lg font-black text-amber-400 font-mono mt-0.5">{calculatedEtaMinutes} MINS</p>
+              </div>
+              <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 text-center shadow-inner">
+                <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">AI Signals</p>
+                <p className="text-lg font-black text-cyan-400 font-mono mt-0.5">{signalNodes.length} AGENTS</p>
+              </div>
+            </div>
           </div>
-        </section>
 
-        {/* AI Agent Inter-Communication Log Terminal */}
-        <section className="bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm h-56 flex flex-col">
-          <h2 className="font-headline-sm text-headline-sm text-primary mb-sm flex items-center gap-xs">
-            <span className="material-symbols-outlined">terminal</span>
-            AI Agent Inter-Communication Feed
-          </h2>
-          <div className="flex-1 bg-surface-container-low p-sm rounded-xl font-mono text-body-sm text-on-surface-variant overflow-y-auto custom-scrollbar flex flex-col-reverse gap-xs border border-outline-variant/50">
-            {agentLogs.length === 0 ? (
-              <div className="text-outline italic text-center py-sm">No agent communications currently transmitting. Launch corridor simulation to view real-time log.</div>
-            ) : (
-              agentLogs.map((log, idx) => (
-                <div key={idx} className="flex gap-2">
-                  <span className="text-secondary font-bold">[{log.time}]</span>
-                  <span>{log.message}</span>
-                </div>
-              ))
-            )}
+          {/* Prominent START AMBULANCE Button */}
+          <button
+            onClick={startAmbulanceSimulation}
+            disabled={isSimulating || routeCoords.length < 2}
+            className="w-full py-4 px-6 bg-gradient-to-r from-rose-600 via-red-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white rounded-2xl font-black text-base tracking-wide shadow-[0_0_40px_rgba(225,29,72,0.4)] active:scale-[0.98] transition-all flex items-center justify-center gap-3 border border-white/20 disabled:opacity-50 disabled:pointer-events-none uppercase mt-2"
+          >
+            <span className="material-symbols-outlined text-3xl animate-bounce">rocket_launch</span>
+            <span>
+              {isSimulating ? `🚀 AMBULANCE SPEEDING EN ROUTE (${currentSpeed.kmh} KM/H)...` : `⚡ START AMBULANCE (ACTIVATE AI GREEN WAVE - ${currentSpeed.kmh} KM/H)`}
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* ===================================================================
+       * PHASE 4: V2X AGENT TERMINAL (GEMINI & CHATGPT COMM FEED)
+       * =================================================================== */}
+      <div className="bg-slate-950 rounded-3xl border border-slate-800 shadow-2xl flex flex-col overflow-hidden min-h-[260px]">
+        <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900 text-white flex-wrap gap-2">
+          <div className="flex items-center gap-3">
+            <span className="w-3 h-3 rounded-full bg-emerald-500 animate-ping"></span>
+            <span className="material-symbols-outlined text-emerald-400 text-xl">terminal</span>
+            <h3 className="font-mono font-bold text-sm tracking-wider uppercase text-slate-200">
+              V2X Agent Command Terminal: Gemini & ChatGPT Handoff Logs
+            </h3>
           </div>
-        </section>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono text-cyan-300 font-extrabold bg-cyan-950/80 px-3 py-1 rounded-lg border border-cyan-700/60">
+              GEMINI 2.5 FLASH
+            </span>
+            <span className="text-xs font-mono text-emerald-300 font-extrabold bg-emerald-950/80 px-3 py-1 rounded-lg border border-emerald-700/60">
+              CHATGPT V2X OVERRIDE
+            </span>
+          </div>
+        </div>
+
+        {/* Scrolling Log Display */}
+        <div className="p-5 bg-slate-950 text-slate-200 font-mono text-xs space-y-3 overflow-y-auto custom-scrollbar max-h-80">
+          {agentLogs.length === 0 ? (
+            <div className="text-slate-500 italic text-center py-10 font-sans text-sm">
+              No inter-agent communication transmitting. Select a trauma center above and click START AMBULANCE...
+            </div>
+          ) : (
+            agentLogs.map((item, index) => (
+              <div 
+                key={index} 
+                className={`p-3 rounded-xl border-l-4 leading-relaxed transition-all ${
+                  item.text.includes('GEMINI') 
+                    ? 'border-cyan-500 bg-slate-900/90 text-cyan-200 shadow' 
+                    : item.text.includes('CHATGPT')
+                    ? 'border-emerald-500 bg-emerald-950/50 text-emerald-200 shadow'
+                    : item.text.includes('🚀') || item.text.includes('🛰️')
+                    ? 'border-rose-500 bg-slate-900/60 text-slate-200 font-bold'
+                    : 'border-slate-600 bg-slate-900/40 text-slate-300'
+                }`}
+              >
+                <span className="text-[11px] text-slate-500 font-extrabold mr-2.5">[{item.time}]</span>
+                <span className="font-mono">{item.text}</span>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
