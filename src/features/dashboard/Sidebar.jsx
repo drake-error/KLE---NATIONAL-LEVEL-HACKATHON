@@ -24,10 +24,15 @@ export default function Sidebar({ currentTab, setCurrentTab }) {
           <span className="material-symbols-outlined" data-icon="dashboard">dashboard</span>
           <span className="font-body-md text-body-md">Dashboard</span>
         </button>
-        <a className="flex items-center gap-sm px-sm py-xs text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-xl" href="#">
+        <button 
+          onClick={() => setCurrentTab('patient-flow')}
+          className={`w-full flex items-center gap-sm px-sm py-xs font-bold rounded-xl transition-all duration-200 ${
+            currentTab === 'patient-flow' ? 'bg-surface-container-high text-on-surface scale-[0.99]' : 'text-on-surface-variant hover:bg-surface-container-low'
+          }`}
+        >
           <span className="material-symbols-outlined" data-icon="emergency">emergency</span>
           <span className="font-body-md text-body-md">Patient Flow</span>
-        </a>
+        </button>
         <button 
           onClick={() => setCurrentTab('fleet')}
           className={`w-full flex items-center gap-sm px-sm py-xs font-bold rounded-xl transition-all duration-200 ${

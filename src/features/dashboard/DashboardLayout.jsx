@@ -5,6 +5,7 @@ import KPIDashboard from './KPIDashboard';
 import HealthVaultTable from './HealthVaultTable';
 import LiveRouteMap from './LiveRouteMap';
 import FleetStatus from './FleetStatus';
+import PatientFlow from './PatientFlow';
 
 export default function DashboardLayout() {
   const [currentTab, setCurrentTab] = useState('dashboard');
@@ -18,7 +19,7 @@ export default function DashboardLayout() {
       <TopHeader />
       
       {/* Dynamic Tab Switch Content Canvas */}
-      {currentTab === 'dashboard' ? (
+      {currentTab === 'dashboard' && (
         <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
           {/* Top KPI Metrics Row */}
           <KPIDashboard />
@@ -32,9 +33,17 @@ export default function DashboardLayout() {
             <LiveRouteMap />
           </div>
         </main>
-      ) : (
+      )}
+      
+      {currentTab === 'fleet' && (
         <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
           <FleetStatus />
+        </main>
+      )}
+      
+      {currentTab === 'patient-flow' && (
+        <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
+          <PatientFlow />
         </main>
       )}
     </div>
