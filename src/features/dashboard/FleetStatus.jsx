@@ -48,26 +48,24 @@ class FleetErrorBoundary extends Component {
 // Preset starting junctions for Bangalore and Belagavi regions
 const REGION_PRESETS = {
   bangalore: {
-    name: "T. Nagar Corridor, Bangalore HQ",
-    center: [77.6229, 12.9172],
-    zoom: 14.0,
+    name: "Jakkur - St. John's Corridor, Bangalore HQ",
+    center: [77.6000, 13.0000],
+    zoom: 11.2,
     junctions: [
-      { id: "junc_hsr", name: "HSR Sector 1 Junction", coords: [77.6229, 12.9172] },
-      { id: "junc_silk", name: "Silk Board Intersection", coords: [77.6215, 12.9210] },
-      { id: "junc_jp", name: "JP Nagar Metro Crossing", coords: [77.6200, 12.9260] },
-      { id: "junc_koramangala", name: "Koramangala 3rd Block Junction", coords: [77.6280, 12.9220] },
-      { id: "junc_btm", name: "BTM Layout Ring Rd Crossing", coords: [77.6150, 12.9150] }
+      { id: "junc_jakkur_demo", name: "Jakkur (Long Demo Route)", coords: [77.5935, 13.0704] }
     ],
     hospitals: [
-      { id: "hosp_stjohns", name: "St. John's Medical Center (Level 1)", coords: [77.6190, 12.9304], beds: "6 Beds Avail" },
-      { id: "hosp_apollo", name: "Apollo Emergency Cardiac Hospital", coords: [77.5912, 12.9214], beds: "4 Beds Avail" },
-      { id: "hosp_manipal", name: "Manipal Advanced Neuro Trauma Center", coords: [77.6482, 12.9582], beds: "8 Beds Avail" }
+      { id: "hosp_stjohns", name: "St. John's Medical Center (Level 1)", coords: [77.6190, 12.9304], beds: "6 Beds Avail" }
     ],
     signals: [
-      { id: "sig_b1", name: "HSR Layout AI Signal", coords: [77.6225, 12.9180], agentId: "AG_BLR_01" },
-      { id: "sig_b2", name: "Silk Board Gate AI Signal", coords: [77.6215, 12.9220], agentId: "AG_BLR_02" },
-      { id: "sig_b3", name: "JP Nagar Arterial AI Signal", coords: [77.6205, 12.9255], agentId: "AG_BLR_03" },
-      { id: "sig_b4", name: "Madiwala Highway AI Signal", coords: [77.6180, 12.9280], agentId: "AG_BLR_04" }
+      { id: "sig_b1", name: "Jakkur Aerodrome AI Signal", coords: [77.593646, 13.056990], agentId: "AG_BLR_01" },
+      { id: "sig_b2", name: "Hebbal Flyover AI Signal", coords: [77.592335, 13.043984], agentId: "AG_BLR_02" },
+      { id: "sig_b3", name: "CBI Junction AI Signal", coords: [77.584040, 13.006743], agentId: "AG_BLR_03" },
+      { id: "sig_b4", name: "Palace Grounds AI Signal", coords: [77.587986, 12.984192], agentId: "AG_BLR_04" },
+      { id: "sig_b5", name: "Chalukya Circle AI Signal", coords: [77.587131, 12.969770], agentId: "AG_BLR_05" },
+      { id: "sig_b6", name: "Richmond Circle AI Signal", coords: [77.593731, 12.959811], agentId: "AG_BLR_06" },
+      { id: "sig_b7", name: "Langford Town AI Signal", coords: [77.602714, 12.944916], agentId: "AG_BLR_07" },
+      { id: "sig_b8", name: "Dairy Circle AI Signal", coords: [77.614045, 12.931341], agentId: "AG_BLR_08" }
     ]
   },
   belagavi: {
@@ -108,7 +106,7 @@ function FleetStatus() {
   /* =====================================================================
    * DISPATCH SELECTION & SCENARIO TOGGLES
    * ===================================================================== */
-  const [selectedStartId, setSelectedStartId] = useState('junc_hsr');
+  const [selectedStartId, setSelectedStartId] = useState('junc_jakkur_demo');
   const [selectedHospitalId, setSelectedHospitalId] = useState('hosp_stjohns');
   const [simulationSpeed, setSimulationSpeed] = useState('medium');
   const [autoGenerate, setAutoGenerate] = useState(false);
@@ -247,8 +245,8 @@ function FleetStatus() {
       
       if (forceSelect) {
         setSelectedStartId('gps');
+        safePanTo(coords, 15.0);
       }
-      safePanTo(coords, 15.0);
 
       // Fetch real nearby hospitals from OpenStreetMap around the GPS coordinates
       addLog(`[LOG] 🏥 [HOSPITAL_SCAN]: Scanning for nearby hospitals within 5km of GPS lock...`);
@@ -298,7 +296,8 @@ function FleetStatus() {
 
   // Update signal nodes and selections when switching regions
   useEffect(() => {
-    setSelectedStartId(regionPreset.junctions[0].id);
+    const defaultStartId = activeRegionId === 'bangalore' ? 'junc_jakkur_demo' : regionPreset.junctions[0].id;
+    setSelectedStartId(defaultStartId);
     setSelectedHospitalId(regionPreset.hospitals[0].id);
     // Initialize signals with state NORMAL_CYCLE
     setSignalNodes(regionPreset.signals.map(s => ({ ...s, state: 'NORMAL_CYCLE' })));
@@ -308,7 +307,7 @@ function FleetStatus() {
     // Recenter map on region center
     const coords = REGION_PRESETS[activeRegionId].center;
     setGpsLocation(coords);
-    safePanTo(coords, 14.0);
+    safePanTo(coords, regionPreset.zoom || 14.0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeRegionId, regionPreset]);
 
@@ -350,7 +349,7 @@ function FleetStatus() {
 
             try {
               const speedKmsPerMs = disp.speedKmh / 3600000;
-              const distDeltaKm = deltaMs * speedKmsPerMs * 45;
+              const distDeltaKm = deltaMs * speedKmsPerMs * 6; // Drastically reduced for demo observability
               const currentDistKm = (disp.progress * disp.distanceKm) + distDeltaKm;
               const newProgress = Math.min(currentDistKm / disp.distanceKm, 1);
 
@@ -381,7 +380,7 @@ function FleetStatus() {
                 try {
                   const rawMap = typeof mapRef.current.getMap === 'function' ? mapRef.current.getMap() : mapRef.current;
                   if (rawMap && typeof rawMap.jumpTo === 'function') {
-                    rawMap.jumpTo({ center: coord, zoom: 15.3 });
+                    rawMap.jumpTo({ center: coord, zoom: 13.5 }); // Zoomed out for better view of long route
                   }
                 } catch (e) {}
               }
@@ -524,8 +523,22 @@ function FleetStatus() {
 
     setTotalDispatchesCount(c => c + 1);
 
+    let routeCoordsQuery = `${startCoords[0]},${startCoords[1]}`;
+    
+    // Check if the selected start junction has predefined waypoints for a demo route
+    if (selectedStartId !== 'gps' && !customStartCoords) {
+      const match = regionPreset.junctions.find(j => j.id === selectedStartId);
+      if (match && match.waypoints) {
+        match.waypoints.forEach(wp => {
+          routeCoordsQuery += `;${wp[0]},${wp[1]}`;
+        });
+      }
+    }
+    
+    routeCoordsQuery += `;${targetHospital.coords[0]},${targetHospital.coords[1]}`;
+
     try {
-      const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${startCoords[0]},${startCoords[1]};${targetHospital.coords[0]},${targetHospital.coords[1]}?geometries=geojson&overview=full`;
+      const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${routeCoordsQuery}?geometries=geojson&overview=full`;
       const res = await fetch(osrmUrl);
       if (!res.ok) throw new Error("OSRM Offline");
       const data = await res.json();
@@ -556,9 +569,18 @@ function FleetStatus() {
         safePanTo(startCoords, 14.8);
       }
     } catch (err) {
-      console.warn("Falling back to straight route geometry:", err.message);
-      const directLine = [startCoords, targetHospital.coords];
-      const dist = turf.length(turf.lineString(directLine), { units: 'kilometers' });
+      console.warn("Falling back to preset corridor routing:", err.message);
+      
+      let fallbackCoords = [startCoords];
+      if (selectedStartId !== 'gps' && !customStartCoords) {
+        const match = regionPreset.junctions.find(j => j.id === selectedStartId);
+        if (match && match.waypoints) {
+          fallbackCoords.push(...match.waypoints);
+        }
+      }
+      fallbackCoords.push(targetHospital.coords);
+
+      const dist = turf.length(turf.lineString(fallbackCoords), { units: 'kilometers' });
 
       const newDispatch = {
         id: `dispatch_${Date.now()}`,
@@ -566,7 +588,7 @@ function FleetStatus() {
         status: 'en-route',
         startName: startLabel,
         hospital: targetHospital,
-        routeCoords: directLine,
+        routeCoords: fallbackCoords,
         distanceKm: dist,
         speedKmh: currentSpeed.kmh,
         progress: 0,
@@ -974,9 +996,10 @@ function FleetStatus() {
                 );
               })}
 
-              {/* Render Hospitals */}
+              {/* Render Hospitals (Only the selected one should be visible on the map) */}
               {regionPreset.hospitals.map(h => {
                 const isSelected = h.id === selectedHospitalId;
+                if (!isSelected) return null;
                 return (
                   <Marker key={h.id} longitude={h.coords[0]} latitude={h.coords[1]} anchor="bottom">
                     <div className="flex flex-col items-center">
@@ -995,9 +1018,10 @@ function FleetStatus() {
                 );
               })}
 
-              {/* Render GPS-Nearby Hospital Markers (discovered from real map data) */}
+              {/* Render GPS-Nearby Hospital Markers (Only the selected one should be visible on the map) */}
               {nearbyGpsHospitals.map(h => {
                 const isSelected = h.id === selectedHospitalId;
+                if (!isSelected) return null;
                 return (
                   <Marker key={h.id} longitude={h.coords[0]} latitude={h.coords[1]} anchor="bottom">
                     <div className="flex flex-col items-center cursor-pointer" onClick={() => setSelectedHospitalId(h.id)}>
