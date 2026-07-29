@@ -4,6 +4,32 @@ import * as turf from '@turf/turf';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
+// Zero-token CARTO Dark Matter raster tile specification (Guarantees reliable tile rendering without CORS/vector failures)
+const FREE_DARK_STYLE = {
+  version: 8,
+  sources: {
+    carto_dark_raster: {
+      type: 'raster',
+      tiles: [
+        'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
+        'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
+        'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png'
+      ],
+      tileSize: 256,
+      attribution: '&copy; OpenStreetMap &copy; CARTO'
+    }
+  },
+  layers: [
+    {
+      id: 'carto_dark_raster_layer',
+      type: 'raster',
+      source: 'carto_dark_raster',
+      minzoom: 0,
+      maxzoom: 22
+    }
+  ]
+};
+
 /* =====================================================================
  * MULTI-REGION TELEMETRY DATASET (Karnataka Focus: Bangalore & Belagavi)
  * ===================================================================== */
@@ -403,7 +429,7 @@ export default function LiveRouteMap() {
               bearing: -12
             }}
             style={{ width: '100%', height: '100%' }}
-            mapStyle="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
+            mapStyle={FREE_DARK_STYLE}
             onLoad={handleMapLoad}
           >
             {/* Route Polyline Visual Layer */}
