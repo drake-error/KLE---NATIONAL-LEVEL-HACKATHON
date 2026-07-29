@@ -1,6 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-export default function TopHeader() {
+export default function TopHeader({ currentTab, setCurrentTab, isLoggedIn }) {
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+
+  const handleSearch = (e) => {
+    if (e.key === 'Enter' && e.target.value.trim() !== '') {
+      setCurrentTab('not-found');
+    }
+  };
   return (
     <header className="h-16 fixed top-0 right-0 w-[calc(100%-16rem)] bg-surface border-b border-outline-variant z-40 flex justify-between items-center px-margin-desktop">
       <div className="flex items-center gap-md flex-1">
@@ -10,33 +18,71 @@ export default function TopHeader() {
             className="w-full pl-xl pr-sm py-xs bg-surface-container-low border-none focus:ring-2 focus:ring-primary rounded-xl text-body-sm font-body-sm" 
             placeholder="Search incidents, fleets, or staff..." 
             type="text" 
+            onKeyDown={handleSearch}
           />
         </div>
       </div>
       <div className="flex items-center gap-md">
-        <div className="flex items-center gap-sm">
-          <button className="p-xs text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors active:scale-95">
-            <span className="material-symbols-outlined" data-icon="notifications">notifications</span>
-          </button>
-          <button className="p-xs text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors active:scale-95">
-            <span className="material-symbols-outlined" data-icon="settings_suggest">settings_suggest</span>
-          </button>
+        <div className="flex items-center gap-sm relative">
+          {/* Notifications */}
+          <div className="relative">
+            <button 
+              onClick={() => { setShowNotifications(!showNotifications); setShowSettings(false); }}
+              className={`p-xs rounded-full transition-colors active:scale-95 ${showNotifications ? 'bg-primary-container text-primary' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
+            >
+              <span className="material-symbols-outlined" data-icon="notifications">notifications</span>
+            </button>
+            {showNotifications && (
+              <div className="absolute right-0 mt-2 w-64 bg-surface border border-outline-variant rounded-xl shadow-lg z-50 p-4 animate-fadeIn">
+                <h4 className="font-bold text-label-md border-b border-outline-variant pb-2 mb-2">Notifications</h4>
+                <p className="text-body-sm text-on-surface-variant text-center py-4">No new notifications</p>
+              </div>
+            )}
+          </div>
+          
+          {/* Settings */}
+          <div className="relative">
+            <button 
+              onClick={() => { setShowSettings(!showSettings); setShowNotifications(false); }}
+              className={`p-xs rounded-full transition-colors active:scale-95 ${showSettings ? 'bg-primary-container text-primary' : 'text-on-surface-variant hover:bg-surface-container-low'}`}
+            >
+              <span className="material-symbols-outlined" data-icon="settings_suggest">settings_suggest</span>
+            </button>
+            {showSettings && (
+              <div className="absolute right-0 mt-2 w-48 bg-surface border border-outline-variant rounded-xl shadow-lg z-50 p-2 animate-fadeIn">
+                <button className="w-full text-left px-3 py-2 text-label-md hover:bg-surface-container-low rounded-lg transition-colors">System Settings</button>
+                <button className="w-full text-left px-3 py-2 text-label-md hover:bg-surface-container-low rounded-lg transition-colors">Healthcare Tools</button>
+                <button className="w-full text-left px-3 py-2 text-label-md hover:bg-surface-container-low rounded-lg transition-colors text-error">Sign Out</button>
+              </div>
+            )}
+          </div>
+          
           <button className="p-xs text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors active:scale-95">
             <span className="material-symbols-outlined" data-icon="apps">apps</span>
           </button>
         </div>
         <div className="h-8 w-[1px] bg-outline-variant mx-xs"></div>
-        <div className="flex items-center gap-sm cursor-pointer group">
-          <div className="text-right">
-            <p className="font-label-md text-label-md text-on-surface group-hover:text-primary transition-colors">Dr. Sarah Chen</p>
-            <p className="font-label-sm text-label-sm text-on-surface-variant">Chief Medical Officer</p>
+        
+        {isLoggedIn ? (
+          <div className="flex items-center gap-sm cursor-pointer group">
+            <div className="text-right">
+              <p className="font-label-md text-label-md text-on-surface group-hover:text-primary transition-colors">Dr. Sarah Chen</p>
+              <p className="font-label-sm text-label-sm text-on-surface-variant">Chief Medical Officer</p>
+            </div>
+            <img 
+              alt="Dr. Sarah Chen"
+              className="w-10 h-10 rounded-full border-2 border-primary-container object-cover" 
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwrv4IcFTxGzoNFBB5dMq_e7Y_zF5qYTW6Wqeewl5Q7dTs2NrXdJVel1FTpwU6Rhdr55UQDsLyxlqVjrgKEiC33ho2GJPbke5S7fk6D_Wgy2xLfM0ViMmmRpV5IhpcF3LoVejYfj2SYPt70URiG903Cfp1CI0P466mQUnK5Xv5XVfbYYH-fqkJZg-zngqqGSgyoYHpjua0OOyZ8gUD2bynlm32_XKpPvW_oXQZTKHwCFqRiK4Uo0t2Cg" 
+            />
           </div>
-          <img 
-            alt="Dr. Sarah Chen"
-            className="w-10 h-10 rounded-full border-2 border-primary-container object-cover" 
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwrv4IcFTxGzoNFBB5dMq_e7Y_zF5qYTW6Wqeewl5Q7dTs2NrXdJVel1FTpwU6Rhdr55UQDsLyxlqVjrgKEiC33ho2GJPbke5S7fk6D_Wgy2xLfM0ViMmmRpV5IhpcF3LoVejYfj2SYPt70URiG903Cfp1CI0P466mQUnK5Xv5XVfbYYH-fqkJZg-zngqqGSgyoYHpjua0OOyZ8gUD2bynlm32_XKpPvW_oXQZTKHwCFqRiK4Uo0t2Cg" 
-          />
-        </div>
+        ) : (
+          <button 
+            onClick={() => setCurrentTab('login')}
+            className="bg-primary hover:bg-primary/90 text-on-primary px-4 py-2 rounded-full font-bold text-label-md transition-all active:scale-95 shadow-sm"
+          >
+            Login / Sign Up
+          </button>
+        )}
       </div>
     </header>
   );

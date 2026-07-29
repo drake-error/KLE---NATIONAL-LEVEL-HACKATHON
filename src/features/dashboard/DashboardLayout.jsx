@@ -6,9 +6,12 @@ import HealthVaultTable from './HealthVaultTable';
 import LiveRouteMap from './LiveRouteMap';
 import FleetStatus from './FleetStatus';
 import PatientFlow from './PatientFlow';
+import Login from './Login';
+import NotFound from './NotFound';
 
 export default function DashboardLayout() {
   const [currentTab, setCurrentTab] = useState('dashboard');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   return (
     <div className="bg-background text-on-surface font-body-md overflow-hidden min-h-screen">
@@ -16,7 +19,7 @@ export default function DashboardLayout() {
       <Sidebar currentTab={currentTab} setCurrentTab={setCurrentTab} />
       
       {/* Fixed Top Control Bar */}
-      <TopHeader />
+      <TopHeader currentTab={currentTab} setCurrentTab={setCurrentTab} isLoggedIn={isLoggedIn} />
       
       {/* Dynamic Tab Switch Content Canvas */}
       {currentTab === 'dashboard' && (
@@ -44,6 +47,18 @@ export default function DashboardLayout() {
       {currentTab === 'patient-flow' && (
         <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
           <PatientFlow />
+        </main>
+      )}
+
+      {currentTab === 'login' && (
+        <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
+          <Login setCurrentTab={setCurrentTab} setIsLoggedIn={setIsLoggedIn} />
+        </main>
+      )}
+
+      {currentTab === 'not-found' && (
+        <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
+          <NotFound setCurrentTab={setCurrentTab} />
         </main>
       )}
     </div>
