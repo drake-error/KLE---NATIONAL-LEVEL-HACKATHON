@@ -25,6 +25,26 @@ export default function TopHeader({ currentTab, setCurrentTab, isLoggedIn, userN
       </div>
       <div className="flex items-center gap-md">
         <div className="flex items-center gap-sm relative">
+          {/* Light/Dark Mode Toggle */}
+          <button 
+            onClick={() => {
+              const html = document.documentElement;
+              if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+              } else {
+                html.classList.add('dark');
+              }
+              // Force local re-render to change icon
+              setShowSettings(prev => prev); 
+            }}
+            className="p-xs text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors active:scale-95"
+            title="Toggle Light/Dark Mode"
+          >
+            <span className="material-symbols-outlined">
+              {document.documentElement.classList.contains('dark') ? 'light_mode' : 'dark_mode'}
+            </span>
+          </button>
+
           {/* Notifications */}
           <div className="relative">
             <button 

@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Map as MapGL, Source, Layer, Marker, NavigationControl } from 'react-map-gl/mapbox';
-import * as turf from '@turf/turf';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Map as MapGL, Marker, NavigationControl } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 // Split token constants to bypass GitHub automated secret push protection scanners
@@ -9,49 +8,20 @@ const T2 = 'ZWNmYTc3MDYzMjA0MjBmY2E5NGU3YmQ0MDYifQ';
 const T3 = '.5s9Z-KPF9yvgT05nO12HOQ';
 const MAPBOX_ACCESS_TOKEN = `${T1}${T2}${T3}`;
 const MAPBOX_DARK_STYLE = 'mapbox://styles/mapbox/dark-v11';
-
-// Karnataka Regional Command Coordinates
-const REGIONAL_COMMAND = {
-  bangalore: {
-    name: "Bangalore HQ (HSR & Silk Board)",
-    center: [77.6229, 12.9172],
-    zoom: 13.8,
-    corridors: [
-      { id: 'unit-1', name: "Alpha Trauma Unit 01", coords: [77.6229, 12.9172], status: "ACTIVE DISPATCH", speed: "60 km/h" },
-      { id: 'unit-2', name: "Beta Cardiac Unit 04", coords: [77.6310, 12.9250], status: "STANDBY", speed: "0 km/h" },
-      { id: 'unit-3', name: "Gamma Rescue Unit 09", coords: [77.6140, 12.9080], status: "RETURNING", speed: "45 km/h" }
-    ],
-    route: [[77.6140, 12.9080], [77.6229, 12.9172], [77.6310, 12.9250]]
-  },
-  belagavi: {
-    name: "Belagavi Command (Tilakwadi Sector)",
-    center: [74.5050, 15.8550],
-    zoom: 13.8,
-    corridors: [
-      { id: 'unit-b1', name: "KLES Trauma Unit 02", coords: [74.5204, 15.8710], status: "ACTIVE DISPATCH", speed: "65 km/h" },
-      { id: 'unit-b2', name: "Lakeview Cardiac Unit 05", coords: [74.5050, 15.8550], status: "STANDBY", speed: "0 km/h" },
-      { id: 'unit-b3', name: "Civil Rescue Unit 08", coords: [74.4977, 15.8497], status: "PATROL", speed: "35 km/h" }
-    ],
-    route: [[74.4977, 15.8497], [74.5050, 15.8550], [74.5204, 15.8710]]
-  }
-};
+const MAPBOX_LIGHT_STYLE = 'mapbox://styles/mapbox/light-v11';
 
 export default function LiveRouteMap() {
-  const [activeRegionId, setActiveRegionId] = useState('bangalore');
-  const [activeUnit, setActiveUnit] = useState(null);
-  const [statusText, setStatusText] = useState('All sector Green Wave protocols armed. Hand Navigation Active!');
-
+  const [gpsCoords, setGpsCoords] = useState(null); // [lng, lat]
+  const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState(null);
   const mapRef = useRef(null);
-  const isMapLoadedRef = useRef(false);
 
-  const activeRegion = useMemo(() => REGIONAL_COMMAND[activeRegionId], [activeRegionId]);
-
-  const safePanTo = useCallback((coords, zoomLevel = 14.5) => {
+  const safePanTo = useCallback((coords) => {
     try {
-      if (!isMapLoadedRef.current || !mapRef.current) return;
+      if (!mapRef.current) return;
       const rawMap = typeof mapRef.current.getMap === 'function' ? mapRef.current.getMap() : mapRef.current;
       if (rawMap && typeof rawMap.flyTo === 'function') {
-        rawMap.flyTo({ center: coords, zoom: zoomLevel, pitch: 45, duration: 1200 });
+        rawMap.flyTo({ center: coords, zoom: 15, pitch: 45, duration: 1500 });
       }
     } catch (err) {
       console.warn("Deferred camera animation:", err.message);
@@ -59,159 +29,131 @@ export default function LiveRouteMap() {
   }, []);
 
   useEffect(() => {
-    setActiveUnit(activeRegion.corridors[0]);
-    safePanTo(activeRegion.center, activeRegion.zoom);
-  }, [activeRegion, safePanTo]);
+    if (!navigator.geolocation) {
+      setErrorMsg("Geolocation is not supported by your browser");
+      setLoading(false);
+      return;
+    }
 
-  const handleMapLoad = useCallback(() => {
-    isMapLoadedRef.current = true;
-  }, []);
+    const handleSuccess = (position) => {
+      const { longitude, latitude } = position.coords;
+      setGpsCoords([longitude, latitude]);
+      setLoading(false);
+      safePanTo([longitude, latitude]);
+    };
 
-  const routeGeoJson = useMemo(() => {
-    return turf.featureCollection([turf.lineString(activeRegion.route)]);
-  }, [activeRegion.route]);
+    const handleError = (error) => {
+      console.error("GPS Geolocation Error:", error);
+      setErrorMsg("Could not fetch GPS location. Please allow location permissions.");
+      setLoading(false);
+      // Fallback location (Bangalore Centre)
+      setGpsCoords([77.5946, 12.9716]);
+    };
+
+    // Watch position in real time
+    const watchId = navigator.geolocation.watchPosition(handleSuccess, handleError, {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    });
+
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, [safePanTo]);
 
   return (
     <div className="col-span-4 flex flex-col gap-4 h-full pb-4 text-slate-100 font-sans">
-      {/* Header & Region Selection Pills */}
+      {/* Header & Status Card */}
       <div className="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 shadow-2xl flex flex-col shrink-0 backdrop-blur-md">
-        <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span className="w-3 h-3 rounded-full bg-cyan-400 animate-pulse"></span>
             <h3 className="font-black text-base tracking-wide text-white uppercase flex items-center gap-2">
-              Dashboard Overview: Active Emergency Corridors
+              GPS Navigation Center
             </h3>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="px-3 py-1 bg-emerald-950 text-emerald-300 font-black text-xs rounded-xl border border-emerald-500/50 flex items-center gap-1">
-              <span className="material-symbols-outlined text-sm">pan_tool</span>
-              ✋ Hand Drag Enabled
-            </span>
-            <span className="text-[11px] font-extrabold px-3 py-1 rounded-full bg-slate-950 text-emerald-400 border border-emerald-500/30">
-              👉 SWITCH TO FLEET STATUS TAB FOR FULL 4-PHASE AI SIMULATION & OSRM GREEN WAVE
-            </span>
-          </div>
-        </div>
-
-        {/* Region Switches */}
-        <div className="grid grid-cols-2 gap-2.5 p-1 bg-slate-950 rounded-xl border border-slate-800">
-          {Object.entries(REGIONAL_COMMAND).map(([key, reg]) => (
-            <button
-              key={key}
-              onClick={() => setActiveRegionId(key)}
-              className={`py-2 px-4 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-2 ${
-                activeRegionId === key
-                  ? 'bg-gradient-to-r from-rose-600 to-amber-600 text-white shadow-lg scale-[1.01]'
-                  : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
-              }`}
-            >
-              <span className="material-symbols-outlined text-sm">location_on</span>
-              <span>{reg.name}</span>
-            </button>
-          ))}
+          <span className="px-3 py-1 bg-cyan-950 text-cyan-300 font-black text-[10px] rounded-xl border border-cyan-500/50 flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-sm">my_location</span>
+            Live GPS Tracking
+          </span>
         </div>
       </div>
 
-      {/* Map Canvas Overview with Hand Grab styling */}
+      {/* Map Canvas Overview */}
       <div className="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 shadow-2xl flex flex-col shrink-0">
         <div className="w-full h-[380px] xl:h-[440px] rounded-xl overflow-hidden border border-slate-700/80 relative shadow-inner bg-slate-950 cursor-grab active:cursor-grabbing">
-          <MapGL
-            ref={mapRef}
-            initialViewState={{
-              longitude: activeRegion.center[0],
-              latitude: activeRegion.center[1],
-              zoom: activeRegion.zoom,
-              pitch: 48,
-              bearing: -12
-            }}
-            mapboxAccessToken={MAPBOX_ACCESS_TOKEN}
-            interactive={true}
-            dragPan={true}
-            dragRotate={true}
-            scrollZoom={true}
-            touchZoomRotate={true}
-            cursor="grab"
-            style={{ width: '100%', height: '100%' }}
-            mapStyle={MAPBOX_DARK_STYLE}
-            onLoad={handleMapLoad}
-          >
-            {/* Standard Navigation zoom controls */}
-            <NavigationControl position="bottom-right" showCompass={true} showZoom={true} />
+          {loading ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-slate-950/80 z-20">
+              <span className="material-symbols-outlined text-cyan-400 text-5xl animate-spin">progress_activity</span>
+              <p className="text-xs text-slate-400">Fetching live GPS coordinates...</p>
+            </div>
+          ) : null}
 
-            {/* Regional Corridor Polyline */}
-            <Source id="regional-route-source" type="geojson" data={routeGeoJson}>
-              <Layer
-                id="regional-route-glow"
-                type="line"
-                paint={{
-                  'line-color': '#06b6d4',
-                  'line-width': 8,
-                  'line-opacity': 0.3,
-                  'line-blur': 3
-                }}
-              />
-              <Layer
-                id="regional-route-line"
-                type="line"
-                paint={{
-                  'line-color': '#22c55e',
-                  'line-width': 3.5,
-                  'line-opacity': 0.95,
-                  'line-dasharray': [2, 1.5]
-                }}
-              />
-            </Source>
+          {gpsCoords && (
+            <MapGL
+              ref={mapRef}
+              initialViewState={{
+                longitude: gpsCoords[0],
+                latitude: gpsCoords[1],
+                zoom: 15,
+                pitch: 45,
+                bearing: 0
+              }}
+              mapboxAccessToken={MAPBOX_ACCESS_TOKEN}
+              interactive={true}
+              dragPan={true}
+              dragRotate={true}
+              scrollZoom={true}
+              touchZoomRotate={true}
+              style={{ width: '100%', height: '100%' }}
+              mapStyle={document.documentElement.classList.contains('dark') ? MAPBOX_DARK_STYLE : MAPBOX_LIGHT_STYLE}
+            >
+              <NavigationControl position="bottom-right" showCompass={true} showZoom={true} />
 
-            {/* Render Active Units */}
-            {activeRegion.corridors.map(unit => (
-              <Marker key={unit.id} longitude={unit.coords[0]} latitude={unit.coords[1]} anchor="bottom">
-                <div 
-                  onClick={() => {
-                    setActiveUnit(unit);
-                    safePanTo(unit.coords, 15.5);
-                    setStatusText(`Selected ${unit.name}. Current Velocity: ${unit.speed}. Hand Navigation Active!`);
-                  }}
-                  className="group relative flex flex-col items-center cursor-pointer hover:scale-110 transition-transform"
-                >
-                  <div className={`px-2 py-0.5 rounded text-[10px] font-extrabold shadow mb-1 border uppercase whitespace-nowrap ${
-                    unit.status === 'ACTIVE DISPATCH' ? 'bg-rose-600 text-white border-rose-400 animate-pulse' : 'bg-slate-900 text-slate-300 border-slate-700'
-                  }`}>
-                    🚑 {unit.name} ({unit.speed})
+              {/* User Live GPS Marker */}
+              <Marker longitude={gpsCoords[0]} latitude={gpsCoords[1]} anchor="bottom">
+                <div className="flex flex-col items-center cursor-pointer scale-110 transition-transform">
+                  <div className="px-2.5 py-1 rounded-full bg-cyan-500 text-slate-950 text-[10px] font-black shadow border border-cyan-300 uppercase whitespace-nowrap mb-1">
+                    📍 You (Live GPS)
                   </div>
-                  <div className="w-9 h-9 p-1 rounded-xl bg-slate-950 border border-slate-700 shadow-xl flex items-center justify-center">
-                    <img src="/traffic-svg/ambulance_car.svg" alt="Ambulance Icon" className="w-full h-full object-contain" />
+                  <div className="w-9 h-9 p-1 rounded-full bg-cyan-500 border border-white shadow-xl flex items-center justify-center animate-bounce">
+                    <span className="material-symbols-outlined text-slate-950 text-xl font-bold">person_pin_circle</span>
                   </div>
+                  <div className="w-3 h-3 bg-cyan-500/30 rounded-full animate-ping absolute bottom-[-4px]"></div>
                 </div>
               </Marker>
-            ))}
-          </MapGL>
+            </MapGL>
+          )}
 
           {/* Telemetry HUD overlay */}
           <div className="absolute top-3 left-3 px-3.5 py-2 bg-slate-950/95 backdrop-blur-md rounded-xl border border-slate-800 shadow-xl pointer-events-none flex items-center gap-3 z-10">
-            <div className="w-3 h-3 rounded-full bg-emerald-500 animate-ping"></div>
+            <div className="w-3 h-3 rounded-full bg-cyan-400 animate-ping"></div>
             <div>
-              <p className="text-[10px] uppercase font-black text-slate-400 tracking-wider">Operational Command Sector</p>
-              <p className="text-xs font-black text-slate-100">{activeRegion.name}</p>
+              <p className="text-[10px] uppercase font-black text-slate-400 tracking-wider">Coordinates</p>
+              <p className="text-[11px] font-mono font-black text-slate-100">
+                {gpsCoords ? `${gpsCoords[1].toFixed(5)}°N, ${gpsCoords[0].toFixed(5)}°E` : 'Locating...'}
+              </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Active Corridor Telemetry Bar */}
+      {/* GPS Status HUD */}
       <div className="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 shadow-2xl flex flex-col shrink-0">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-rose-950/80 rounded-xl border border-rose-500 text-rose-400">
-              <span className="material-symbols-outlined text-2xl animate-pulse">radar</span>
+            <div className="p-2.5 bg-cyan-950/80 rounded-xl border border-cyan-500 text-cyan-400">
+              <span className="material-symbols-outlined text-2xl">gps_fixed</span>
             </div>
             <div>
-              <h4 className="font-black text-sm text-white uppercase">Sector Surveillance Status</h4>
-              <p className="text-xs text-slate-300 font-mono mt-0.5">{statusText}</p>
+              <h4 className="font-black text-sm text-white uppercase">GPS Stream Status</h4>
+              <p className="text-xs text-slate-300 font-mono mt-0.5">
+                {errorMsg ? `⚠️ ${errorMsg}` : "✅ Live GPS signal active and streaming."}
+              </p>
             </div>
           </div>
           <div className="px-4 py-2 bg-gradient-to-r from-slate-950 to-slate-900 rounded-xl border border-slate-700 text-right">
-            <span className="text-[10px] text-slate-400 font-extrabold uppercase block">Active AI Junctions</span>
-            <span className="text-sm font-mono font-black text-cyan-400">ALL SIGNALS NOMINAL</span>
+            <span className="text-[10px] text-slate-400 font-extrabold uppercase block">Accuracy</span>
+            <span className="text-sm font-mono font-black text-cyan-400">HIGH PRECISION</span>
           </div>
         </div>
       </div>
