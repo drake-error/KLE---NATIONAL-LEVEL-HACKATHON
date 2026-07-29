@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import MapGL, { Source, Layer, Marker, NavigationControl } from 'react-map-gl';
+import { Map as MapGL, Source, Layer, Marker, NavigationControl } from 'react-map-gl/mapbox';
 import * as turf from '@turf/turf';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
