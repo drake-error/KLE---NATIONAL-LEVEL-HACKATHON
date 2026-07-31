@@ -358,7 +358,7 @@ Respiratory rt: 16 /min
   };
 
   return (
-    <div className="flex flex-col gap-gutter min-h-screen text-on-surface bg-surface-container-lowest p-6">
+    <div className="flex flex-col gap-6 w-full pb-12 text-on-surface">
       {/* Page Header */}
       <div className="flex items-center justify-between border-b border-outline-variant/30 pb-4 mb-4">
         <div>
@@ -626,24 +626,71 @@ Respiratory rt: 16 /min
               </div>
             </div>
           ) : (
-            <div className="bg-surface-container/30 border border-outline-variant/50 border-dashed rounded-2xl p-12 text-center flex flex-col items-center justify-center gap-3 h-full min-h-[480px]">
-              <span className="material-symbols-outlined text-on-surface-variant text-5xl animate-pulse">clinical_trial</span>
-              <h3 className="text-base font-bold text-on-surface mt-2">No Active Clinical Report</h3>
-              <p className="text-xs text-on-surface-variant max-w-sm">
-                Select a blood report profile and run the <strong>Intelligent Clinical Analysis</strong>. 
-                The agent will <strong>actually parse</strong> the report text, extract real lab values, 
-                compare against 40+ medical reference ranges, and generate a genuine AI diagnosis.
-              </p>
-              <div className="flex gap-3 mt-4">
-                <div className="flex items-center gap-1.5 text-[10px] text-on-surface-variant">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Real text parsing
+            <div className="relative overflow-hidden bg-gradient-to-br from-surface-container-lowest via-surface-container-low to-surface-container rounded-3xl border border-outline-variant/80 shadow-xl p-8 md:p-12 text-center flex flex-col items-center justify-center gap-6 h-full min-h-[520px] transition-all duration-500 group">
+              
+              {/* Background Ambient Glow */}
+              <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none group-hover:bg-primary/15 transition-all duration-700"></div>
+              <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-rose-500/10 rounded-full blur-3xl pointer-events-none group-hover:bg-rose-500/15 transition-all duration-700"></div>
+
+              {/* Glowing High-Tech Icon Sphere */}
+              <div className="relative flex items-center justify-center">
+                <div className="absolute inset-0 bg-gradient-to-tr from-primary to-rose-500 rounded-full blur-lg opacity-40 animate-pulse"></div>
+                <div className="relative w-24 h-24 rounded-3xl bg-gradient-to-br from-surface to-surface-container-lowest border border-outline-variant/60 shadow-2xl flex items-center justify-center transform group-hover:scale-105 transition-transform duration-500">
+                  <span className="material-symbols-outlined text-primary dark:text-rose-400 text-[52px]">biotech</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-[10px] text-on-surface-variant">
-                  <span className="w-2 h-2 rounded-full bg-blue-500"></span> 40+ reference ranges
+              </div>
+
+              {/* Elegant Hero Copy */}
+              <div className="max-w-md z-10 space-y-2">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-[11px] font-black tracking-wider uppercase text-primary mb-1">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  AI Clinical Engine Standing By
                 </div>
-                <div className="flex items-center gap-1.5 text-[10px] text-on-surface-variant">
-                  <span className="w-2 h-2 rounded-full bg-rose-500"></span> Clinical rule engine
+                <h3 className="text-2xl md:text-3xl font-black text-on-surface tracking-tight leading-tight">
+                  No Active Report Evaluated
+                </h3>
+                <p className="text-sm text-on-surface-variant font-medium leading-relaxed">
+                  Select an intake profile on the left or drop an actual blood report to trigger our high-precision <strong>Intelligent Clinical Analysis</strong> pipeline.
+                </p>
+              </div>
+
+              {/* Feature Cards Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 w-full max-w-xl mt-4 z-10">
+                <div className="bg-surface/80 dark:bg-surface-container-lowest/80 backdrop-blur-md p-4 rounded-2xl border border-outline-variant/60 shadow-sm flex flex-col items-center text-center gap-2 hover:border-primary/50 transition-all">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-xl">science</span>
+                  </div>
+                  <div>
+                    <p className="text-xs font-extrabold text-on-surface">Real Value Parsing</p>
+                    <p className="text-[11px] text-on-surface-variant leading-tight mt-0.5 font-medium">Extracts exact biological markers directly from raw text</p>
+                  </div>
                 </div>
+
+                <div className="bg-surface/80 dark:bg-surface-container-lowest/80 backdrop-blur-md p-4 rounded-2xl border border-outline-variant/60 shadow-sm flex flex-col items-center text-center gap-2 hover:border-primary/50 transition-all">
+                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-xl">rule</span>
+                  </div>
+                  <div>
+                    <p className="text-xs font-extrabold text-on-surface">40+ Reference Ranges</p>
+                    <p className="text-[11px] text-on-surface-variant leading-tight mt-0.5 font-medium">Evaluates metrics against established medical bounds</p>
+                  </div>
+                </div>
+
+                <div className="bg-surface/80 dark:bg-surface-container-lowest/80 backdrop-blur-md p-4 rounded-2xl border border-outline-variant/60 shadow-sm flex flex-col items-center text-center gap-2 hover:border-primary/50 transition-all">
+                  <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-xl">smart_toy</span>
+                  </div>
+                  <div>
+                    <p className="text-xs font-extrabold text-on-surface">Interactive Medical AI</p>
+                    <p className="text-[11px] text-on-surface-variant leading-tight mt-0.5 font-medium">Context-aware conversational diagnostic guidance</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant/70 flex items-center gap-2">
+                <span className="w-8 h-[1px] bg-outline-variant/60"></span>
+                Ready for Clinical Ingest
+                <span className="w-8 h-[1px] bg-outline-variant/60"></span>
               </div>
             </div>
           )}
