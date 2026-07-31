@@ -9,11 +9,14 @@ import PatientFlow from './PatientFlow';
 import Login from './Login';
 import NotFound from './NotFound';
 
+import HealthVault from '../health-vault/HealthVault';
+
 export default function DashboardLayout() {
   const [currentTab, setCurrentTab] = useState('dashboard');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState('');
   const [theme, setTheme] = useState(document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+  const [searchQuery, setSearchQuery] = useState('');
 
   return (
     <div className="bg-background text-on-surface font-body-md overflow-hidden min-h-screen">
@@ -21,7 +24,7 @@ export default function DashboardLayout() {
       <Sidebar currentTab={currentTab} setCurrentTab={setCurrentTab} />
       
       {/* Fixed Top Control Bar */}
-      <TopHeader currentTab={currentTab} setCurrentTab={setCurrentTab} isLoggedIn={isLoggedIn} userName={userName} theme={theme} setTheme={setTheme} />
+      <TopHeader currentTab={currentTab} setCurrentTab={setCurrentTab} isLoggedIn={isLoggedIn} userName={userName} theme={theme} setTheme={setTheme} searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
       
       {/* Dynamic Tab Switch Content Canvas */}
       {currentTab === 'dashboard' && (
@@ -37,6 +40,12 @@ export default function DashboardLayout() {
             {/* Right Section (4 cols): Live Interactive Route Map, Control Hub & AI Terminal */}
             <LiveRouteMap theme={theme} />
           </div>
+        </main>
+      )}
+      
+      {currentTab === 'health-vault' && (
+        <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
+          <HealthVault searchQuery={searchQuery} />
         </main>
       )}
       

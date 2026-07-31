@@ -34,6 +34,15 @@ export default function Sidebar({ currentTab, setCurrentTab }) {
           <span className="font-body-md text-body-md">Patient Flow</span>
         </button>
         <button 
+          onClick={() => setCurrentTab('health-vault')}
+          className={`w-full flex items-center gap-sm px-sm py-xs font-bold rounded-xl transition-all duration-200 ${
+            currentTab === 'health-vault' ? 'bg-surface-container-high text-on-surface scale-[0.99]' : 'text-on-surface-variant hover:bg-surface-container-low'
+          }`}
+        >
+          <span className="material-symbols-outlined" data-icon="folder_shared">folder_shared</span>
+          <span className="font-body-md text-body-md">Health Vault</span>
+        </button>
+        <button 
           onClick={() => setCurrentTab('fleet')}
           className={`w-full flex items-center gap-sm px-sm py-xs font-bold rounded-xl transition-all duration-200 ${
             currentTab === 'fleet' ? 'bg-surface-container-high text-on-surface scale-[0.99]' : 'text-on-surface-variant hover:bg-surface-container-low'

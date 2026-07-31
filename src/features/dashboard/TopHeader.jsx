@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 
-export default function TopHeader({ currentTab, setCurrentTab, isLoggedIn, userName, theme, setTheme }) {
+export default function TopHeader({ currentTab, setCurrentTab, isLoggedIn, userName, theme, setTheme, searchQuery, setSearchQuery }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showApps, setShowApps] = useState(false);
 
   const handleSearch = (e) => {
-    if (e.key === 'Enter' && e.target.value.trim() !== '') {
-      setCurrentTab('not-found');
+    if (e.key === 'Enter') {
+      setCurrentTab('health-vault');
     }
   };
+
   return (
     <header className="h-16 fixed top-0 right-0 w-[calc(100%-16rem)] bg-surface border-b border-outline-variant z-40 flex justify-between items-center px-margin-desktop">
       <div className="flex items-center gap-md flex-1">
@@ -19,6 +20,8 @@ export default function TopHeader({ currentTab, setCurrentTab, isLoggedIn, userN
             className="w-full pl-xl pr-sm py-xs bg-surface-container-low border-none focus:ring-2 focus:ring-primary rounded-xl text-body-sm font-body-sm" 
             placeholder="Search incidents, fleets, or staff..." 
             type="text" 
+            value={searchQuery || ''}
+            onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleSearch}
           />
         </div>

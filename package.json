@@ -10,7 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.111.0",
     "@turf/turf": "^7.3.5",
+    "crypto-js": "^4.2.0",
     "leaflet": "^1.9.4",
     "mapbox-gl": "^3.27.0",
     "maplibre-gl": "^6.0.0",
