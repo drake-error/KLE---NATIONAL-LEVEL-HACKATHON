@@ -11,6 +11,9 @@ import NotFound from './NotFound';
 
 import HealthVault from '../health-vault/HealthVault';
 import ParentalMonitoring from '../parental-monitoring/ParentalMonitoring';
+import SettingsPage from '../settings/SettingsPage';
+import SupportPage from '../support/SupportPage';
+import SystemStatusPage from '../support/SystemStatusPage';
 
 export default function DashboardLayout({ session }) {
   const [currentTab, setCurrentTab] = useState('dashboard');
@@ -78,6 +81,24 @@ export default function DashboardLayout({ session }) {
       {currentTab === 'not-found' && (
         <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
           <NotFound setCurrentTab={setCurrentTab} />
+        </main>
+      )}
+
+      {currentTab === 'settings' && (
+        <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
+          <SettingsPage session={session} theme={theme} setTheme={setTheme} />
+        </main>
+      )}
+
+      {currentTab === 'support' && (
+        <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
+          <SupportPage session={session} setCurrentTab={setCurrentTab} />
+        </main>
+      )}
+
+      {currentTab === 'system-status' && (
+        <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
+          <SystemStatusPage setCurrentTab={setCurrentTab} />
         </main>
       )}
     </div>

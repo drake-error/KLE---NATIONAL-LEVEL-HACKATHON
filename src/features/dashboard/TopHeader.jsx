@@ -86,8 +86,8 @@ export default function TopHeader({ currentTab, setCurrentTab, session, theme, s
             </button>
             {showSettings && (
               <div className="absolute right-0 mt-2 w-48 bg-surface border border-outline-variant rounded-xl shadow-lg z-50 p-2 animate-fadeIn">
-                <button className="w-full text-left px-3 py-2 text-label-md hover:bg-surface-container-low rounded-lg transition-colors">System Settings</button>
-                <button className="w-full text-left px-3 py-2 text-label-md hover:bg-surface-container-low rounded-lg transition-colors">Healthcare Tools</button>
+                <button onClick={() => { setCurrentTab('settings'); setShowSettings(false); }} className="w-full text-left px-3 py-2 text-label-md hover:bg-surface-container-low rounded-lg transition-colors">System Settings</button>
+                <button onClick={() => { setCurrentTab('settings'); setShowSettings(false); }} className="w-full text-left px-3 py-2 text-label-md hover:bg-surface-container-low rounded-lg transition-colors">Healthcare Tools</button>
                 <button onClick={handleLogout} className="w-full text-left px-3 py-2 text-label-md hover:bg-surface-container-low rounded-lg transition-colors text-error">Sign Out</button>
               </div>
             )}
@@ -137,13 +137,13 @@ export default function TopHeader({ currentTab, setCurrentTab, session, theme, s
         <div className="h-8 w-[1px] bg-outline-variant mx-xs"></div>
         
         {session ? (
-          <div className="flex items-center gap-sm cursor-pointer group">
+          <div onClick={() => setCurrentTab('settings')} className="flex items-center gap-sm cursor-pointer group" title="View Profile & Settings">
             <div className="text-right">
               <p className="font-label-md text-label-md text-on-surface group-hover:text-primary transition-colors capitalize">{userName}</p>
             </div>
             <img 
               alt={userName}
-              className="w-10 h-10 rounded-full border-2 border-primary-container bg-surface-container object-cover" 
+              className="w-10 h-10 rounded-full border-2 border-primary-container bg-surface-container object-cover group-hover:scale-105 transition-transform" 
               src={userAvatar} 
             />
           </div>

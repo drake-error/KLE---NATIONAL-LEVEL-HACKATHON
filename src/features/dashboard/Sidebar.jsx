@@ -57,23 +57,38 @@ export default function Sidebar({ currentTab, setCurrentTab }) {
           <span className="material-symbols-outlined" data-icon="analytics">analytics</span>
           <span className="font-body-md text-body-md">Analytics</span>
         </a>
-        <a className="flex items-center gap-sm px-sm py-xs text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-xl" href="#">
+        <button 
+          onClick={() => setCurrentTab('settings')}
+          className={`w-full flex items-center gap-sm px-sm py-xs font-bold rounded-xl transition-all duration-200 ${
+            currentTab === 'settings' ? 'bg-surface-container-high text-on-surface scale-[0.99]' : 'text-on-surface-variant hover:bg-surface-container-low'
+          }`}
+        >
           <span className="material-symbols-outlined" data-icon="settings">settings</span>
           <span className="font-body-md text-body-md">Settings</span>
-        </a>
+        </button>
       </nav>
       <button className="mb-lg w-full py-sm bg-primary text-on-primary rounded-xl font-label-md text-label-md shadow-md active:scale-95 transition-transform">
         New Dispatch
       </button>
       <div className="space-y-1 pt-sm border-t border-outline-variant">
-        <a className="flex items-center gap-sm px-sm py-xs text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-xl" href="#">
+        <button
+          onClick={() => setCurrentTab('support')}
+          className={`w-full flex items-center gap-sm px-sm py-xs rounded-xl font-bold transition-all duration-200 ${
+            currentTab === 'support' ? 'bg-surface-container-high text-on-surface scale-[0.99]' : 'text-on-surface-variant hover:bg-surface-container-low'
+          }`}
+        >
           <span className="material-symbols-outlined" data-icon="help">help</span>
           <span className="font-label-md text-label-md">Support</span>
-        </a>
-        <a className="flex items-center gap-sm px-sm py-xs text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-xl" href="#">
+        </button>
+        <button
+          onClick={() => setCurrentTab('system-status')}
+          className={`w-full flex items-center gap-sm px-sm py-xs rounded-xl font-bold transition-all duration-200 ${
+            currentTab === 'system-status' ? 'bg-surface-container-high text-on-surface scale-[0.99]' : 'text-on-surface-variant hover:bg-surface-container-low'
+          }`}
+        >
           <span className="material-symbols-outlined" data-icon="pulse">switch_account</span>
           <span className="font-label-md text-label-md">System Status</span>
-        </a>
+        </button>
       </div>
     </aside>
   );
