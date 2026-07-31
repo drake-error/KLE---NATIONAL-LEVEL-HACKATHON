@@ -1,8 +1,38 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 export default function HealthVaultTable() {
+  const [sosTriggered, setSosTriggered] = useState(false);
+
+  const handleSosClick = () => {
+    setSosTriggered(true);
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      // Synthesize three sharp emergency acoustic alert beeps
+      [0, 0.2, 0.4].forEach(offset => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime + offset); // A5 siren pitch
+        osc.frequency.exponentialRampToValueAtTime(1760, audioCtx.currentTime + offset + 0.1); // A6 ascending slope
+        gain.gain.setValueAtTime(0.35, audioCtx.currentTime + offset);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + offset + 0.12);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(audioCtx.currentTime + offset);
+        osc.stop(audioCtx.currentTime + offset + 0.12);
+      });
+    } catch (e) {
+      console.error('Web Audio acoustic generator error:', e);
+    }
+
+    // Automatically reset alarm display state after 6 seconds
+    setTimeout(() => {
+      setSosTriggered(false);
+    }, 6000);
+  };
+
   return (
-    <div className="col-span-8 flex flex-col gap-gutter">
+    <div className="col-span-8 flex flex-col gap-gutter relative">
       {/* System Topology & AI Agents */}
       <section className="bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm">
         <div className="flex justify-between items-center mb-md">
@@ -85,7 +115,67 @@ export default function HealthVaultTable() {
           </div>
         </div>
       </section>
-      
+
+      {/* ─── Blue Floating Emergency SOS Control Hub (Below Topology) ─── */}
+      <section className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 rounded-2xl p-5 shadow-xl border border-blue-400/40 text-white animate-fadeIn transition-all duration-300 hover:shadow-blue-500/25">
+        <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 relative z-10">
+          <div className="flex items-center gap-4 text-left">
+            <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-inner animate-bounce">
+              <span className="material-symbols-outlined text-3xl font-black text-white">sos</span>
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-950/40 text-[10px] font-black tracking-wider uppercase text-cyan-200 border border-cyan-300/30 mb-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                Instant Telemetry Trigger
+              </div>
+              <h3 className="text-lg font-black tracking-tight leading-tight">
+                Emergency Fleet &amp; Hospital SOS Dispatch
+              </h3>
+              <p className="text-xs text-blue-100 font-medium">
+                Clicking sounds an acoustic hazard siren &amp; primes high-priority route clearance. <span className="underline decoration-white/50 font-bold">Backend dispatch logic pending</span>.
+              </p>
+            </div>
+          </div>
+
+          <button 
+            onClick={handleSosClick}
+            className={`px-6 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider shadow-2xl flex items-center gap-2 transition-all transform active:scale-95 border ${
+              sosTriggered 
+                ? 'bg-amber-400 text-slate-950 border-amber-300 scale-105 animate-pulse shadow-amber-400/50' 
+                : 'bg-white text-blue-700 hover:bg-slate-50 border-white/80 hover:shadow-xl'
+            }`}
+          >
+            <span className="material-symbols-outlined text-lg">{sosTriggered ? 'volume_up' : 'campaign'}</span>
+            {sosTriggered ? 'BEEP! Siren Broadcasting...' : 'ACTIVATE SOS BEACON'}
+          </button>
+        </div>
+
+        {sosTriggered && (
+          <div className="mt-4 pt-3 border-t border-white/20 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs font-bold bg-slate-950/20 px-4 py-2 rounded-xl animate-fadeIn">
+            <span className="flex items-center gap-2 text-amber-200">
+              <span className="material-symbols-outlined text-base text-amber-400">gpp_good</span>
+              Acoustic alarm triggered! Local emergency beacon simulated successfully.
+            </span>
+            <span className="text-[11px] bg-white/20 px-2.5 py-0.5 rounded text-white font-mono">
+              ⚡ Reminder: Backend API connection will be attached in later phase.
+            </span>
+          </div>
+        )}
+      </section>
+
+      {/* Fixed Floating Emergency SOS Circular Button */}
+      <button
+        onClick={handleSosClick}
+        title="Activate Emergency SOS Beacon (Beeps)"
+        className="fixed bottom-8 right-8 z-50 bg-gradient-to-tr from-blue-700 via-blue-600 to-cyan-500 text-white p-4 rounded-full shadow-2xl border-2 border-white/40 flex items-center justify-center hover:scale-110 active:scale-90 transition-all duration-300 group ring-4 ring-blue-500/30 animate-bounce"
+      >
+        <span className="material-symbols-outlined text-3xl font-black">sos</span>
+        <span className="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs group-hover:ml-2 group-hover:pr-2 transition-all duration-300 text-xs font-black tracking-wider uppercase">
+          Emergency SOS
+        </span>
+      </button>
+
       {/* Emergency Response Analytics */}
       <section className="bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm flex-1">
         <div className="flex justify-between items-center mb-md">
