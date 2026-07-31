@@ -358,22 +358,22 @@ Respiratory rt: 16 /min
   };
 
   return (
-    <div className="flex flex-col gap-gutter min-h-screen text-slate-100 bg-slate-950 p-6">
+    <div className="flex flex-col gap-gutter min-h-screen text-on-surface bg-surface-container-lowest p-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between border-b border-slate-900 pb-4 mb-4">
+      <div className="flex items-center justify-between border-b border-outline-variant/30 pb-4 mb-4">
         <div>
           <h2 className="text-xl font-bold flex items-center gap-2 text-rose-500">
             <span className="material-symbols-outlined text-rose-500">emergency</span>
             AI Patient Flow & Diagnostic Agent (HIA)
           </h2>
-          <p className="text-xs text-slate-400">Intelligent Agent — Actually parses, evaluates & diagnoses blood reports against 40+ medical reference ranges</p>
+          <p className="text-xs text-on-surface-variant">Intelligent Agent — Actually parses, evaluates & diagnoses blood reports against 40+ medical reference ranges</p>
         </div>
         <div className="flex gap-2">
-          <span className="px-3 py-1 text-[10px] bg-slate-900 border border-slate-800 rounded-full font-bold text-slate-300 flex items-center gap-1.5">
+          <span className="px-3 py-1 text-[10px] bg-surface-container border border-outline-variant rounded-full font-bold text-on-surface flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
             Analysis Engine: Live
           </span>
-          <span className="px-3 py-1 text-[10px] bg-slate-900 border border-slate-800 rounded-full font-bold text-slate-300">
+          <span className="px-3 py-1 text-[10px] bg-surface-container border border-outline-variant rounded-full font-bold text-on-surface">
             Rule Engine: 40+ Reference Ranges
           </span>
         </div>
@@ -382,25 +382,25 @@ Respiratory rt: 16 /min
       <div className="grid grid-cols-12 gap-gutter">
         {/* Left Section */}
         <div className="col-span-12 lg:col-span-5 flex flex-col gap-gutter">
-          <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-5 flex flex-col gap-4">
-            <h3 className="text-sm font-black text-slate-300 uppercase tracking-wider">Patient Intake Information</h3>
+          <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-5 flex flex-col gap-4">
+            <h3 className="text-sm font-black text-on-surface uppercase tracking-wider">Patient Intake Information</h3>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-[10px] uppercase font-black tracking-wider text-slate-400 block mb-1">Patient Name</label>
+                <label className="text-[10px] uppercase font-black tracking-wider text-on-surface-variant block mb-1">Patient Name</label>
                 <input type="text" value={patientName} onChange={(e) => setPatientName(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-rose-500" />
+                  className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-rose-500" />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-[10px] uppercase font-black tracking-wider text-slate-400 block mb-1">Age</label>
+                  <label className="text-[10px] uppercase font-black tracking-wider text-on-surface-variant block mb-1">Age</label>
                   <input type="number" value={patientAge} onChange={(e) => setPatientAge(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-rose-500" />
+                    className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-rose-500" />
                 </div>
                 <div>
-                  <label className="text-[10px] uppercase font-black tracking-wider text-slate-400 block mb-1">Gender</label>
+                  <label className="text-[10px] uppercase font-black tracking-wider text-on-surface-variant block mb-1">Gender</label>
                   <select value={patientGender} onChange={(e) => setPatientGender(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-2 py-2 text-xs font-semibold focus:outline-none focus:border-rose-500">
+                    className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl px-2 py-2 text-xs font-semibold focus:outline-none focus:border-rose-500">
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
                     <option value="Other">Other</option>
@@ -410,17 +410,17 @@ Respiratory rt: 16 /min
             </div>
 
             <div>
-              <label className="text-[10px] uppercase font-black tracking-wider text-slate-400 block mb-1">Select Blood Report Source</label>
+              <label className="text-[10px] uppercase font-black tracking-wider text-on-surface-variant block mb-1">Select Blood Report Source</label>
               <div className="flex flex-col gap-2">
                 {Object.entries(SAMPLE_REPORTS).map(([key, report]) => (
                   <label key={key} className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
-                    reportSource === key ? 'border-rose-500 bg-rose-950/10' : 'border-slate-800 bg-slate-950 hover:bg-slate-900/50'
+                    reportSource === key ? 'border-rose-500 bg-rose-950/10' : 'border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low'
                   }`}>
                     <div className="flex items-center gap-2">
                       <input type="radio" name="reportSource" checked={reportSource === key} onChange={() => setReportSource(key)} className="accent-rose-500" />
                       <div className="text-left">
                         <p className="text-xs font-bold">{report.title}</p>
-                        <p className="text-[10px] text-slate-400">{report.description}</p>
+                        <p className="text-[10px] text-on-surface-variant">{report.description}</p>
                       </div>
                     </div>
                     <span className={`text-[10px] px-2 py-0.5 font-bold rounded ${badgeColors[report.badgeColor]}`}>{report.badge}</span>
@@ -432,15 +432,15 @@ Respiratory rt: 16 /min
             {/* File Uploader */}
             <div onDragEnter={handleDrag} onDragOver={handleDrag} onDragLeave={handleDrag} onDrop={handleDrop}
               className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all ${
-                dragActive ? 'border-rose-500 bg-rose-500/10' : 'border-slate-800 bg-slate-950 hover:border-slate-700'
+                dragActive ? 'border-rose-500 bg-rose-500/10' : 'border-outline-variant bg-surface-container-lowest hover:border-outline'
               }`}>
               <input type="file" id="file-upload" multiple={false} onChange={handleFileChange} accept=".txt,.csv,.pdf,image/*" className="hidden" />
               <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center gap-2">
-                <span className="material-symbols-outlined text-slate-400 text-3xl">upload_file</span>
-                <span className="text-xs font-bold text-slate-200">
+                <span className="material-symbols-outlined text-on-surface-variant text-3xl">upload_file</span>
+                <span className="text-xs font-bold text-on-surface">
                   {uploadedFile ? `Attached: ${uploadedFile.name}` : "Upload blood report TXT/CSV/Image"}
                 </span>
-                <span className="text-[10px] text-slate-500">Drag & drop or click to browse — agent will ACTUALLY parse values</span>
+                <span className="text-[10px] text-on-surface-variant">Drag & drop or click to browse — agent will ACTUALLY parse values</span>
               </label>
             </div>
 
@@ -452,18 +452,18 @@ Respiratory rt: 16 /min
           </div>
 
           {/* Agent Console */}
-          <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-5 flex flex-col gap-2 flex-1 min-h-[220px]">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2">
-              <span className="text-xs font-black text-slate-400 uppercase tracking-wider">Intelligent Agent Processing Logs</span>
+          <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-5 flex flex-col gap-2 flex-1 min-h-[220px]">
+            <div className="flex items-center justify-between border-b border-outline-variant pb-2 mb-2">
+              <span className="text-xs font-black text-on-surface-variant uppercase tracking-wider">Intelligent Agent Processing Logs</span>
               <span className="flex h-2 w-2 relative">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
               </span>
             </div>
             <div ref={logsContainerRef}
-              className="font-mono text-[10px] text-emerald-400 bg-slate-950 p-4 rounded-xl border border-slate-800 flex-1 overflow-y-auto max-h-[220px] leading-relaxed">
+              className="font-mono text-[10px] text-emerald-400 bg-surface-container-lowest p-4 rounded-xl border border-outline-variant flex-1 overflow-y-auto max-h-[220px] leading-relaxed">
               {analysisLogs.length === 0 ? (
-                <span className="text-slate-600">Waiting for clinical diagnosis trigger...</span>
+                <span className="text-on-surface-variant">Waiting for clinical diagnosis trigger...</span>
               ) : (
                 analysisLogs.map((log, i) => (
                   <div key={i} className="mb-1.5 animate-fadeIn">{log}</div>
@@ -478,9 +478,9 @@ Respiratory rt: 16 /min
           {analysisResult ? (
             <div className="flex flex-col gap-gutter animate-fadeIn">
               {/* Flagged Lab Parameters — REAL extracted values */}
-              <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-5 flex flex-col gap-3">
+              <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-5 flex flex-col gap-3">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-sm font-black text-slate-300 uppercase tracking-wider">
+                  <h3 className="text-sm font-black text-on-surface uppercase tracking-wider">
                     Parsed Lab Parameters ({analysisResult.parameterCount} extracted)
                   </h3>
                   <span className={`px-2.5 py-0.5 text-[10px] font-black rounded-full ${
@@ -494,10 +494,10 @@ Respiratory rt: 16 /min
                   </span>
                 </div>
 
-                <div className="overflow-x-auto rounded-xl border border-slate-850">
+                <div className="overflow-x-auto rounded-xl border border-outline-variant/50">
                   <table className="w-full text-left border-collapse text-xs">
                     <thead>
-                      <tr className="bg-slate-950/80 text-slate-400 font-bold border-b border-slate-850">
+                      <tr className="bg-surface-container-lowest/80 text-on-surface-variant font-bold border-b border-outline-variant/50">
                         <th className="p-3">Category</th>
                         <th className="p-3">Marker</th>
                         <th className="p-3 text-center">Extracted Value</th>
@@ -507,10 +507,10 @@ Respiratory rt: 16 /min
                     </thead>
                     <tbody>
                       {analysisResult.metrics.map((metric, i) => (
-                        <tr key={i} className="border-b border-slate-900 hover:bg-slate-900/30 transition-colors">
-                          <td className="p-3 font-semibold text-slate-400">{metric.category}</td>
-                          <td className="p-3 font-bold text-slate-200">{metric.name}</td>
-                          <td className="p-3 text-center font-mono font-bold text-slate-300">{metric.value}</td>
+                        <tr key={i} className="border-b border-outline-variant/30 hover:bg-surface-container/30 transition-colors">
+                          <td className="p-3 font-semibold text-on-surface-variant">{metric.category}</td>
+                          <td className="p-3 font-bold text-on-surface">{metric.name}</td>
+                          <td className="p-3 text-center font-mono font-bold text-on-surface">{metric.value}</td>
                           <td className="p-3 text-center">
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                               metric.status === 'High' ? 'bg-amber-500/20 text-amber-300'
@@ -518,7 +518,7 @@ Respiratory rt: 16 /min
                                 : 'bg-emerald-500/20 text-emerald-300'
                             }`}>{metric.status}</span>
                           </td>
-                          <td className="p-3 text-right font-mono text-slate-400">{metric.ref}</td>
+                          <td className="p-3 text-right font-mono text-on-surface-variant">{metric.ref}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -527,22 +527,22 @@ Respiratory rt: 16 /min
               </div>
 
               {/* AI Diagnosis — REAL generated from actual values */}
-              <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-5 flex flex-col gap-3">
-                <div className="flex justify-between items-center border-b border-slate-850 pb-2">
-                  <h3 className="text-sm font-black text-slate-300 uppercase tracking-wider">Intelligent Clinical Analysis</h3>
+              <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-5 flex flex-col gap-3">
+                <div className="flex justify-between items-center border-b border-outline-variant/50 pb-2">
+                  <h3 className="text-sm font-black text-on-surface uppercase tracking-wider">Intelligent Clinical Analysis</h3>
                   <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
                     ✓ Generated from actual parsed values
                   </span>
                 </div>
-                <div className="text-xs leading-relaxed text-slate-300 space-y-3 pt-1">
+                <div className="text-xs leading-relaxed text-on-surface space-y-3 pt-1">
                   {analysisResult.analysis.split('\n\n').map((paragraph, pIdx) => {
                     if (paragraph.startsWith('- **Potential Health Risks:**') || paragraph.startsWith('- **Recommendations:**')) {
                       return (
                         <div key={pIdx} className="pl-4 border-l-2 border-rose-500/50 mb-4">
-                          <p className="font-bold text-slate-200 mb-2">{paragraph.split('\n')[0].replace('- ', '')}</p>
+                          <p className="font-bold text-on-surface mb-2">{paragraph.split('\n')[0].replace('- ', '')}</p>
                           <ul className="list-disc pl-5 space-y-1">
                             {paragraph.split('\n').slice(1).filter(l => l.trim()).map((li, lIdx) => (
-                              <li key={lIdx} className="text-slate-300">{li.replace(/^\s*-\s*/, '').replace(/\*\*/g, '')}</li>
+                              <li key={lIdx} className="text-on-surface">{li.replace(/^\s*-\s*/, '').replace(/\*\*/g, '')}</li>
                             ))}
                           </ul>
                         </div>
@@ -550,13 +550,13 @@ Respiratory rt: 16 /min
                     }
                     if (paragraph.startsWith('> ')) {
                       return (
-                        <blockquote key={pIdx} className="bg-slate-950 p-3 rounded-xl border-l-4 border-blue-500 text-[11px] text-slate-400 italic mb-2">
+                        <blockquote key={pIdx} className="bg-surface-container-lowest p-3 rounded-xl border-l-4 border-blue-500 text-[11px] text-on-surface-variant italic mb-2">
                           {paragraph.replace('> ', '')}
                         </blockquote>
                       );
                     }
                     if (paragraph.startsWith('### ')) {
-                      return <h4 key={pIdx} className="text-sm font-bold text-slate-200 mt-2">{paragraph.replace('### ', '')}</h4>;
+                      return <h4 key={pIdx} className="text-sm font-bold text-on-surface mt-2">{paragraph.replace('### ', '')}</h4>;
                     }
                     return <p key={pIdx}>{paragraph}</p>;
                   })}
@@ -564,13 +564,13 @@ Respiratory rt: 16 /min
               </div>
 
               {/* Intelligent Follow-Up Chat */}
-              <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-5 flex flex-col gap-3 h-[420px]">
-                <div className="flex justify-between items-center border-b border-slate-850 pb-2">
-                  <h3 className="text-sm font-black text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+              <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-5 flex flex-col gap-3 h-[420px]">
+                <div className="flex justify-between items-center border-b border-outline-variant/50 pb-2">
+                  <h3 className="text-sm font-black text-on-surface uppercase tracking-wider flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-xs text-rose-400">forum</span>
                     Context-Aware Clinical Chat Agent
                   </h3>
-                  <span className="text-[10px] text-slate-400 font-medium">Grounded in your actual lab data</span>
+                  <span className="text-[10px] text-on-surface-variant font-medium">Grounded in your actual lab data</span>
                 </div>
 
                 <div className="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-thin">
@@ -579,7 +579,7 @@ Respiratory rt: 16 /min
                       <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-xs leading-relaxed ${
                         msg.role === 'user'
                           ? 'bg-rose-600 text-white rounded-tr-none'
-                          : 'bg-slate-950 border border-slate-850 text-slate-300 rounded-tl-none'
+                          : 'bg-surface-container-lowest border border-outline-variant/50 text-on-surface rounded-tl-none'
                       }`}>
                         <p className="font-bold text-[9px] uppercase tracking-wider opacity-60 mb-1">
                           {msg.role === 'user' ? 'Patient' : 'Clinical AI Agent'}
@@ -590,7 +590,7 @@ Respiratory rt: 16 /min
                   ))}
                   {isReplying && (
                     <div className="flex justify-start">
-                      <div className="bg-slate-950 border border-slate-850 rounded-2xl rounded-tl-none px-4 py-3 text-xs text-slate-500 flex items-center gap-2">
+                      <div className="bg-surface-container-lowest border border-outline-variant/50 rounded-2xl rounded-tl-none px-4 py-3 text-xs text-on-surface-variant flex items-center gap-2">
                         <span className="relative flex h-2 w-2">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-slate-600 opacity-75"></span>
                           <span className="relative inline-flex rounded-full h-2 w-2 bg-slate-500"></span>
@@ -606,18 +606,18 @@ Respiratory rt: 16 /min
                   <div className="grid grid-cols-2 gap-2 mt-2">
                     {SUGGESTED_QUESTIONS.map((q, i) => (
                       <button key={i} onClick={() => handleSendMessage(q)}
-                        className="text-left p-2.5 bg-slate-950 border border-slate-850 hover:border-slate-700 rounded-xl text-[10px] text-slate-300 hover:text-white transition-all font-semibold leading-snug hover:bg-slate-900">
+                        className="text-left p-2.5 bg-surface-container-lowest border border-outline-variant/50 hover:border-outline rounded-xl text-[10px] text-on-surface hover:text-white transition-all font-semibold leading-snug hover:bg-surface-container">
                         {q}
                       </button>
                     ))}
                   </div>
                 )}
 
-                <div className="flex gap-2 border-t border-slate-850 pt-3">
+                <div className="flex gap-2 border-t border-outline-variant/50 pt-3">
                   <input type="text" value={userInput} onChange={(e) => setUserInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                     placeholder="Ask about your actual lab results — diet, urgency, follow-up tests..."
-                    className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-rose-500 font-semibold" />
+                    className="flex-1 bg-surface-container-lowest border border-outline-variant rounded-xl px-3 py-2.5 text-xs text-on-surface focus:outline-none focus:border-rose-500 font-semibold" />
                   <button onClick={() => handleSendMessage()} disabled={isReplying || !userInput.trim()}
                     className="bg-rose-600 hover:bg-rose-500 disabled:bg-rose-900 disabled:text-rose-400 text-white font-bold px-4 rounded-xl transition-all active:scale-95 flex items-center justify-center">
                     <span className="material-symbols-outlined text-sm">send</span>
@@ -626,22 +626,22 @@ Respiratory rt: 16 /min
               </div>
             </div>
           ) : (
-            <div className="bg-slate-900/30 border border-slate-850 border-dashed rounded-2xl p-12 text-center flex flex-col items-center justify-center gap-3 h-full min-h-[480px]">
-              <span className="material-symbols-outlined text-slate-500 text-5xl animate-pulse">clinical_trial</span>
-              <h3 className="text-base font-bold text-slate-300 mt-2">No Active Clinical Report</h3>
-              <p className="text-xs text-slate-500 max-w-sm">
+            <div className="bg-surface-container/30 border border-outline-variant/50 border-dashed rounded-2xl p-12 text-center flex flex-col items-center justify-center gap-3 h-full min-h-[480px]">
+              <span className="material-symbols-outlined text-on-surface-variant text-5xl animate-pulse">clinical_trial</span>
+              <h3 className="text-base font-bold text-on-surface mt-2">No Active Clinical Report</h3>
+              <p className="text-xs text-on-surface-variant max-w-sm">
                 Select a blood report profile and run the <strong>Intelligent Clinical Analysis</strong>. 
                 The agent will <strong>actually parse</strong> the report text, extract real lab values, 
                 compare against 40+ medical reference ranges, and generate a genuine AI diagnosis.
               </p>
               <div className="flex gap-3 mt-4">
-                <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+                <div className="flex items-center gap-1.5 text-[10px] text-on-surface-variant">
                   <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Real text parsing
                 </div>
-                <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+                <div className="flex items-center gap-1.5 text-[10px] text-on-surface-variant">
                   <span className="w-2 h-2 rounded-full bg-blue-500"></span> 40+ reference ranges
                 </div>
-                <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+                <div className="flex items-center gap-1.5 text-[10px] text-on-surface-variant">
                   <span className="w-2 h-2 rounded-full bg-rose-500"></span> Clinical rule engine
                 </div>
               </div>
