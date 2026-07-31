@@ -37,7 +37,7 @@ export default function ParentalMonitoring() {
   const [isRecording, setIsRecording] = useState(false);
   const [alerts, setAlerts] = useState([]);
   const [newMember, setNewMember] = useState({ name: '', age: '', relation: '', avatar: '👤' });
-  const [newReminder, setNewReminder] = useState({ medicine: '', dosage: '', time: '08:00', frequency: 'Daily', notes: '' });
+  const [newReminder, setNewReminder] = useState({ medicine: '', dosage: '', time: '08:00', frequency: 'Daily', notes: '', memberId: '', days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] });
 
   const [alarmActive, setAlarmActive] = useState(false);
   const [soundedAlarms, setSoundedAlarms] = useState([]);
@@ -183,19 +183,21 @@ export default function ParentalMonitoring() {
   };
 
   const addReminder = () => {
-    if (!newReminder.medicine || !selectedMember) return;
+    const targetMemberId = newReminder.memberId || selectedMember?.id;
+    if (!newReminder.medicine || !targetMemberId) return;
     const reminder = {
       id: Date.now().toString(),
-      memberId: selectedMember.id,
+      memberId: targetMemberId,
       medicine: newReminder.medicine,
       dosage: newReminder.dosage || '1 tablet',
       time: newReminder.time,
       frequency: newReminder.frequency,
+      days: newReminder.days,
       status: 'pending',
       notes: newReminder.notes,
     };
     setReminders(prev => [...prev, reminder]);
-    setNewReminder({ medicine: '', dosage: '', time: '08:00', frequency: 'Daily', notes: '' });
+    setNewReminder({ medicine: '', dosage: '', time: '08:00', frequency: 'Daily', notes: '', memberId: '', days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] });
     setShowAddReminder(false);
   };
 
@@ -306,9 +308,15 @@ export default function ParentalMonitoring() {
             Advanced Parental Care Circle • Medicine reminders with voice alerts • {circle.length} member{circle.length !== 1 ? 's' : ''} in your circle
           </p>
         </div>
-        <button onClick={resetAllReminders} className="px-3 py-1.5 text-label-sm font-bold border border-outline-variant rounded-xl text-on-surface hover:bg-surface-container-low transition-colors">
-          Reset Today's Reminders
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setShowAddReminder(true)} className="px-4 py-2 bg-primary text-on-primary text-label-md font-bold rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-1 shadow-md">
+            <span className="material-symbols-outlined text-[18px]">alarm_add</span>
+            Set Reminder
+          </button>
+          <button onClick={resetAllReminders} className="px-3 py-1.5 text-label-sm font-bold border border-outline-variant rounded-xl text-on-surface hover:bg-surface-container-low transition-colors">
+            Reset Today
+          </button>
+        </div>
       </div>
 
       {/* Voice Reminder Recorder */}
@@ -435,18 +443,12 @@ export default function ParentalMonitoring() {
                   </span>
                 )}
               </h3>
-              <button onClick={() => setShowAddReminder(true)} disabled={!selectedMember}
-                className="px-3 py-1.5 bg-primary text-on-primary text-label-sm font-bold rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1">
-                <span className="material-symbols-outlined text-[16px]">add</span>
-                Add Reminder
+              <button onClick={() => setShowAddReminder(true)}
+                className="px-3 py-1.5 bg-primary text-on-primary text-label-sm font-bold rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-1">
+                <span className="material-symbols-outlined text-[16px]">alarm_add</span>
+                Set Reminder
               </button>
             </div>
-
-            {!selectedMember && (
-              <div className="text-center py-md bg-surface-container rounded-xl mb-md">
-                <p className="text-body-sm text-on-surface-variant font-bold">← Select a member from the Circle of Trust to view or add their reminders</p>
-              </div>
-            )}
 
             <div className="space-y-2">
               {memberReminders.map(r => {
@@ -460,7 +462,7 @@ export default function ParentalMonitoring() {
                     {/* Time */}
                     <div className="w-16 text-center shrink-0">
                       <p className="text-lg font-black text-on-surface">{r.time}</p>
-                      <p className="text-[10px] text-on-surface-variant font-bold">{r.frequency}</p>
+                      <p className="text-[10px] text-on-surface-variant font-bold">{r.days ? r.days.join(', ') : r.frequency}</p>
                     </div>
 
                     {/* Divider */}
@@ -570,31 +572,97 @@ export default function ParentalMonitoring() {
         </div>
       )}
 
-      {/* Add Reminder Modal */}
-      {showAddReminder && selectedMember && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] backdrop-blur-sm">
-          <div className="bg-surface-container-lowest p-lg rounded-2xl shadow-2xl max-w-md w-full border border-outline-variant">
-            <h4 className="font-headline-md text-on-surface font-bold flex items-center gap-2 mb-2">
-              <span className="material-symbols-outlined text-primary">alarm_add</span>
-              Add Reminder for {selectedMember.avatar} {selectedMember.name}
+      {/* Set Reminder Modal — Comprehensive */}
+      {showAddReminder && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] backdrop-blur-sm p-md">
+          <div className="bg-surface-container-lowest p-lg rounded-2xl shadow-2xl max-w-lg w-full border border-outline-variant max-h-[90vh] overflow-y-auto">
+            <h4 className="font-headline-md text-on-surface font-bold flex items-center gap-2 mb-md">
+              <span className="material-symbols-outlined text-primary text-[28px]">alarm_add</span>
+              Set Medicine Reminder
             </h4>
-            <div className="space-y-sm mt-md">
+
+            {/* Step 1: Who is this for? */}
+            <div className="mb-md">
+              <label className="text-label-sm font-bold text-on-surface-variant block mb-2">Who is this reminder for? *</label>
+              {circle.length === 0 ? (
+                <div className="bg-status-emergency/10 border border-status-emergency/20 p-sm rounded-xl text-body-sm text-status-emergency font-bold">
+                  ⚠️ No members in your Circle of Trust. Add a member first before setting reminders.
+                </div>
+              ) : (
+                <div className="flex gap-2 flex-wrap">
+                  {circle.map(m => (
+                    <button key={m.id} onClick={() => setNewReminder(p => ({ ...p, memberId: m.id }))}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 transition-all ${
+                        newReminder.memberId === m.id 
+                          ? 'border-primary bg-primary/10 shadow-sm' 
+                          : 'border-outline-variant hover:border-primary/40 hover:bg-surface-container-low'
+                      }`}>
+                      <span className="text-2xl">{m.avatar}</span>
+                      <div className="text-left">
+                        <p className="font-bold text-on-surface text-label-md">{m.name}</p>
+                        <p className="text-[10px] text-on-surface-variant">{m.relation}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Step 2: Medicine Details */}
+            <div className="mb-md space-y-sm">
               <div>
                 <label className="text-label-sm font-bold text-on-surface-variant block mb-1">Medicine Name *</label>
                 <input value={newReminder.medicine} onChange={e => setNewReminder(p => ({ ...p, medicine: e.target.value }))}
-                  className="w-full px-sm py-2 rounded-xl bg-surface-container border border-outline focus:border-primary outline-none text-on-surface" placeholder="e.g. Metformin 500mg" />
+                  className="w-full px-sm py-2 rounded-xl bg-surface-container border border-outline focus:border-primary outline-none text-on-surface" placeholder="e.g. Metformin 500mg" autoFocus />
               </div>
-              <div className="grid grid-cols-3 gap-sm">
+              <div className="grid grid-cols-2 gap-sm">
                 <div>
                   <label className="text-label-sm font-bold text-on-surface-variant block mb-1">Dosage</label>
                   <input value={newReminder.dosage} onChange={e => setNewReminder(p => ({ ...p, dosage: e.target.value }))}
                     className="w-full px-sm py-2 rounded-xl bg-surface-container border border-outline focus:border-primary outline-none text-on-surface" placeholder="1 tablet" />
                 </div>
                 <div>
-                  <label className="text-label-sm font-bold text-on-surface-variant block mb-1">Time *</label>
+                  <label className="text-label-sm font-bold text-on-surface-variant block mb-1">⏰ Alarm Time *</label>
                   <input type="time" value={newReminder.time} onChange={e => setNewReminder(p => ({ ...p, time: e.target.value }))}
-                    className="w-full px-sm py-2 rounded-xl bg-surface-container border border-outline focus:border-primary outline-none text-on-surface" />
+                    className="w-full px-sm py-2 rounded-xl bg-surface-container border border-outline focus:border-primary outline-none text-on-surface text-lg font-bold" />
                 </div>
+              </div>
+            </div>
+
+            {/* Step 3: Which Days? */}
+            <div className="mb-md">
+              <label className="text-label-sm font-bold text-on-surface-variant block mb-2">Which days should this alarm ring?</label>
+              <div className="flex gap-1.5">
+                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                  <button key={day}
+                    onClick={() => {
+                      setNewReminder(p => ({
+                        ...p,
+                        days: p.days.includes(day) ? p.days.filter(d => d !== day) : [...p.days, day]
+                      }));
+                    }}
+                    className={`w-11 h-11 rounded-full text-label-sm font-bold transition-all ${
+                      newReminder.days.includes(day)
+                        ? 'bg-primary text-on-primary shadow-sm'
+                        : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+                    }`}>
+                    {day}
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-2 mt-2">
+                <button onClick={() => setNewReminder(p => ({ ...p, days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] }))}
+                  className="text-[11px] font-bold text-primary hover:underline">Select All</button>
+                <button onClick={() => setNewReminder(p => ({ ...p, days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] }))}
+                  className="text-[11px] font-bold text-primary hover:underline">Weekdays Only</button>
+                <button onClick={() => setNewReminder(p => ({ ...p, days: [] }))}
+                  className="text-[11px] font-bold text-on-surface-variant hover:underline">Clear</button>
+              </div>
+            </div>
+
+            {/* Step 4: Additional Info */}
+            <div className="mb-md space-y-sm">
+              <div className="grid grid-cols-2 gap-sm">
                 <div>
                   <label className="text-label-sm font-bold text-on-surface-variant block mb-1">Frequency</label>
                   <select value={newReminder.frequency} onChange={e => setNewReminder(p => ({ ...p, frequency: e.target.value }))}
@@ -602,17 +670,32 @@ export default function ParentalMonitoring() {
                     <option>Daily</option><option>Twice Daily</option><option>Weekly</option><option>As Needed</option>
                   </select>
                 </div>
-              </div>
-              <div>
-                <label className="text-label-sm font-bold text-on-surface-variant block mb-1">Notes</label>
-                <input value={newReminder.notes} onChange={e => setNewReminder(p => ({ ...p, notes: e.target.value }))}
-                  className="w-full px-sm py-2 rounded-xl bg-surface-container border border-outline focus:border-primary outline-none text-on-surface" placeholder="Take after breakfast" />
+                <div>
+                  <label className="text-label-sm font-bold text-on-surface-variant block mb-1">Notes</label>
+                  <input value={newReminder.notes} onChange={e => setNewReminder(p => ({ ...p, notes: e.target.value }))}
+                    className="w-full px-sm py-2 rounded-xl bg-surface-container border border-outline focus:border-primary outline-none text-on-surface" placeholder="Take after breakfast" />
+                </div>
               </div>
             </div>
-            <div className="flex justify-end gap-sm mt-md">
-              <button onClick={() => setShowAddReminder(false)} className="px-4 py-2 font-bold text-on-surface-variant hover:bg-surface-container rounded-xl transition-colors">Cancel</button>
-              <button onClick={addReminder} disabled={!newReminder.medicine}
-                className="px-4 py-2 bg-primary text-on-primary font-bold rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50">Add Reminder</button>
+
+            {/* Voice Reminder Info */}
+            <div className="mb-md p-sm rounded-xl bg-primary-fixed/10 border border-primary/15">
+              <p className="text-body-sm text-on-surface-variant flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary text-[18px]">record_voice_over</span>
+                {voiceBlob 
+                  ? '✅ Your voice will play as an alarm when this reminder triggers.' 
+                  : '💡 Record your voice above to use it as a personalized alarm sound.'}
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-sm">
+              <button onClick={() => { setShowAddReminder(false); setNewReminder({ medicine: '', dosage: '', time: '08:00', frequency: 'Daily', notes: '', memberId: '', days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] }); }}
+                className="px-4 py-2 font-bold text-on-surface-variant hover:bg-surface-container rounded-xl transition-colors">Cancel</button>
+              <button onClick={addReminder} disabled={!newReminder.medicine || !newReminder.memberId || newReminder.days.length === 0}
+                className="px-5 py-2 bg-primary text-on-primary font-bold rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1">
+                <span className="material-symbols-outlined text-[16px]">alarm_add</span>
+                Set Reminder
+              </button>
             </div>
           </div>
         </div>
