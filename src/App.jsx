@@ -1,6 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import DashboardLayout from './features/dashboard/DashboardLayout';
+import { IntroAnimation } from './components/IntroAnimation';
 
 export default function App() {
-  return <DashboardLayout />;
+  const [showIntro, setShowIntro] = useState(true);
+
+  return (
+    <>
+      {showIntro && <IntroAnimation onDone={() => setShowIntro(false)} />}
+      <DashboardLayout />
+    </>
+  );
 }
