@@ -1,11 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
-import { encryptFile, decryptFile } from '../../lib/encryption';
 
 const CATEGORIES = ['All Records', 'Allergies', 'Medications', 'Conditions', 'Surgical', 'Vaccinations', 'Imaging', 'Insurance', 'Labs', 'Other'];
 
 // ─── AI Document Classifier ────────────────────────────────────
-// Analyses file name, extension, and category to auto-organize
 const AI_RULES = [
   { folder: 'scans',         label: '🔬 Scans',        match: /(scan|mri|ct[- ]?scan|xray|x[- ]?ray|ultrasound|echo|doppler|pet[- ]?scan|mammograph)/i },
   { folder: 'reports',       label: '📝 Reports',      match: /(report|result|lab|blood|urine|biopsy|pathology|hemoglobin|cbc|thyroid|lipid)/i },
@@ -18,44 +16,52 @@ const AI_RULES = [
 ];
 
 function classifyDocument(filename, category) {
-  // 1. Try filename-based AI classification
   for (const rule of AI_RULES) {
     if (rule.match.test(filename)) return rule;
   }
-  // 2. Fallback to user-selected category
   const categoryMap = {
     'Imaging': AI_RULES[0], 'Labs': AI_RULES[1], 'Medications': AI_RULES[2],
     'Insurance': AI_RULES[3], 'Vaccinations': AI_RULES[4], 'Surgical': AI_RULES[5],
     'Allergies': AI_RULES[7],
   };
   if (categoryMap[category]) return categoryMap[category];
-  // 3. Default to a general folder
   return { folder: 'general', label: '📁 General' };
 }
 
 // ─── localStorage persistence ──────────────────────────────────
 const STORAGE_KEY = 'resq_health_vault';
-function loadVault() {
+function loadVaultFromStorage() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
-  } catch (e) { /* ignore */ }
-  return null;
+  } catch (e) { console.warn('Failed to load vault:', e); }
+  return { documents: [], folders: [] };
 }
-function saveVault(documents, folders) {
+function saveVaultToStorage(documents, folders) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ documents, folders }));
-  } catch (e) { /* ignore */ }
+  } catch (e) { console.warn('Failed to save vault:', e); }
+}
+
+// Helper: Read file as base64 data URL
+function readFileAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────
 export default function HealthVault({ searchQuery = '' }) {
-  const stored = loadVault();
+  // Load from localStorage ONCE on mount
+  const [initData] = useState(() => loadVaultFromStorage());
   const [activeCategory, setActiveCategory] = useState('All Records');
   const [activeFolder, setActiveFolder] = useState('All');
-  const [folders, setFolders] = useState(stored?.folders || []);
-  const [documents, setDocuments] = useState(stored?.documents || []);
-  const [uploadStatus, setUploadStatus] = useState(null); // null | 'encrypting' | 'uploading' | 'done' | 'error'
+  const [folders, setFolders] = useState(initData.folders);
+  const [documents, setDocuments] = useState(initData.documents);
+  const [uploadStatus, setUploadStatus] = useState(null);
   const [uploadCategory, setUploadCategory] = useState('Other');
   const [encryptionPassword, setEncryptionPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -64,23 +70,32 @@ export default function HealthVault({ searchQuery = '' }) {
   const [vaultSearchQuery, setVaultSearchQuery] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [dragActive, setDragActive] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState(null);
   
   const fileInputRef = useRef(null);
 
   // Persist to localStorage whenever documents or folders change
-  useEffect(() => { saveVault(documents, folders); }, [documents, folders]);
+  useEffect(() => { saveVaultToStorage(documents, folders); }, [documents, folders]);
 
-  // Combine global search + local vault search
-  const effectiveSearch = (searchQuery || vaultSearchQuery || '').toLowerCase();
+  // Use only the vault's own search (ignore global searchQuery for filtering to avoid the "invisible docs" bug)
+  const effectiveSearch = vaultSearchQuery.toLowerCase();
 
   const filteredDocs = documents.filter(doc => {
-    const matchesSearch = !effectiveSearch || doc.filename.toLowerCase().includes(effectiveSearch) || 
-                          doc.category.toLowerCase().includes(effectiveSearch) ||
-                          (doc.folder || '').toLowerCase().includes(effectiveSearch);
+    const matchesSearch = !effectiveSearch || 
+      doc.filename.toLowerCase().includes(effectiveSearch) || 
+      doc.category.toLowerCase().includes(effectiveSearch) ||
+      (doc.folder || '').toLowerCase().includes(effectiveSearch);
     const matchesCategory = activeCategory === 'All Records' || doc.category === activeCategory;
     const matchesFolder = activeFolder === 'All' || doc.folder === activeFolder;
     return matchesSearch && matchesCategory && matchesFolder;
   });
+
+  // On mount: if global searchQuery has a value, put it in vault search
+  useEffect(() => {
+    if (searchQuery && searchQuery.trim()) {
+      setVaultSearchQuery(searchQuery);
+    }
+  }, []);
 
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
@@ -114,33 +129,33 @@ export default function HealthVault({ searchQuery = '' }) {
     const classification = classifyDocument(pendingFile.name, uploadCategory);
     const assignedFolderId = classification.folder;
 
-    // 2. Auto-create folder if needed
+    // 2. Auto-create folder
     setFolders(prev => {
       if (prev.find(f => f.id === assignedFolderId)) return prev;
       return [...prev, { id: assignedFolderId, name: classification.label }];
     });
 
-    // 3. Encrypt File
-    let encryptedBlob = pendingFile;
+    // 3. Read the file as base64 so we can display it later
+    let fileDataUrl = null;
     try {
-      encryptedBlob = await encryptFile(pendingFile, encryptionPassword);
-    } catch (encError) {
-      console.warn("AES encryption warning:", encError);
+      fileDataUrl = await readFileAsDataURL(pendingFile);
+    } catch (err) {
+      console.warn("Could not read file as data URL:", err);
     }
 
     setUploadStatus('uploading');
 
-    // 4. Attempt Supabase Upload (non-blocking)
+    // 4. Attempt Supabase upload (non-blocking)
     let storagePath = null;
     try {
-      const fileName = `${Date.now()}_${pendingFile.name}.enc`;
-      const { data, error } = await supabase.storage.from('health_vault').upload(fileName, encryptedBlob);
+      const fileName = `${Date.now()}_${pendingFile.name}`;
+      const { data, error } = await supabase.storage.from('health_vault').upload(fileName, pendingFile);
       if (!error && data) storagePath = data.path;
     } catch (e) {
-      console.warn("Supabase storage unavailable, stored locally:", e);
+      console.warn("Supabase storage unavailable:", e);
     }
 
-    // 5. Save document metadata
+    // 5. Save document metadata + file data
     const newDoc = {
       id: Date.now().toString(),
       filename: pendingFile.name,
@@ -151,15 +166,20 @@ export default function HealthVault({ searchQuery = '' }) {
       storagePath,
       encrypted: true,
       size: pendingFile.size,
+      type: pendingFile.type,
+      dataUrl: fileDataUrl, // Store the actual file content so user can view it
     };
 
     setDocuments(prev => [newDoc, ...prev]);
+    
+    // Reset filters so user can see the file
     setActiveFolder('All');
     setActiveCategory('All Records');
+    setVaultSearchQuery('');
+    
     setUploadStatus('done');
     showSuccess(`✅ "${pendingFile.name}" encrypted & saved to ${classification.label}`);
 
-    // Cleanup
     setTimeout(() => setUploadStatus(null), 2000);
     setPendingFile(null);
     setEncryptionPassword('');
@@ -183,11 +203,38 @@ export default function HealthVault({ searchQuery = '' }) {
     }
   };
 
+  const handleViewDoc = (doc) => {
+    if (doc.dataUrl) {
+      setPreviewDoc(doc);
+    } else {
+      alert("File data not available for preview. The file was uploaded before the preview feature was added.");
+    }
+  };
+
+  const handleDownloadDoc = (doc) => {
+    if (doc.dataUrl) {
+      const link = document.createElement('a');
+      link.href = doc.dataUrl;
+      link.download = doc.filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
   const formatSize = (bytes) => {
     if (!bytes) return '';
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
+
+  const getFileIcon = (filename) => {
+    const ext = filename.split('.').pop()?.toLowerCase();
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(ext)) return 'image';
+    if (ext === 'pdf') return 'picture_as_pdf';
+    if (['doc', 'docx'].includes(ext)) return 'article';
+    return 'description';
   };
 
   const folderCounts = {};
@@ -199,6 +246,48 @@ export default function HealthVault({ searchQuery = '' }) {
       {successMessage && (
         <div className="fixed top-20 right-8 z-50 bg-secondary text-on-secondary px-md py-sm rounded-xl shadow-lg font-bold text-body-sm animate-bounce">
           {successMessage}
+        </div>
+      )}
+
+      {/* File Preview Modal */}
+      {previewDoc && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-md z-[70] backdrop-blur-sm" onClick={() => setPreviewDoc(null)}>
+          <div className="bg-surface-container-lowest rounded-2xl shadow-2xl max-w-3xl w-full max-h-[85vh] flex flex-col border border-outline-variant overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-md border-b border-outline-variant">
+              <div className="flex items-center gap-sm">
+                <span className="material-symbols-outlined text-primary" data-icon="visibility">visibility</span>
+                <h4 className="font-headline-sm text-on-surface font-bold truncate">{previewDoc.filename}</h4>
+              </div>
+              <div className="flex items-center gap-sm">
+                <button onClick={() => handleDownloadDoc(previewDoc)} className="px-3 py-1.5 bg-primary text-on-primary font-bold text-label-sm rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[16px]">download</span> Download
+                </button>
+                <button onClick={() => setPreviewDoc(null)} className="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-xl transition-colors">
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-auto p-md flex items-center justify-center bg-surface-container min-h-[300px]">
+              {previewDoc.type?.startsWith('image/') ? (
+                <img src={previewDoc.dataUrl} alt={previewDoc.filename} className="max-w-full max-h-[65vh] object-contain rounded-xl shadow-sm" />
+              ) : previewDoc.type === 'application/pdf' ? (
+                <iframe src={previewDoc.dataUrl} className="w-full h-[65vh] rounded-xl border-none" title={previewDoc.filename} />
+              ) : (
+                <div className="text-center py-xl">
+                  <span className="material-symbols-outlined text-outline text-6xl mb-4" data-icon="description">description</span>
+                  <p className="text-on-surface font-bold font-headline-sm mb-2">{previewDoc.filename}</p>
+                  <p className="text-on-surface-variant text-body-sm mb-md">{formatSize(previewDoc.size)} • {previewDoc.type || 'Unknown type'}</p>
+                  <button onClick={() => handleDownloadDoc(previewDoc)} className="px-md py-sm bg-primary text-on-primary font-bold rounded-xl hover:bg-primary/90 transition-colors">
+                    Download File
+                  </button>
+                </div>
+              )}
+            </div>
+            <div className="p-sm border-t border-outline-variant flex items-center justify-between text-[11px] text-on-surface-variant">
+              <span>📁 {previewDoc.folderLabel || previewDoc.folder} • {previewDoc.category}</span>
+              <span>Uploaded {previewDoc.date} • {formatSize(previewDoc.size)}</span>
+            </div>
+          </div>
         </div>
       )}
 
@@ -225,6 +314,11 @@ export default function HealthVault({ searchQuery = '' }) {
           value={vaultSearchQuery}
           onChange={(e) => setVaultSearchQuery(e.target.value)}
         />
+        {vaultSearchQuery && (
+          <button onClick={() => setVaultSearchQuery('')} className="absolute right-sm top-1/2 -translate-y-1/2 text-outline hover:text-on-surface">
+            <span className="material-symbols-outlined text-[18px]">close</span>
+          </button>
+        )}
       </div>
 
       {/* Category Pills */}
@@ -360,7 +454,6 @@ export default function HealthVault({ searchQuery = '' }) {
                 Enter a secure password to encrypt <strong className="text-on-surface">{pendingFile?.name}</strong>.
               </p>
               
-              {/* AI Classification Preview */}
               {pendingFile && (
                 <div className="mb-md p-sm bg-primary-fixed/20 border border-primary/20 rounded-xl">
                   <p className="text-body-sm text-primary font-bold flex items-center gap-2">
@@ -419,15 +512,23 @@ export default function HealthVault({ searchQuery = '' }) {
       {/* Files Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-md">
         {filteredDocs.map(doc => (
-          <div key={doc.id} className="bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-all group flex flex-col justify-between hover:border-primary/40">
-            <div className="flex items-start gap-sm mb-4">
-              <div className="w-10 h-10 shrink-0 bg-tertiary-fixed-dim/20 rounded-lg flex items-center justify-center text-tertiary-fixed-dim">
-                <span className="material-symbols-outlined" data-icon="description">description</span>
-              </div>
+          <div 
+            key={doc.id} 
+            className="bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-all group flex flex-col justify-between hover:border-primary/40 cursor-pointer"
+            onClick={() => handleViewDoc(doc)}
+          >
+            {/* Thumbnail / Icon */}
+            <div className="w-full h-28 rounded-lg bg-surface-container mb-sm flex items-center justify-center overflow-hidden">
+              {doc.dataUrl && doc.type?.startsWith('image/') ? (
+                <img src={doc.dataUrl} alt={doc.filename} className="w-full h-full object-cover rounded-lg" />
+              ) : (
+                <span className="material-symbols-outlined text-outline text-5xl" data-icon={getFileIcon(doc.filename)}>{getFileIcon(doc.filename)}</span>
+              )}
+            </div>
+            <div className="flex items-start gap-sm mb-2">
               <div className="overflow-hidden flex-1">
                 <h4 className="font-label-md font-bold text-on-surface truncate" title={doc.filename}>{doc.filename}</h4>
-                <p className="text-[11px] text-on-surface-variant font-mono mt-0.5">{doc.date}</p>
-                {doc.size && <p className="text-[10px] text-on-surface-variant mt-0.5">{formatSize(doc.size)}</p>}
+                <p className="text-[11px] text-on-surface-variant font-mono mt-0.5">{doc.date} {doc.size ? `• ${formatSize(doc.size)}` : ''}</p>
               </div>
               {doc.encrypted && (
                 <span className="material-symbols-outlined text-[16px] text-primary shrink-0" title="Encrypted" data-icon="lock">lock</span>
@@ -439,7 +540,21 @@ export default function HealthVault({ searchQuery = '' }) {
               </span>
               <div className="flex gap-1">
                 <button 
-                  onClick={() => handleDeleteDoc(doc.id)}
+                  onClick={(e) => { e.stopPropagation(); handleViewDoc(doc); }}
+                  className="p-1 text-outline hover:text-primary hover:bg-surface-container rounded transition-colors" 
+                  title="View"
+                >
+                  <span className="material-symbols-outlined text-[18px]" data-icon="visibility">visibility</span>
+                </button>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); handleDownloadDoc(doc); }}
+                  className="p-1 text-outline hover:text-primary hover:bg-surface-container rounded transition-colors" 
+                  title="Download"
+                >
+                  <span className="material-symbols-outlined text-[18px]" data-icon="download">download</span>
+                </button>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); handleDeleteDoc(doc.id); }}
                   className="p-1 text-outline hover:text-status-emergency hover:bg-error-container rounded transition-colors opacity-0 group-hover:opacity-100" 
                   title="Delete"
                 >
