@@ -60,7 +60,7 @@ export default function Sidebar({ currentTab, setCurrentTab }) {
           }`}
         >
           <span className="material-symbols-outlined" data-icon="health_and_safety">health_and_safety</span>
-          <span className="font-body-md text-body-md">Road Safety & Awareness</span>
+          <span className="font-body-md text-body-md">Safety Hub</span>
         </button>
         <button 
           onClick={() => setCurrentTab('settings')}
