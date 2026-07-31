@@ -12,19 +12,12 @@ import NotFound from './NotFound';
 import HealthVault from '../health-vault/HealthVault';
 import ParentalMonitoring from '../parental-monitoring/ParentalMonitoring';
 
-export default function DashboardLayout({ session }) {
+export default function DashboardLayout() {
   const [currentTab, setCurrentTab] = useState('dashboard');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userName, setUserName] = useState('');
   const [theme, setTheme] = useState(document.documentElement.classList.contains('dark') ? 'dark' : 'light');
   const [searchQuery, setSearchQuery] = useState('');
-
-  // If no session exists, only render the Login screen full-width
-  if (!session) {
-    return (
-      <div className="bg-background text-on-surface font-body-md overflow-hidden min-h-screen flex items-center justify-center">
-        <Login />
-      </div>
-    );
-  }
 
   return (
     <div className="bg-background text-on-surface font-body-md overflow-hidden min-h-screen">
@@ -32,7 +25,7 @@ export default function DashboardLayout({ session }) {
       <Sidebar currentTab={currentTab} setCurrentTab={setCurrentTab} />
       
       {/* Fixed Top Control Bar */}
-      <TopHeader currentTab={currentTab} setCurrentTab={setCurrentTab} session={session} theme={theme} setTheme={setTheme} searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+      <TopHeader currentTab={currentTab} setCurrentTab={setCurrentTab} isLoggedIn={isLoggedIn} userName={userName} theme={theme} setTheme={setTheme} searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
       
       {/* Dynamic Tab Switch Content Canvas */}
       {currentTab === 'dashboard' && (
@@ -72,6 +65,12 @@ export default function DashboardLayout({ session }) {
       {currentTab === 'patient-flow' && (
         <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
           <PatientFlow />
+        </main>
+      )}
+
+      {currentTab === 'login' && (
+        <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
+          <Login setCurrentTab={setCurrentTab} setIsLoggedIn={setIsLoggedIn} setUserName={setUserName} />
         </main>
       )}
 

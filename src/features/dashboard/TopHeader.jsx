@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { supabase } from '../../lib/supabase';
 
-export default function TopHeader({ currentTab, setCurrentTab, session, theme, setTheme, searchQuery, setSearchQuery }) {
+export default function TopHeader({ currentTab, setCurrentTab, isLoggedIn, userName, theme, setTheme, searchQuery, setSearchQuery }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showApps, setShowApps] = useState(false);
@@ -9,19 +8,12 @@ export default function TopHeader({ currentTab, setCurrentTab, session, theme, s
   const handleSearch = (e) => {
     if (e.key === 'Enter') {
       setCurrentTab('health-vault');
+      // If the user typed "health vault" just to navigate, clear it so they see their files
       if (e.target.value.toLowerCase().includes('health')) {
         setSearchQuery('');
       }
     }
   };
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-  };
-
-  const user = session?.user;
-  const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
-  const userAvatar = user?.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${userName}&backgroundColor=e2e8f0`;
 
   return (
     <header className="h-16 fixed top-0 right-0 w-[calc(100%-16rem)] bg-surface border-b border-outline-variant z-40 flex justify-between items-center px-margin-desktop">
@@ -88,7 +80,7 @@ export default function TopHeader({ currentTab, setCurrentTab, session, theme, s
               <div className="absolute right-0 mt-2 w-48 bg-surface border border-outline-variant rounded-xl shadow-lg z-50 p-2 animate-fadeIn">
                 <button className="w-full text-left px-3 py-2 text-label-md hover:bg-surface-container-low rounded-lg transition-colors">System Settings</button>
                 <button className="w-full text-left px-3 py-2 text-label-md hover:bg-surface-container-low rounded-lg transition-colors">Healthcare Tools</button>
-                <button onClick={handleLogout} className="w-full text-left px-3 py-2 text-label-md hover:bg-surface-container-low rounded-lg transition-colors text-error">Sign Out</button>
+                <button className="w-full text-left px-3 py-2 text-label-md hover:bg-surface-container-low rounded-lg transition-colors text-error">Sign Out</button>
               </div>
             )}
           </div>
@@ -136,18 +128,25 @@ export default function TopHeader({ currentTab, setCurrentTab, session, theme, s
         </div>
         <div className="h-8 w-[1px] bg-outline-variant mx-xs"></div>
         
-        {session ? (
+        {isLoggedIn ? (
           <div className="flex items-center gap-sm cursor-pointer group">
             <div className="text-right">
-              <p className="font-label-md text-label-md text-on-surface group-hover:text-primary transition-colors capitalize">{userName}</p>
+              <p className="font-label-md text-label-md text-on-surface group-hover:text-primary transition-colors capitalize">{userName || 'User'}</p>
             </div>
             <img 
-              alt={userName}
+              alt={userName || 'User'}
               className="w-10 h-10 rounded-full border-2 border-primary-container bg-surface-container object-cover" 
-              src={userAvatar} 
+              src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${userName || 'User'}&backgroundColor=e2e8f0`} 
             />
           </div>
-        ) : null}
+        ) : (
+          <button 
+            onClick={() => setCurrentTab('login')}
+            className="bg-primary hover:bg-primary/90 text-on-primary px-4 py-2 rounded-full font-bold text-label-md transition-all active:scale-95 shadow-sm"
+          >
+            Login / Sign Up
+          </button>
+        )}
       </div>
     </header>
   );
