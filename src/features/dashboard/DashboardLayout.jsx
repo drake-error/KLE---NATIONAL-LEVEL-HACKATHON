@@ -10,6 +10,7 @@ import Login from './Login';
 import NotFound from './NotFound';
 
 import HealthVault from '../health-vault/HealthVault';
+import ParentalMonitoring from '../parental-monitoring/ParentalMonitoring';
 
 export default function DashboardLayout() {
   const [currentTab, setCurrentTab] = useState('dashboard');
@@ -46,6 +47,12 @@ export default function DashboardLayout() {
       {currentTab === 'health-vault' && (
         <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
           <HealthVault searchQuery={searchQuery} />
+        </main>
+      )}
+
+      {currentTab === 'parental-monitoring' && (
+        <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
+          <ParentalMonitoring />
         </main>
       )}
       
