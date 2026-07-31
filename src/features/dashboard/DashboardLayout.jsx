@@ -6,6 +6,7 @@ import HealthVaultTable from './HealthVaultTable';
 import LiveRouteMap from './LiveRouteMap';
 import FleetStatus from './FleetStatus';
 import PatientFlow from './PatientFlow';
+import Login from './Login';
 import NotFound from './NotFound';
 
 import HealthVault from '../health-vault/HealthVault';
@@ -16,7 +17,14 @@ export default function DashboardLayout({ session }) {
   const [theme, setTheme] = useState(document.documentElement.classList.contains('dark') ? 'dark' : 'light');
   const [searchQuery, setSearchQuery] = useState('');
 
-
+  // If no session exists, render the Login/Signup screen full-width
+  if (!session) {
+    return (
+      <div className="bg-background text-on-surface font-body-md overflow-hidden min-h-screen flex items-center justify-center">
+        <Login />
+      </div>
+    );
+  }
 
   return (
     <div className="bg-background text-on-surface font-body-md overflow-hidden min-h-screen">

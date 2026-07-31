@@ -15,6 +15,10 @@ export default function TopHeader({ currentTab, setCurrentTab, session, theme, s
     }
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
+
   const user = session?.user;
   const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
   const userAvatar = user?.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${userName}&backgroundColor=e2e8f0`;
@@ -84,6 +88,7 @@ export default function TopHeader({ currentTab, setCurrentTab, session, theme, s
               <div className="absolute right-0 mt-2 w-48 bg-surface border border-outline-variant rounded-xl shadow-lg z-50 p-2 animate-fadeIn">
                 <button className="w-full text-left px-3 py-2 text-label-md hover:bg-surface-container-low rounded-lg transition-colors">System Settings</button>
                 <button className="w-full text-left px-3 py-2 text-label-md hover:bg-surface-container-low rounded-lg transition-colors">Healthcare Tools</button>
+                <button onClick={handleLogout} className="w-full text-left px-3 py-2 text-label-md hover:bg-surface-container-low rounded-lg transition-colors text-error">Sign Out</button>
               </div>
             )}
           </div>

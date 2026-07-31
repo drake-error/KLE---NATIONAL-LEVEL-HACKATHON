@@ -3,35 +3,23 @@ import DashboardLayout from './features/dashboard/DashboardLayout';
 import { IntroAnimation } from './components/IntroAnimation';
 import { supabase } from './lib/supabase';
 
-const defaultSession = {
-  user: {
-    id: 'demo-resqplus-user',
-    email: 'admin@resqplus.org',
-    user_metadata: {
-      full_name: 'Dr. Admin',
-      avatar_url: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=250&auto=format&fit=crop'
-    }
-  }
-};
-
 export default function App() {
   const [showIntro, setShowIntro] = useState(true);
-  const [session, setSession] = useState(defaultSession);
+  const [session, setSession] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session or use default demo session
+    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session || defaultSession);
+      setSession(session);
       setIsLoading(false);
     }).catch(() => {
-      setSession(defaultSession);
       setIsLoading(false);
     });
 
     // Listen for auth changes (login, logout, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session || defaultSession);
+      setSession(session);
     });
 
     return () => subscription.unsubscribe();
