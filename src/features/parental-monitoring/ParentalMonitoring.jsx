@@ -1,41 +1,29 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { supabase } from '../../lib/supabase';
 
-// ─── localStorage persistence ──────────────────────────────────
-const STORAGE_KEY = 'resq_parental_monitoring';
-function loadData() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch (e) { /* ignore */ }
-  return null;
-}
-function saveData(data) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) { /* ignore */ }
-}
+export default function ParentalMonitoring({ session }) {
+  // Mode: 'primary' (my care circle) or 'caregiver' (monitoring someone else)
+  const [mode, setMode] = useState('primary');
+  
+  // Data State
+  const [circle, setCircle] = useState([]);
+  const [reminders, setReminders] = useState([]);
+  const [voiceBlob, setVoiceBlob] = useState(null);
+  
+  // Caregiver Mode State
+  const [accessCode, setAccessCode] = useState('');
+  const [caregiverInput, setCaregiverInput] = useState('');
+  const [linkedPatientId, setLinkedPatientId] = useState(null);
+  const [linkedPatientName, setLinkedPatientName] = useState('');
+  const [isLinking, setIsLinking] = useState(false);
 
-// ─── Default demo data ─────────────────────────────────────────
-const DEFAULT_CIRCLE = [
-  { id: '1', name: 'Grandma Latha', age: 72, relation: 'Grandmother', avatar: '👵', status: 'active', lastCheckIn: Date.now() - 1800000 },
-  { id: '2', name: 'Grandpa Mohan', age: 78, relation: 'Grandfather', avatar: '👴', status: 'active', lastCheckIn: Date.now() - 7200000 },
-];
-
-const DEFAULT_REMINDERS = [
-  { id: '1', memberId: '1', medicine: 'Metformin 500mg', dosage: '1 tablet', time: '08:00', frequency: 'Daily', status: 'pending', notes: 'Take after breakfast' },
-  { id: '2', memberId: '1', medicine: 'Amlodipine 5mg', dosage: '1 tablet', time: '21:00', frequency: 'Daily', status: 'pending', notes: 'Take before bed' },
-  { id: '3', memberId: '2', medicine: 'Aspirin 75mg', dosage: '1 tablet', time: '09:00', frequency: 'Daily', status: 'pending', notes: 'Take with water' },
-  { id: '4', memberId: '2', medicine: 'Atorvastatin 10mg', dosage: '1 tablet', time: '22:00', frequency: 'Daily', status: 'pending', notes: 'Take at night' },
-];
-
-export default function ParentalMonitoring() {
-  const [initData] = useState(() => loadData());
-  const [circle, setCircle] = useState(initData?.circle || DEFAULT_CIRCLE);
-  const [reminders, setReminders] = useState(initData?.reminders || DEFAULT_REMINDERS);
+  // UI State
   const [selectedMember, setSelectedMember] = useState(null);
   const [showAddMember, setShowAddMember] = useState(false);
   const [showAddReminder, setShowAddReminder] = useState(false);
-  const [voiceBlob, setVoiceBlob] = useState(initData?.voiceBlob || null);
   const [isRecording, setIsRecording] = useState(false);
   const [alerts, setAlerts] = useState([]);
+  
   const [newMember, setNewMember] = useState({ name: '', age: '', relation: '', avatar: '👤' });
   const [newReminder, setNewReminder] = useState({ medicine: '', dosage: '', time: '08:00', frequency: 'Daily', notes: '', memberId: '', days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] });
 
@@ -47,11 +35,93 @@ export default function ParentalMonitoring() {
   const voiceAudioRef = useRef(null);
   const alarmTimeoutRef = useRef(null);
 
-  // Persist
-  useEffect(() => {
-    saveData({ circle, reminders, voiceBlob });
-  }, [circle, reminders, voiceBlob]);
+  // Helper to get active user ID based on mode
+  const getActiveUserId = () => {
+    if (mode === 'primary') return session?.user?.id;
+    return linkedPatientId;
+  };
 
+  // 1. Fetch Data from Supabase
+  const loadData = useCallback(async () => {
+    const userId = getActiveUserId();
+    if (!userId) return;
+
+    try {
+      // Fetch Circle
+      const { data: circleData } = await supabase.from('circle_members').select('*').eq('user_id', userId);
+      if (circleData) setCircle(circleData);
+
+      // Fetch Reminders
+      const { data: remData } = await supabase.from('medicine_reminders').select('*').eq('user_id', userId);
+      if (remData) setReminders(remData);
+
+      // Fetch Profile (Voice + Access Code)
+      const { data: profile } = await supabase.from('monitoring_profiles').select('*').eq('user_id', userId).single();
+      if (profile) {
+        setVoiceBlob(profile.voice_blob);
+        if (mode === 'primary') setAccessCode(profile.access_code);
+      } else if (mode === 'primary') {
+        // Generate new profile with access code for primary user
+        const newCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+        await supabase.from('monitoring_profiles').insert([{ user_id: userId, access_code: newCode }]);
+        setAccessCode(newCode);
+      }
+    } catch (err) {
+      console.error('Error loading data:', err);
+    }
+  }, [mode, session, linkedPatientId]);
+
+  useEffect(() => {
+    if (session) {
+      // Check if we are already linked to someone as a caregiver
+      const checkLink = async () => {
+        const { data } = await supabase.from('caregiver_links').select('patient_id').eq('caregiver_id', session.user.id).single();
+        if (data) {
+          setLinkedPatientId(data.patient_id);
+          // Optional: Fetch patient name from profiles if needed
+          setLinkedPatientName('Linked Profile'); 
+        }
+        loadData();
+      };
+      checkLink();
+    }
+  }, [session, loadData]);
+
+  // Handle Caregiver Link
+  const handleLinkCaregiver = async () => {
+    if (!caregiverInput) return;
+    setIsLinking(true);
+    try {
+      // Find patient by access code
+      const { data: patient } = await supabase.from('monitoring_profiles').select('user_id').eq('access_code', caregiverInput).single();
+      if (patient) {
+        // Create link
+        await supabase.from('caregiver_links').upsert({ caregiver_id: session.user.id, patient_id: patient.user_id });
+        setLinkedPatientId(patient.user_id);
+        setLinkedPatientName('Linked Profile');
+        alert('Successfully linked to loved one!');
+        loadData();
+      } else {
+        alert('Invalid access code.');
+      }
+    } catch (err) {
+      alert('Failed to link. Make sure the code is correct.');
+    } finally {
+      setIsLinking(false);
+    }
+  };
+
+  const handleUnlink = async () => {
+    if (confirm('Are you sure you want to unlink from this profile?')) {
+      await supabase.from('caregiver_links').delete().eq('caregiver_id', session.user.id);
+      setLinkedPatientId(null);
+      setCircle([]);
+      setReminders([]);
+      setVoiceBlob(null);
+    }
+  };
+
+  // Alarm Logic
   const stopAlarm = () => {
     if (voiceAudioRef.current) {
       voiceAudioRef.current.pause();
@@ -77,13 +147,11 @@ export default function ParentalMonitoring() {
     });
     setAlarmActive(true);
 
-    // Stop after 60 seconds (1 minute)
     alarmTimeoutRef.current = setTimeout(() => {
       stopAlarm();
     }, 60000);
   };
 
-  // Check for missed medications and generate alerts
   useEffect(() => {
     const checkAlerts = () => {
       const now = new Date();
@@ -92,7 +160,7 @@ export default function ParentalMonitoring() {
 
       reminders.forEach(r => {
         if (r.status === 'pending' && r.time <= currentTime) {
-          const member = circle.find(m => m.id === r.memberId);
+          const member = circle.find(m => m.id === r.member_id);
           if (member) {
             newAlerts.push({
               id: r.id,
@@ -102,7 +170,6 @@ export default function ParentalMonitoring() {
               reminder: r,
             });
 
-            // If it's exactly the scheduled time, trigger the voice alarm (only once per alarm)
             if (r.time === currentTime && !soundedAlarms.includes(r.id)) {
               startAlarm();
               setSoundedAlarms(prev => [...prev, r.id]);
@@ -113,14 +180,14 @@ export default function ParentalMonitoring() {
       setAlerts(newAlerts);
     };
     checkAlerts();
-    const interval = setInterval(checkAlerts, 5000); // Check more frequently (every 5s) for instant alarm response
+    const interval = setInterval(checkAlerts, 5000);
     return () => {
       clearInterval(interval);
       if (alarmTimeoutRef.current) clearTimeout(alarmTimeoutRef.current);
     };
   }, [reminders, circle, soundedAlarms, voiceBlob]);
 
-  // ─── Voice Recording ───────────────────────────────────────
+  // Voice Recording
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -132,11 +199,16 @@ export default function ParentalMonitoring() {
         if (e.data.size > 0) audioChunksRef.current.push(e.data);
       };
 
-      mediaRecorder.onstop = () => {
+      mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         const reader = new FileReader();
-        reader.onload = () => {
-          setVoiceBlob(reader.result);
+        reader.onload = async () => {
+          const base64data = reader.result;
+          setVoiceBlob(base64data);
+          // Save to Supabase
+          if (mode === 'primary') {
+            await supabase.from('monitoring_profiles').update({ voice_blob: base64data }).eq('user_id', session.user.id);
+          }
         };
         reader.readAsDataURL(audioBlob);
         stream.getTracks().forEach(t => t.stop());
@@ -165,29 +237,43 @@ export default function ParentalMonitoring() {
     }
   };
 
-  // ─── CRUD ──────────────────────────────────────────────────
-  const addMember = () => {
+  const handleDeleteVoice = async () => {
+    setVoiceBlob(null);
+    if (mode === 'primary') {
+      await supabase.from('monitoring_profiles').update({ voice_blob: null }).eq('user_id', session.user.id);
+    }
+  }
+
+  // CRUD
+  const addMember = async () => {
     if (!newMember.name || !newMember.age) return;
+    const userId = getActiveUserId();
     const member = {
-      id: Date.now().toString(),
+      user_id: userId,
       name: newMember.name,
       age: parseInt(newMember.age),
       relation: newMember.relation || 'Family',
       avatar: newMember.avatar,
       status: 'active',
-      lastCheckIn: Date.now(),
+      last_check_in: Date.now(),
     };
-    setCircle(prev => [...prev, member]);
+    
+    const { data } = await supabase.from('circle_members').insert([member]).select();
+    if (data) {
+      setCircle(prev => [...prev, data[0]]);
+    }
     setNewMember({ name: '', age: '', relation: '', avatar: '👤' });
     setShowAddMember(false);
   };
 
-  const addReminder = () => {
+  const addReminder = async () => {
     const targetMemberId = newReminder.memberId || selectedMember?.id;
     if (!newReminder.medicine || !targetMemberId) return;
+    const userId = getActiveUserId();
+
     const reminder = {
-      id: Date.now().toString(),
-      memberId: targetMemberId,
+      user_id: userId,
+      member_id: targetMemberId,
       medicine: newReminder.medicine,
       dosage: newReminder.dosage || '1 tablet',
       time: newReminder.time,
@@ -196,39 +282,45 @@ export default function ParentalMonitoring() {
       status: 'pending',
       notes: newReminder.notes,
     };
-    setReminders(prev => [...prev, reminder]);
+
+    const { data } = await supabase.from('medicine_reminders').insert([reminder]).select();
+    if (data) {
+      setReminders(prev => [...prev, data[0]]);
+    }
     setNewReminder({ medicine: '', dosage: '', time: '08:00', frequency: 'Daily', notes: '', memberId: '', days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] });
     setShowAddReminder(false);
   };
 
-  const markTaken = (reminderId) => {
-    setReminders(prev => prev.map(r => r.id === reminderId ? { ...r, status: 'taken' } : r));
+  const updateReminderStatus = async (id, status) => {
+    await supabase.from('medicine_reminders').update({ status }).eq('id', id);
+    setReminders(prev => prev.map(r => r.id === id ? { ...r, status } : r));
     stopAlarm();
   };
 
-  const markMissed = (reminderId) => {
-    setReminders(prev => prev.map(r => r.id === reminderId ? { ...r, status: 'missed' } : r));
-    stopAlarm();
-  };
-
-  const resetAllReminders = () => {
+  const resetAllReminders = async () => {
+    const userId = getActiveUserId();
+    await supabase.from('medicine_reminders').update({ status: 'pending' }).eq('user_id', userId);
     setReminders(prev => prev.map(r => ({ ...r, status: 'pending' })));
   };
 
-  const removeMember = (memberId) => {
+  const removeMember = async (id) => {
     if (confirm('Remove this member and all their reminders?')) {
-      setCircle(prev => prev.filter(m => m.id !== memberId));
-      setReminders(prev => prev.filter(r => r.memberId !== memberId));
-      if (selectedMember?.id === memberId) setSelectedMember(null);
+      await supabase.from('circle_members').delete().eq('id', id);
+      setCircle(prev => prev.filter(m => m.id !== id));
+      setReminders(prev => prev.filter(r => r.member_id !== id));
+      if (selectedMember?.id === id) setSelectedMember(null);
     }
   };
 
-  const removeReminder = (reminderId) => {
-    setReminders(prev => prev.filter(r => r.id !== reminderId));
+  const removeReminder = async (id) => {
+    await supabase.from('medicine_reminders').delete().eq('id', id);
+    setReminders(prev => prev.filter(r => r.id !== id));
   };
 
-  const doCheckIn = (memberId) => {
-    setCircle(prev => prev.map(m => m.id === memberId ? { ...m, lastCheckIn: Date.now(), status: 'active' } : m));
+  const doCheckIn = async (id) => {
+    const now = Date.now();
+    await supabase.from('circle_members').update({ last_check_in: now, status: 'active' }).eq('id', id);
+    setCircle(prev => prev.map(m => m.id === id ? { ...m, last_check_in: now, status: 'active' } : m));
   };
 
   const getTimeAgo = (timestamp) => {
@@ -242,288 +334,354 @@ export default function ParentalMonitoring() {
   };
 
   const getStatusColor = (member) => {
-    const diff = Date.now() - member.lastCheckIn;
-    if (diff < 3600000) return 'text-secondary'; // active within 1hr
-    if (diff < 14400000) return 'text-tertiary-fixed-dim'; // within 4hrs
-    return 'text-status-emergency'; // inactive
+    const diff = Date.now() - member.last_check_in;
+    if (diff < 3600000) return 'text-secondary';
+    if (diff < 14400000) return 'text-tertiary-fixed-dim';
+    return 'text-status-emergency';
   };
 
   const getStatusLabel = (member) => {
-    const diff = Date.now() - member.lastCheckIn;
+    const diff = Date.now() - member.last_check_in;
     if (diff < 3600000) return 'Active';
     if (diff < 14400000) return 'Idle';
     return '⚠️ Inactive';
   };
 
   const memberReminders = selectedMember 
-    ? reminders.filter(r => r.memberId === selectedMember.id)
+    ? reminders.filter(r => r.member_id === selectedMember.id)
     : reminders;
 
   const avatarOptions = ['👤', '👵', '👴', '👩', '👨', '👧', '👦', '🧓', '👩‍🦳', '👨‍🦳'];
 
+  if (!session) {
+    return <div className="p-xl text-center font-bold">Please log in to access Parental Monitoring.</div>;
+  }
+
   return (
     <div className="flex-1 flex flex-col gap-md max-w-7xl mx-auto w-full pb-xl">
 
-      {/* Alerts Banner */}
-      {alerts.length > 0 && (
-        <div className="bg-status-emergency/10 border border-status-emergency/30 rounded-xl p-md">
-          <h3 className="text-status-emergency font-bold flex items-center gap-2 mb-sm">
-            <span className="material-symbols-outlined animate-pulse">notification_important</span>
-            {alerts.length} Medication Alert{alerts.length > 1 ? 's' : ''}
-          </h3>
-          <div className="space-y-2">
-            {alerts.map(alert => (
-              <div key={alert.id} className="flex items-center justify-between bg-surface-container-lowest rounded-lg p-sm">
-                <div className="flex items-center gap-sm">
-                  <span className="text-2xl">{alert.member.avatar}</span>
-                  <div>
-                    <p className="text-body-sm font-bold text-on-surface">{alert.message}</p>
-                    <p className="text-[11px] text-on-surface-variant">{alert.reminder.notes}</p>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={() => { markTaken(alert.reminder.id); playVoiceReminder(); }}
-                    className="px-3 py-1 bg-secondary text-on-secondary text-label-sm font-bold rounded-lg hover:bg-secondary/80 transition-colors">
-                    ✅ Taken
-                  </button>
-                  <button onClick={() => markMissed(alert.reminder.id)}
-                    className="px-3 py-1 bg-error-container text-on-error-container text-label-sm font-bold rounded-lg hover:bg-error-container/80 transition-colors">
-                    Missed
-                  </button>
-                </div>
-              </div>
-            ))}
+      {/* Mode Switcher */}
+      <div className="bg-surface-container border border-outline-variant rounded-2xl p-sm flex gap-2 w-fit mx-auto shadow-sm">
+        <button 
+          onClick={() => setMode('primary')}
+          className={`px-6 py-2 rounded-xl font-bold text-label-md transition-all ${mode === 'primary' ? 'bg-primary text-on-primary shadow-md' : 'text-on-surface hover:bg-surface-container-low'}`}>
+          My Care Circle
+        </button>
+        <button 
+          onClick={() => setMode('caregiver')}
+          className={`px-6 py-2 rounded-xl font-bold text-label-md transition-all ${mode === 'caregiver' ? 'bg-primary text-on-primary shadow-md' : 'text-on-surface hover:bg-surface-container-low'}`}>
+          Monitor a Loved One
+        </button>
+      </div>
+
+      {mode === 'primary' && accessCode && (
+        <div className="bg-primary/10 border border-primary/20 rounded-xl p-md flex items-center justify-between shadow-sm">
+          <div>
+            <h3 className="font-bold text-primary flex items-center gap-2">
+              <span className="material-symbols-outlined">vpn_key</span>
+              Your Caregiver Access Code
+            </h3>
+            <p className="text-body-sm text-on-surface-variant mt-1">Share this code with your caretaker so they can monitor your reminders remotely.</p>
+          </div>
+          <div className="bg-surface px-4 py-2 rounded-lg border border-primary/30 font-mono text-xl font-black text-on-surface tracking-widest select-all">
+            {accessCode}
           </div>
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="font-headline-md text-on-surface font-bold flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary text-[28px]" data-icon="supervisor_account">supervisor_account</span>
-            Parental Monitoring
-          </h2>
-          <p className="text-body-sm text-on-surface-variant mt-1">
-            Advanced Parental Care Circle • Medicine reminders with voice alerts • {circle.length} member{circle.length !== 1 ? 's' : ''} in your circle
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => setShowAddReminder(true)} className="px-4 py-2 bg-primary text-on-primary text-label-md font-bold rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-1 shadow-md">
-            <span className="material-symbols-outlined text-[18px]">alarm_add</span>
-            Set Reminder
-          </button>
-          <button onClick={resetAllReminders} className="px-3 py-1.5 text-label-sm font-bold border border-outline-variant rounded-xl text-on-surface hover:bg-surface-container-low transition-colors">
-            Reset Today
+      {mode === 'caregiver' && !linkedPatientId && (
+        <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-xl text-center max-w-md mx-auto mt-xl shadow-md">
+          <span className="material-symbols-outlined text-primary text-5xl mb-4">link</span>
+          <h3 className="font-headline-sm font-bold text-on-surface mb-2">Link to a Loved One</h3>
+          <p className="text-body-sm text-on-surface-variant mb-6">Enter the 6-character Caregiver Access Code generated on their account to monitor their medicines.</p>
+          <input 
+            value={caregiverInput}
+            onChange={e => setCaregiverInput(e.target.value.toUpperCase())}
+            placeholder="e.g. MOM-7B9X"
+            className="w-full text-center text-xl tracking-widest font-mono font-bold px-4 py-3 bg-surface-container rounded-xl border border-outline mb-4 focus:border-primary outline-none uppercase"
+          />
+          <button 
+            onClick={handleLinkCaregiver} disabled={!caregiverInput || isLinking}
+            className="w-full bg-primary text-on-primary font-bold py-3 rounded-xl hover:bg-primary/90 transition-all disabled:opacity-50">
+            {isLinking ? 'Linking...' : 'Connect to Circle'}
           </button>
         </div>
-      </div>
+      )}
 
-      {/* Voice Reminder Recorder */}
-      <div className="bg-gradient-to-r from-primary/10 to-tertiary-fixed-dim/10 p-md rounded-xl border border-primary/20 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-sm">
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isRecording ? 'bg-status-emergency animate-pulse' : 'bg-primary/20'}`}>
-              <span className="material-symbols-outlined text-primary text-[28px]">{isRecording ? 'mic' : 'record_voice_over'}</span>
+      {/* Show Content Only if Primary, OR if Caregiver and Linked */}
+      {(mode === 'primary' || (mode === 'caregiver' && linkedPatientId)) && (
+        <>
+          {/* Alerts Banner */}
+          {alerts.length > 0 && (
+            <div className="bg-status-emergency/10 border border-status-emergency/30 rounded-xl p-md">
+              <h3 className="text-status-emergency font-bold flex items-center gap-2 mb-sm">
+                <span className="material-symbols-outlined animate-pulse">notification_important</span>
+                {alerts.length} Medication Alert{alerts.length > 1 ? 's' : ''}
+              </h3>
+              <div className="space-y-2">
+                {alerts.map(alert => (
+                  <div key={alert.id} className="flex items-center justify-between bg-surface-container-lowest rounded-lg p-sm">
+                    <div className="flex items-center gap-sm">
+                      <span className="text-2xl">{alert.member.avatar}</span>
+                      <div>
+                        <p className="text-body-sm font-bold text-on-surface">{alert.message}</p>
+                        <p className="text-[11px] text-on-surface-variant">{alert.reminder.notes}</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => { updateReminderStatus(alert.reminder.id, 'taken'); playVoiceReminder(); }}
+                        className="px-3 py-1 bg-secondary text-on-secondary text-label-sm font-bold rounded-lg hover:bg-secondary/80 transition-colors">
+                        ✅ Taken
+                      </button>
+                      <button onClick={() => updateReminderStatus(alert.reminder.id, 'missed')}
+                        className="px-3 py-1 bg-error-container text-on-error-container text-label-sm font-bold rounded-lg hover:bg-error-container/80 transition-colors">
+                        Missed
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
+          )}
+
+          {/* Header */}
+          <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-headline-sm text-on-surface font-bold">Caretaker Voice Reminder</h3>
-              <p className="text-body-sm text-on-surface-variant">
-                {voiceBlob ? 'Voice recorded ✅ This will play when a reminder triggers.' : 'Record your voice to play as a personalized reminder for your loved ones.'}
+              <h2 className="font-headline-md text-on-surface font-bold flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary text-[28px]" data-icon="supervisor_account">supervisor_account</span>
+                {mode === 'caregiver' ? 'Monitoring Loved One' : 'Parental Monitoring'}
+              </h2>
+              <p className="text-body-sm text-on-surface-variant mt-1">
+                {circle.length} member{circle.length !== 1 ? 's' : ''} in the circle
               </p>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {voiceBlob && (
-              <>
-                <button onClick={playVoiceReminder} className="px-3 py-1.5 bg-surface-container-lowest text-on-surface font-bold text-label-sm rounded-xl border border-outline-variant hover:bg-surface-container-low transition-colors flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[16px]">play_arrow</span> Play
+            <div className="flex items-center gap-2">
+              {mode === 'caregiver' && (
+                <button onClick={handleUnlink} className="px-3 py-1.5 text-status-emergency bg-error-container/20 font-bold border border-status-emergency/20 rounded-xl hover:bg-error-container/40 transition-colors flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[18px]">link_off</span> Unlink
                 </button>
-                <button onClick={() => setVoiceBlob(null)} className="px-3 py-1.5 text-on-surface-variant font-bold text-label-sm rounded-xl hover:bg-surface-container-low transition-colors">
-                  Delete
-                </button>
-              </>
-            )}
-            {isRecording ? (
-              <button onClick={stopRecording} className="px-4 py-2 bg-status-emergency text-white font-bold text-label-sm rounded-xl hover:bg-status-emergency/80 transition-colors flex items-center gap-1 animate-pulse">
-                <span className="material-symbols-outlined text-[16px]">stop</span> Stop Recording
-              </button>
-            ) : (
-              <button onClick={startRecording} className="px-4 py-2 bg-primary text-on-primary font-bold text-label-sm rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-1">
-                <span className="material-symbols-outlined text-[16px]">mic</span> {voiceBlob ? 'Re-record' : 'Record Voice'}
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-12 gap-md">
-        {/* Circle of Trust — Left Panel */}
-        <div className="col-span-4 flex flex-col gap-md">
-          <div className="bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm">
-            <div className="flex items-center justify-between mb-md">
-              <h3 className="font-headline-sm text-on-surface font-bold flex items-center gap-2">
-                <span className="material-symbols-outlined text-tertiary-fixed-dim text-[20px]">shield</span>
-                Circle of Trust
-              </h3>
-              <button onClick={() => setShowAddMember(true)} className="px-3 py-1 text-label-sm font-bold border border-outline-variant rounded-full text-on-surface hover:bg-surface-container-low transition-colors">
-                + Add
-              </button>
-            </div>
-
-            <div className="space-y-2">
-              {circle.map(member => (
-                <div
-                  key={member.id}
-                  onClick={() => setSelectedMember(selectedMember?.id === member.id ? null : member)}
-                  className={`flex items-center gap-sm p-sm rounded-xl cursor-pointer transition-all group ${
-                    selectedMember?.id === member.id 
-                      ? 'bg-primary/10 border border-primary/30' 
-                      : 'hover:bg-surface-container-low border border-transparent'
-                  }`}
-                >
-                  <div className="relative">
-                    <span className="text-3xl">{member.avatar}</span>
-                    <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-surface-container-lowest ${getStatusColor(member) === 'text-secondary' ? 'bg-secondary' : getStatusColor(member) === 'text-tertiary-fixed-dim' ? 'bg-tertiary-fixed-dim' : 'bg-status-emergency'}`}></span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-label-md font-bold text-on-surface truncate">{member.name}</h4>
-                    <p className="text-[11px] text-on-surface-variant">{member.relation} • Age {member.age}</p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className={`text-[11px] font-bold ${getStatusColor(member)}`}>{getStatusLabel(member)}</p>
-                    <p className="text-[10px] text-on-surface-variant">{getTimeAgo(member.lastCheckIn)}</p>
-                  </div>
-                  <button onClick={(e) => { e.stopPropagation(); doCheckIn(member.id); }}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-primary hover:bg-primary/10 rounded-lg transition-all shrink-0" title="Manual Check-in">
-                    <span className="material-symbols-outlined text-[18px]">check_circle</span>
-                  </button>
-                  <button onClick={(e) => { e.stopPropagation(); removeMember(member.id); }}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-outline hover:text-status-emergency hover:bg-error-container rounded-lg transition-all shrink-0" title="Remove">
-                    <span className="material-symbols-outlined text-[18px]">close</span>
-                  </button>
-                </div>
-              ))}
-              {circle.length === 0 && (
-                <p className="text-center text-on-surface-variant text-body-sm py-md">No members yet. Add your first family member above.</p>
               )}
-            </div>
-          </div>
-
-          {/* Quick Stats */}
-          <div className="bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm">
-            <h3 className="font-label-md font-bold text-on-surface-variant mb-sm">Today's Summary</h3>
-            <div className="grid grid-cols-3 gap-sm">
-              <div className="text-center p-sm bg-secondary/10 rounded-xl">
-                <p className="text-xl font-black text-secondary">{reminders.filter(r => r.status === 'taken').length}</p>
-                <p className="text-[10px] font-bold text-on-surface-variant">Taken</p>
-              </div>
-              <div className="text-center p-sm bg-tertiary-fixed-dim/10 rounded-xl">
-                <p className="text-xl font-black text-tertiary-fixed-dim">{reminders.filter(r => r.status === 'pending').length}</p>
-                <p className="text-[10px] font-bold text-on-surface-variant">Pending</p>
-              </div>
-              <div className="text-center p-sm bg-status-emergency/10 rounded-xl">
-                <p className="text-xl font-black text-status-emergency">{reminders.filter(r => r.status === 'missed').length}</p>
-                <p className="text-[10px] font-bold text-on-surface-variant">Missed</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Medicine Reminders — Right Panel */}
-        <div className="col-span-8">
-          <div className="bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm">
-            <div className="flex items-center justify-between mb-md">
-              <h3 className="font-headline-sm text-on-surface font-bold flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary text-[20px]">medication</span>
-                Medicine Reminders
-                {selectedMember && (
-                  <span className="text-body-sm font-normal text-on-surface-variant ml-2">
-                    for {selectedMember.avatar} {selectedMember.name}
-                  </span>
-                )}
-              </h3>
-              <button onClick={() => setShowAddReminder(true)}
-                className="px-3 py-1.5 bg-primary text-on-primary text-label-sm font-bold rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-1">
-                <span className="material-symbols-outlined text-[16px]">alarm_add</span>
+              <button onClick={() => setShowAddReminder(true)} className="px-4 py-2 bg-primary text-on-primary text-label-md font-bold rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-1 shadow-md">
+                <span className="material-symbols-outlined text-[18px]">alarm_add</span>
                 Set Reminder
               </button>
-            </div>
-
-            <div className="space-y-2">
-              {memberReminders.map(r => {
-                const member = circle.find(m => m.id === r.memberId);
-                return (
-                  <div key={r.id} className={`flex items-center gap-sm p-sm rounded-xl border transition-all group ${
-                    r.status === 'taken' ? 'bg-secondary/5 border-secondary/20' :
-                    r.status === 'missed' ? 'bg-status-emergency/5 border-status-emergency/20' :
-                    'bg-surface border-outline-variant hover:border-primary/30'
-                  }`}>
-                    {/* Time */}
-                    <div className="w-16 text-center shrink-0">
-                      <p className="text-lg font-black text-on-surface">{r.time}</p>
-                      <p className="text-[10px] text-on-surface-variant font-bold">{r.days ? r.days.join(', ') : r.frequency}</p>
-                    </div>
-
-                    {/* Divider */}
-                    <div className={`w-1 h-10 rounded-full ${
-                      r.status === 'taken' ? 'bg-secondary' :
-                      r.status === 'missed' ? 'bg-status-emergency' : 'bg-primary'
-                    }`}></div>
-
-                    {/* Details */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        {!selectedMember && member && <span className="text-lg">{member.avatar}</span>}
-                        <h4 className="font-label-md font-bold text-on-surface">{r.medicine}</h4>
-                        <span className="px-2 py-0.5 bg-surface-container text-on-surface-variant text-[10px] font-bold rounded">{r.dosage}</span>
-                      </div>
-                      {r.notes && <p className="text-[11px] text-on-surface-variant mt-0.5">{r.notes}</p>}
-                    </div>
-
-                    {/* Status Badge */}
-                    <div className="shrink-0">
-                      {r.status === 'taken' ? (
-                        <span className="px-3 py-1 bg-secondary/20 text-secondary text-label-sm font-bold rounded-full flex items-center gap-1">
-                          <span className="material-symbols-outlined text-[14px]">check</span> Taken
-                        </span>
-                      ) : r.status === 'missed' ? (
-                        <span className="px-3 py-1 bg-status-emergency/20 text-status-emergency text-label-sm font-bold rounded-full flex items-center gap-1">
-                          <span className="material-symbols-outlined text-[14px]">close</span> Missed
-                        </span>
-                      ) : (
-                        <div className="flex gap-1">
-                          <button onClick={() => { markTaken(r.id); playVoiceReminder(); }}
-                            className="px-3 py-1 bg-secondary text-on-secondary text-label-sm font-bold rounded-lg hover:bg-secondary/80 transition-colors">
-                            ✅ Taken
-                          </button>
-                          <button onClick={() => markMissed(r.id)}
-                            className="px-3 py-1 bg-surface-container text-on-surface-variant text-label-sm font-bold rounded-lg hover:bg-surface-container-high transition-colors">
-                            Skip
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Delete */}
-                    <button onClick={() => removeReminder(r.id)}
-                      className="opacity-0 group-hover:opacity-100 p-1 text-outline hover:text-status-emergency rounded transition-all shrink-0" title="Delete">
-                      <span className="material-symbols-outlined text-[16px]">delete</span>
-                    </button>
-                  </div>
-                );
-              })}
-              {memberReminders.length === 0 && (
-                <div className="text-center py-xl">
-                  <span className="material-symbols-outlined text-outline text-5xl mb-2">medication</span>
-                  <p className="text-on-surface-variant font-bold">No reminders set</p>
-                  <p className="text-body-sm text-on-surface-variant mt-1">Select a member and click "Add Reminder" to get started.</p>
-                </div>
-              )}
+              <button onClick={resetAllReminders} className="px-3 py-1.5 text-label-sm font-bold border border-outline-variant rounded-xl text-on-surface hover:bg-surface-container-low transition-colors">
+                Reset Today
+              </button>
             </div>
           </div>
-        </div>
-      </div>
+
+          {/* Voice Reminder Recorder */}
+          <div className="bg-gradient-to-r from-primary/10 to-tertiary-fixed-dim/10 p-md rounded-xl border border-primary/20 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-sm">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isRecording ? 'bg-status-emergency animate-pulse' : 'bg-primary/20'}`}>
+                  <span className="material-symbols-outlined text-primary text-[28px]">{isRecording ? 'mic' : 'record_voice_over'}</span>
+                </div>
+                <div>
+                  <h3 className="font-headline-sm text-on-surface font-bold">Caretaker Voice Reminder</h3>
+                  <p className="text-body-sm text-on-surface-variant">
+                    {voiceBlob ? 'Voice recorded ✅ This will play when a reminder triggers.' : 'Record your voice to play as a personalized reminder for your loved ones.'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {voiceBlob && (
+                  <>
+                    <button onClick={playVoiceReminder} className="px-3 py-1.5 bg-surface-container-lowest text-on-surface font-bold text-label-sm rounded-xl border border-outline-variant hover:bg-surface-container-low transition-colors flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[16px]">play_arrow</span> Play
+                    </button>
+                    {mode === 'primary' && (
+                      <button onClick={handleDeleteVoice} className="px-3 py-1.5 text-on-surface-variant font-bold text-label-sm rounded-xl hover:bg-surface-container-low transition-colors">
+                        Delete
+                      </button>
+                    )}
+                  </>
+                )}
+                {mode === 'primary' && (
+                  isRecording ? (
+                    <button onClick={stopRecording} className="px-4 py-2 bg-status-emergency text-white font-bold text-label-sm rounded-xl hover:bg-status-emergency/80 transition-colors flex items-center gap-1 animate-pulse">
+                      <span className="material-symbols-outlined text-[16px]">stop</span> Stop Recording
+                    </button>
+                  ) : (
+                    <button onClick={startRecording} className="px-4 py-2 bg-primary text-on-primary font-bold text-label-sm rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[16px]">mic</span> {voiceBlob ? 'Re-record' : 'Record Voice'}
+                    </button>
+                  )
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-12 gap-md">
+            {/* Circle of Trust — Left Panel */}
+            <div className="col-span-4 flex flex-col gap-md">
+              <div className="bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm">
+                <div className="flex items-center justify-between mb-md">
+                  <h3 className="font-headline-sm text-on-surface font-bold flex items-center gap-2">
+                    <span className="material-symbols-outlined text-tertiary-fixed-dim text-[20px]">shield</span>
+                    Circle of Trust
+                  </h3>
+                  <button onClick={() => setShowAddMember(true)} className="px-3 py-1 text-label-sm font-bold border border-outline-variant rounded-full text-on-surface hover:bg-surface-container-low transition-colors">
+                    + Add
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  {circle.map(member => (
+                    <div
+                      key={member.id}
+                      onClick={() => setSelectedMember(selectedMember?.id === member.id ? null : member)}
+                      className={`flex items-center gap-sm p-sm rounded-xl cursor-pointer transition-all group ${
+                        selectedMember?.id === member.id 
+                          ? 'bg-primary/10 border border-primary/30' 
+                          : 'hover:bg-surface-container-low border border-transparent'
+                      }`}
+                    >
+                      <div className="relative">
+                        <span className="text-3xl">{member.avatar}</span>
+                        <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-surface-container-lowest ${getStatusColor(member) === 'text-secondary' ? 'bg-secondary' : getStatusColor(member) === 'text-tertiary-fixed-dim' ? 'bg-tertiary-fixed-dim' : 'bg-status-emergency'}`}></span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-label-md font-bold text-on-surface truncate">{member.name}</h4>
+                        <p className="text-[11px] text-on-surface-variant">{member.relation} • Age {member.age}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className={`text-[11px] font-bold ${getStatusColor(member)}`}>{getStatusLabel(member)}</p>
+                        <p className="text-[10px] text-on-surface-variant">{getTimeAgo(member.last_check_in)}</p>
+                      </div>
+                      <button onClick={(e) => { e.stopPropagation(); doCheckIn(member.id); }}
+                        className="opacity-0 group-hover:opacity-100 p-1 text-primary hover:bg-primary/10 rounded-lg transition-all shrink-0" title="Manual Check-in">
+                        <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                      </button>
+                      <button onClick={(e) => { e.stopPropagation(); removeMember(member.id); }}
+                        className="opacity-0 group-hover:opacity-100 p-1 text-outline hover:text-status-emergency hover:bg-error-container rounded-lg transition-all shrink-0" title="Remove">
+                        <span className="material-symbols-outlined text-[18px]">close</span>
+                      </button>
+                    </div>
+                  ))}
+                  {circle.length === 0 && (
+                    <p className="text-center text-on-surface-variant text-body-sm py-md">No members yet. Add your first family member above.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Quick Stats */}
+              <div className="bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm">
+                <h3 className="font-label-md font-bold text-on-surface-variant mb-sm">Today's Summary</h3>
+                <div className="grid grid-cols-3 gap-sm">
+                  <div className="text-center p-sm bg-secondary/10 rounded-xl">
+                    <p className="text-xl font-black text-secondary">{reminders.filter(r => r.status === 'taken').length}</p>
+                    <p className="text-[10px] font-bold text-on-surface-variant">Taken</p>
+                  </div>
+                  <div className="text-center p-sm bg-tertiary-fixed-dim/10 rounded-xl">
+                    <p className="text-xl font-black text-tertiary-fixed-dim">{reminders.filter(r => r.status === 'pending').length}</p>
+                    <p className="text-[10px] font-bold text-on-surface-variant">Pending</p>
+                  </div>
+                  <div className="text-center p-sm bg-status-emergency/10 rounded-xl">
+                    <p className="text-xl font-black text-status-emergency">{reminders.filter(r => r.status === 'missed').length}</p>
+                    <p className="text-[10px] font-bold text-on-surface-variant">Missed</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Medicine Reminders — Right Panel */}
+            <div className="col-span-8">
+              <div className="bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm">
+                <div className="flex items-center justify-between mb-md">
+                  <h3 className="font-headline-sm text-on-surface font-bold flex items-center gap-2">
+                    <span className="material-symbols-outlined text-primary text-[20px]">medication</span>
+                    Medicine Reminders
+                    {selectedMember && (
+                      <span className="text-body-sm font-normal text-on-surface-variant ml-2">
+                        for {selectedMember.avatar} {selectedMember.name}
+                      </span>
+                    )}
+                  </h3>
+                  <button onClick={() => setShowAddReminder(true)}
+                    className="px-3 py-1.5 bg-primary text-on-primary text-label-sm font-bold rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[16px]">alarm_add</span>
+                    Set Reminder
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  {memberReminders.map(r => {
+                    const member = circle.find(m => m.id === r.member_id);
+                    return (
+                      <div key={r.id} className={`flex items-center gap-sm p-sm rounded-xl border transition-all group ${
+                        r.status === 'taken' ? 'bg-secondary/5 border-secondary/20' :
+                        r.status === 'missed' ? 'bg-status-emergency/5 border-status-emergency/20' :
+                        'bg-surface border-outline-variant hover:border-primary/30'
+                      }`}>
+                        {/* Time */}
+                        <div className="w-16 text-center shrink-0">
+                          <p className="text-lg font-black text-on-surface">{r.time}</p>
+                          <p className="text-[10px] text-on-surface-variant font-bold">{r.days ? r.days.join(', ') : r.frequency}</p>
+                        </div>
+
+                        {/* Divider */}
+                        <div className={`w-1 h-10 rounded-full ${
+                          r.status === 'taken' ? 'bg-secondary' :
+                          r.status === 'missed' ? 'bg-status-emergency' : 'bg-primary'
+                        }`}></div>
+
+                        {/* Details */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            {!selectedMember && member && <span className="text-lg">{member.avatar}</span>}
+                            <h4 className="font-label-md font-bold text-on-surface">{r.medicine}</h4>
+                            <span className="px-2 py-0.5 bg-surface-container text-on-surface-variant text-[10px] font-bold rounded">{r.dosage}</span>
+                          </div>
+                          {r.notes && <p className="text-[11px] text-on-surface-variant mt-0.5">{r.notes}</p>}
+                        </div>
+
+                        {/* Status Badge */}
+                        <div className="shrink-0">
+                          {r.status === 'taken' ? (
+                            <span className="px-3 py-1 bg-secondary/20 text-secondary text-label-sm font-bold rounded-full flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[14px]">check</span> Taken
+                            </span>
+                          ) : r.status === 'missed' ? (
+                            <span className="px-3 py-1 bg-status-emergency/20 text-status-emergency text-label-sm font-bold rounded-full flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[14px]">close</span> Missed
+                            </span>
+                          ) : (
+                            <div className="flex gap-1">
+                              <button onClick={() => { updateReminderStatus(r.id, 'taken'); playVoiceReminder(); }}
+                                className="px-3 py-1 bg-secondary text-on-secondary text-label-sm font-bold rounded-lg hover:bg-secondary/80 transition-colors">
+                                ✅ Taken
+                              </button>
+                              <button onClick={() => updateReminderStatus(r.id, 'missed')}
+                                className="px-3 py-1 bg-surface-container text-on-surface-variant text-label-sm font-bold rounded-lg hover:bg-surface-container-high transition-colors">
+                                Skip
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Delete */}
+                        <button onClick={() => removeReminder(r.id)}
+                          className="opacity-0 group-hover:opacity-100 p-1 text-outline hover:text-status-emergency rounded transition-all shrink-0" title="Delete">
+                          <span className="material-symbols-outlined text-[16px]">delete</span>
+                        </button>
+                      </div>
+                    );
+                  })}
+                  {memberReminders.length === 0 && (
+                    <div className="text-center py-xl">
+                      <span className="material-symbols-outlined text-outline text-5xl mb-2">medication</span>
+                      <p className="text-on-surface-variant font-bold">No reminders set</p>
+                      <p className="text-body-sm text-on-surface-variant mt-1">Select a member and click "Add Reminder" to get started.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Add Member Modal */}
       {showAddMember && (
@@ -572,7 +730,7 @@ export default function ParentalMonitoring() {
         </div>
       )}
 
-      {/* Set Reminder Modal — Comprehensive */}
+      {/* Set Reminder Modal */}
       {showAddReminder && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] backdrop-blur-sm p-md">
           <div className="bg-surface-container-lowest p-lg rounded-2xl shadow-2xl max-w-lg w-full border border-outline-variant max-h-[90vh] overflow-y-auto">
