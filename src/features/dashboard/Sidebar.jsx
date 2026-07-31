@@ -53,10 +53,15 @@ export default function Sidebar({ currentTab, setCurrentTab }) {
           <span className="material-symbols-outlined" data-icon="supervisor_account">supervisor_account</span>
           <span className="font-body-md text-body-md">Parental Monitoring</span>
         </button>
-        <a className="flex items-center gap-sm px-sm py-xs text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-xl" href="#">
-          <span className="material-symbols-outlined" data-icon="analytics">analytics</span>
-          <span className="font-body-md text-body-md">Analytics</span>
-        </a>
+        <button 
+          onClick={() => setCurrentTab('awareness')}
+          className={`w-full flex items-center gap-sm px-sm py-xs font-bold rounded-xl transition-all duration-200 ${
+            currentTab === 'awareness' ? 'bg-surface-container-high text-on-surface scale-[0.99]' : 'text-on-surface-variant hover:bg-surface-container-low'
+          }`}
+        >
+          <span className="material-symbols-outlined" data-icon="health_and_safety">health_and_safety</span>
+          <span className="font-body-md text-body-md">Road Safety & Awareness</span>
+        </button>
         <button 
           onClick={() => setCurrentTab('settings')}
           className={`w-full flex items-center gap-sm px-sm py-xs font-bold rounded-xl transition-all duration-200 ${

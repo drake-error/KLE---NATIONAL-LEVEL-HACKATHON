@@ -14,6 +14,7 @@ import ParentalMonitoring from '../parental-monitoring/ParentalMonitoring';
 import SettingsPage from '../settings/SettingsPage';
 import SupportPage from '../support/SupportPage';
 import SystemStatusPage from '../support/SystemStatusPage';
+import RoadAccidentAwarenessPage from '../awareness/RoadAccidentAwarenessPage';
 
 export default function DashboardLayout({ session }) {
   const [currentTab, setCurrentTab] = useState('dashboard');
@@ -99,6 +100,12 @@ export default function DashboardLayout({ session }) {
       {currentTab === 'system-status' && (
         <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
           <SystemStatusPage setCurrentTab={setCurrentTab} />
+        </main>
+      )}
+
+      {currentTab === 'awareness' && (
+        <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
+          <RoadAccidentAwarenessPage />
         </main>
       )}
     </div>
