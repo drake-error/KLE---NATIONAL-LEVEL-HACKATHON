@@ -2,26 +2,26 @@ import React from 'react';
 
 export default function NotFound({ setCurrentTab }) {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-8rem)] text-center p-4 animate-fadeIn">
-      <div className="bg-surface border border-outline-variant rounded-3xl p-12 max-w-lg shadow-sm">
-        <div className="w-24 h-24 bg-error-container text-error rounded-full flex items-center justify-center mx-auto mb-6">
-          <span className="material-symbols-outlined text-5xl" data-icon="search_off">search_off</span>
-        </div>
-        
-        <h1 className="text-3xl font-black text-on-surface mb-4 tracking-tight">Page Not Found</h1>
-        
-        <p className="text-body-lg text-on-surface-variant mb-8 leading-relaxed">
-          The requested resource could not be located in the ResQ-Plus database. 
-          The search functionality is currently undergoing maintenance.
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-8rem)] p-6 animate-fadeIn">
+      <div className="max-w-[28rem] w-full text-center p-8 bg-surface-container-lowest rounded-2xl border border-outline-variant shadow-sm">
+        <h1 className="text-xl font-bold text-on-surface mb-2">This page didn't load</h1>
+        <p className="text-on-surface-variant mb-6 leading-relaxed">
+          Something went wrong on our end. You can try refreshing or head back home.
         </p>
-        
-        <button 
-          onClick={() => setCurrentTab('dashboard')}
-          className="bg-primary hover:bg-primary/90 text-on-primary font-bold px-8 py-3 rounded-full transition-all active:scale-95 flex items-center gap-2 mx-auto"
-        >
-          <span className="material-symbols-outlined text-sm" data-icon="home">home</span>
-          Return to Dashboard
-        </button>
+        <div className="flex gap-2 justify-center flex-wrap">
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 rounded-md bg-primary text-on-primary font-medium hover:bg-primary/90 transition-colors border border-transparent"
+          >
+            Try again
+          </button>
+          <button 
+            onClick={() => setCurrentTab('dashboard')} 
+            className="px-4 py-2 rounded-md bg-surface text-on-surface border border-outline hover:bg-surface-container-low transition-colors font-medium"
+          >
+            Go home
+          </button>
+        </div>
       </div>
     </div>
   );
