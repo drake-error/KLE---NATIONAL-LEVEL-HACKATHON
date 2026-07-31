@@ -8,6 +8,10 @@ export default function TopHeader({ currentTab, setCurrentTab, isLoggedIn, userN
   const handleSearch = (e) => {
     if (e.key === 'Enter') {
       setCurrentTab('health-vault');
+      // If the user typed "health vault" just to navigate, clear it so they see their files
+      if (e.target.value.toLowerCase().includes('health')) {
+        setSearchQuery('');
+      }
     }
   };
 

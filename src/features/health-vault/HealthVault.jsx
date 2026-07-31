@@ -105,20 +105,26 @@ export default function HealthVault({ searchQuery = '' }) {
       // 3. Update Local State (or Database)
       const newDoc = {
         id: Date.now().toString(),
-        filename: pendingFile.name,
-        category: uploadCategory,
+        filename: pendingFile.name || 'unknown_file',
+        category: uploadCategory || 'Other',
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
         folder: assignedFolderId,
-        storagePath,
+        storagePath: storagePath || null,
         encrypted: true
       };
 
+      console.log("Adding new document to state:", newDoc);
       setDocuments(prev => [newDoc, ...prev]);
+      
+      // Force active folder to 'All' or the new folder so they can see it
+      setActiveFolder('All');
+      setActiveCategory('All Records');
+
     } catch (err) {
-      console.error("Encryption/Upload Error:", err);
-      // Even if there's an error in encryption (e.g. crypto-js not fully loaded), we fallback to local mock without encryption for the demo
-      alert("Encryption or Upload failed. Check console for details.");
+      console.error("Encryption/Upload Error (Top Level):", err);
+      alert("An unexpected error occurred during upload: " + (err.message || err));
     } finally {
+      console.log("Upload flow completed, resetting state.");
       setIsUploading(false);
       setPendingFile(null);
       setEncryptionPassword('');
@@ -196,6 +202,14 @@ export default function HealthVault({ searchQuery = '' }) {
             </button>
           ))}
         </div>
+        {searchQuery && (
+          <div className="mt-md p-sm bg-primary-fixed/20 border border-primary/30 rounded-lg flex items-center justify-between">
+            <p className="text-body-sm text-primary font-bold flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px]">info</span>
+              Showing results for: "{searchQuery}". Clear your search if you can't see your uploaded files.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Upload Zone */}
