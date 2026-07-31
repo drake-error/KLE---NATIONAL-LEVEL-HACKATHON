@@ -39,14 +39,49 @@ export default function ParentalMonitoring() {
   const [newMember, setNewMember] = useState({ name: '', age: '', relation: '', avatar: '👤' });
   const [newReminder, setNewReminder] = useState({ medicine: '', dosage: '', time: '08:00', frequency: 'Daily', notes: '' });
 
+  const [alarmActive, setAlarmActive] = useState(false);
+  const [soundedAlarms, setSoundedAlarms] = useState([]);
+
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const voiceAudioRef = useRef(null);
+  const alarmTimeoutRef = useRef(null);
 
   // Persist
   useEffect(() => {
     saveData({ circle, reminders, voiceBlob });
   }, [circle, reminders, voiceBlob]);
+
+  const stopAlarm = () => {
+    if (voiceAudioRef.current) {
+      voiceAudioRef.current.pause();
+      voiceAudioRef.current = null;
+    }
+    if (alarmTimeoutRef.current) {
+      clearTimeout(alarmTimeoutRef.current);
+      alarmTimeoutRef.current = null;
+    }
+    setAlarmActive(false);
+  };
+
+  const startAlarm = () => {
+    if (!voiceBlob) return;
+    stopAlarm();
+
+    const audio = new Audio(voiceBlob);
+    audio.loop = true;
+    voiceAudioRef.current = audio;
+
+    audio.play().catch(err => {
+      console.warn("Auto-play blocked by browser. Alarm will sound on next click.");
+    });
+    setAlarmActive(true);
+
+    // Stop after 60 seconds (1 minute)
+    alarmTimeoutRef.current = setTimeout(() => {
+      stopAlarm();
+    }, 60000);
+  };
 
   // Check for missed medications and generate alerts
   useEffect(() => {
@@ -66,15 +101,24 @@ export default function ParentalMonitoring() {
               member,
               reminder: r,
             });
+
+            // If it's exactly the scheduled time, trigger the voice alarm (only once per alarm)
+            if (r.time === currentTime && !soundedAlarms.includes(r.id)) {
+              startAlarm();
+              setSoundedAlarms(prev => [...prev, r.id]);
+            }
           }
         }
       });
       setAlerts(newAlerts);
     };
     checkAlerts();
-    const interval = setInterval(checkAlerts, 60000);
-    return () => clearInterval(interval);
-  }, [reminders, circle]);
+    const interval = setInterval(checkAlerts, 5000); // Check more frequently (every 5s) for instant alarm response
+    return () => {
+      clearInterval(interval);
+      if (alarmTimeoutRef.current) clearTimeout(alarmTimeoutRef.current);
+    };
+  }, [reminders, circle, soundedAlarms, voiceBlob]);
 
   // ─── Voice Recording ───────────────────────────────────────
   const startRecording = async () => {
@@ -114,10 +158,7 @@ export default function ParentalMonitoring() {
 
   const playVoiceReminder = () => {
     if (voiceBlob) {
-      if (voiceAudioRef.current) {
-        voiceAudioRef.current.pause();
-        voiceAudioRef.current = null;
-      }
+      stopAlarm();
       const audio = new Audio(voiceBlob);
       voiceAudioRef.current = audio;
       audio.play();
@@ -160,10 +201,12 @@ export default function ParentalMonitoring() {
 
   const markTaken = (reminderId) => {
     setReminders(prev => prev.map(r => r.id === reminderId ? { ...r, status: 'taken' } : r));
+    stopAlarm();
   };
 
   const markMissed = (reminderId) => {
     setReminders(prev => prev.map(r => r.id === reminderId ? { ...r, status: 'missed' } : r));
+    stopAlarm();
   };
 
   const resetAllReminders = () => {
