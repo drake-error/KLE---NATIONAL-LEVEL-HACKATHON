@@ -171,15 +171,46 @@ export default function RoadAccidentAwarenessPage() {
   };
 
   const triggerAudioSimulation = (stepNum) => {
+    // If already playing this step, stop it
     if (audioPlayingStep === stepNum) {
+      window.speechSynthesis.cancel();
       setAudioPlayingStep(null);
-    } else {
-      setAudioPlayingStep(stepNum);
-      // Automatically end simulation after 5 seconds
-      setTimeout(() => {
-        setAudioPlayingStep(prev => prev === stepNum ? null : prev);
-      }, 5000);
+      return;
     }
+
+    // Stop any currently playing audio first
+    window.speechSynthesis.cancel();
+
+    const step = emergencySteps.find(s => s.step === stepNum);
+    if (!step) return;
+
+    // Build the full script to read aloud
+    const script = [
+      `Stage ${step.step} Protocol: ${step.title}.`,
+      `Timeframe: ${step.timeframe}.`,
+      step.headline,
+      ...step.actions.map((act, i) => `Action ${i + 1}: ${act}`),
+      `Critical Warning: ${step.warning}`
+    ].join(' ... ');
+
+    const utterance = new SpeechSynthesisUtterance(script);
+    utterance.rate = 0.95;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+
+    // Try to pick a clear English voice
+    const voices = window.speechSynthesis.getVoices();
+    const preferred = voices.find(v => v.lang.startsWith('en') && v.name.includes('Google'))
+      || voices.find(v => v.lang.startsWith('en-US'))
+      || voices.find(v => v.lang.startsWith('en'));
+    if (preferred) utterance.voice = preferred;
+
+    utterance.onstart = () => setAudioPlayingStep(stepNum);
+    utterance.onend = () => setAudioPlayingStep(null);
+    utterance.onerror = () => setAudioPlayingStep(null);
+
+    setAudioPlayingStep(stepNum);
+    window.speechSynthesis.speak(utterance);
   };
 
   const handleQuizSubmit = (optIndex) => {
