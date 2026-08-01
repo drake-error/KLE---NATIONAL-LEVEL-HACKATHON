@@ -676,6 +676,72 @@ export default function RoadAccidentAwarenessPage() {
         </div>
       </div>
 
+      {/* CPR & AED Usage - Simplified Overview */}
+      <div className="bg-surface-container border border-outline-variant/30 rounded-[2rem] p-6 lg:p-8 mt-8">
+        <div className="flex items-center gap-4 mb-6 pb-6 border-b border-outline-variant/30">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+            <span className="material-symbols-rounded text-2xl font-black">monitor_heart</span>
+          </div>
+          <div>
+            <h2 className="text-xl font-black text-on-surface tracking-tight">
+              {t("Start Hands-Only CPR & AED Usage")}
+            </h2>
+            <p className="text-sm font-semibold text-on-surface-variant mt-1">
+              {t("Life-Saving Actions for Cardiac Emergencies")}
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 hover:border-primary/50 transition-colors">
+            <div className="flex gap-4">
+              <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black flex-shrink-0">1</div>
+              <div>
+                <h3 className="font-black text-on-surface text-sm mb-1">{t("Start Hands-Only CPR (Push Hard & Fast)")}</h3>
+                <p className="text-xs font-semibold text-on-surface-variant leading-relaxed mb-2">
+                  <strong>{t("Action:")}</strong> {t("Place the heel of your hand in the center of the chest, interlock your fingers, keep your elbows straight, and push down hard (about 2 inches/5 cm deep).")}
+                </p>
+                <p className="text-xs font-semibold text-on-surface-variant leading-relaxed text-emerald-600 dark:text-emerald-400">
+                  <strong>{t("Rhythm Tip:")}</strong> {t("Aim for 100–120 beats per minute—push to the tempo of the song \"Stayin' Alive\".")}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 hover:border-amber-500/50 transition-colors">
+            <div className="flex gap-4">
+              <div className="w-8 h-8 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center font-black flex-shrink-0">2</div>
+              <div>
+                <h3 className="font-black text-on-surface text-sm mb-1">{t("Get and Use an AED")}</h3>
+                <p className="text-xs font-semibold text-on-surface-variant leading-relaxed mb-2">
+                  <strong>{t("Action:")}</strong> {t("Point directly at a specific bystander and say, \"You, go find an AED!\" (Public devices are often located in metro stations, security booths, or main gates).")}
+                </p>
+                <p className="text-xs font-semibold text-on-surface-variant leading-relaxed text-emerald-600 dark:text-emerald-400">
+                  <strong>{t("Key Tip:")}</strong> {t("As soon as the AED arrives, turn it on—it will give you clear, spoken step-by-step instructions.")}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 hover:border-rose-500/50 transition-colors">
+            <div className="flex gap-4">
+              <div className="w-8 h-8 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center font-black flex-shrink-0">3</div>
+              <div>
+                <h3 className="font-black text-on-surface text-sm mb-1">{t('2 Essential "DO NOTs"')}</h3>
+                <p className="text-xs font-semibold text-on-surface-variant leading-relaxed mb-2">
+                  <span className="text-rose-500 mr-1">❌</span>
+                  <strong>{t("Do NOT stop compressions to check for a pulse:")}</strong> {t("If they are unconscious and not breathing normally (or only gasping), keep doing chest compressions until medics arrive.")}
+                </p>
+                <p className="text-xs font-semibold text-on-surface-variant leading-relaxed">
+                  <span className="text-rose-500 mr-1">❌</span>
+                  <strong>{t("Do NOT worry about cracking ribs:")}</strong> {t("Hearing or feeling a pop during compressions is common. Effective depth is required to keep blood flowing to the brain—focus on keeping the rhythm.")}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* AI Voice Assistant */}
       <AIVoiceAssistant />
     </div>
