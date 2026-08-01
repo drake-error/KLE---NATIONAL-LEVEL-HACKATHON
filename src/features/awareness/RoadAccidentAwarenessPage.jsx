@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useI18n } from '../../i18n';
 import AIVoiceAssistant from './AIVoiceAssistant';
-import { initSpeechVoices, getBestNativeVoice } from '../../utils/speechVoice';
+import { speakInLanguage, stopSpeaking, initVoices } from '../../utils/speechVoice';
 
 export default function RoadAccidentAwarenessPage() {
   const { t, lang } = useI18n();
@@ -13,7 +13,7 @@ export default function RoadAccidentAwarenessPage() {
   const [audioPlayingStep, setAudioPlayingStep] = useState(null);
 
   useEffect(() => {
-    initSpeechVoices();
+    initVoices();
   }, []);
 
   const emergencySteps = [
@@ -181,13 +181,13 @@ export default function RoadAccidentAwarenessPage() {
   const triggerAudioSimulation = (stepNum) => {
     // If already playing this step, stop it
     if (audioPlayingStep === stepNum) {
-      window.speechSynthesis.cancel();
+      stopSpeaking();
       setAudioPlayingStep(null);
       return;
     }
 
     // Stop any currently playing audio first
-    window.speechSynthesis.cancel();
+    stopSpeaking();
 
     const step = emergencySteps.find(s => s.step === stepNum);
     if (!step) return;
@@ -199,26 +199,17 @@ export default function RoadAccidentAwarenessPage() {
       t(step.headline),
       ...step.actions.map((act, i) => `${i + 1}: ${t(act)}`),
       `${t("Critical Safety Warning")}: ${t(step.warning)}`
-    ].join(' . ');
-
-    const utterance = new SpeechSynthesisUtterance(script);
-    const nativeSelection = getBestNativeVoice(lang);
-    utterance.lang = nativeSelection.bcp47;
-    utterance.rate = 0.95;
-    utterance.pitch = 1.0;
-    utterance.volume = 1.0;
-
-    // Assign explicit native voice if available; NEVER fall back to English so the OS speaks native Kannada/Tamil/Telugu
-    if (nativeSelection.voice) {
-      utterance.voice = nativeSelection.voice;
-    }
-
-    utterance.onstart = () => setAudioPlayingStep(stepNum);
-    utterance.onend = () => setAudioPlayingStep(null);
-    utterance.onerror = () => setAudioPlayingStep(null);
+    ].join('. ');
 
     setAudioPlayingStep(stepNum);
-    window.speechSynthesis.speak(utterance);
+
+    // speakInLanguage automatically uses Google Translate TTS for Kannada/Tamil/Telugu
+    // since Windows has no native TTS voices for these languages
+    speakInLanguage(script, lang, {
+      onStart: () => setAudioPlayingStep(stepNum),
+      onEnd: () => setAudioPlayingStep(null),
+      onError: () => setAudioPlayingStep(null),
+    });
   };
 
   const handleQuizSubmit = (optIndex) => {

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useI18n } from '../../i18n';
-import { initSpeechVoices, getBestNativeVoice } from '../../utils/speechVoice';
+import { speakInLanguage, stopSpeaking as stopSpeakingEngine, initVoices } from '../../utils/speechVoice';
 
 // ─── Language-specific voice mapping for Web Speech API ────────────────
 const LANG_VOICE_MAP = {
@@ -83,7 +83,7 @@ export default function AIVoiceAssistant() {
 
   // Initialize speech voices asynchronously on component mount
   useEffect(() => {
-    initSpeechVoices();
+    initVoices();
   }, []);
 
   // Auto-scroll chat
@@ -103,29 +103,20 @@ export default function AIVoiceAssistant() {
 
   // ─── Speech Synthesis (Text-to-Speech) ─────────────────────────────
   const speakText = (text) => {
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    const nativeSelection = getBestNativeVoice(lang);
-    utterance.lang = nativeSelection.bcp47;
-    utterance.rate = 0.92;
-    utterance.pitch = 1.05;
-    utterance.volume = 1.0;
-
-    // Only set explicit voice if a matching native voice was found; NEVER fall back to English!
-    if (nativeSelection.voice) {
-      utterance.voice = nativeSelection.voice;
-    }
-
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-
+    stopSpeakingEngine();
     setIsSpeaking(true);
-    window.speechSynthesis.speak(utterance);
+
+    // speakInLanguage uses Google Translate TTS for Kannada/Tamil/Telugu
+    // since Windows has no native TTS voices for these languages
+    speakInLanguage(text, lang, {
+      onStart: () => setIsSpeaking(true),
+      onEnd: () => setIsSpeaking(false),
+      onError: () => setIsSpeaking(false),
+    });
   };
 
   const stopSpeaking = () => {
-    window.speechSynthesis.cancel();
+    stopSpeakingEngine();
     setIsSpeaking(false);
   };
 
