@@ -621,6 +621,61 @@ export default function RoadAccidentAwarenessPage() {
         </div>
       </div>
 
+      {/* Critical Immediate Actions - Simplified Overview */}
+      <div className="bg-surface-container border border-outline-variant/30 rounded-[2rem] p-6 lg:p-8 mt-8">
+        <div className="flex items-center gap-4 mb-6 pb-6 border-b border-outline-variant/30">
+          <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center">
+            <span className="material-symbols-rounded text-2xl font-black">emergency</span>
+          </div>
+          <div>
+            <h2 className="text-xl font-black text-on-surface tracking-tight">
+              {t("Critical Immediate Actions")}
+            </h2>
+            <p className="text-sm font-semibold text-on-surface-variant mt-1">
+              {t("3 Most Critical Steps Based on Real-World Accident Scenes")}
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 hover:border-primary/50 transition-colors">
+            <div className="flex gap-4">
+              <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black flex-shrink-0">1</div>
+              <div>
+                <h3 className="font-black text-on-surface text-sm mb-1">{t("Call Emergency Services Immediately")}</h3>
+                <p className="text-xs font-semibold text-on-surface-variant leading-relaxed">
+                  {t("Dial 112 (or 108/100) immediately. Provide the exact location, mentioning major landmarks visible in the area (e.g., Elevated Metro, near specific signboard).")}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 hover:border-amber-500/50 transition-colors">
+            <div className="flex gap-4">
+              <div className="w-8 h-8 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center font-black flex-shrink-0">2</div>
+              <div>
+                <h3 className="font-black text-on-surface text-sm mb-1">{t("Ensure On-Scene Safety (Do Not Become a Victim)")}</h3>
+                <p className="text-xs font-semibold text-on-surface-variant leading-relaxed">
+                  {t("Activate hazard lights and move vehicles off the active lanes if possible. Put out emergency triangles *far* behind the crash site (at least 150m on a highway).")}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 hover:border-rose-500/50 transition-colors">
+            <div className="flex gap-4">
+              <div className="w-8 h-8 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center font-black flex-shrink-0">3</div>
+              <div>
+                <h3 className="font-black text-on-surface text-sm mb-1">{t("Do Not Move Injured Persons")}</h3>
+                <p className="text-xs font-semibold text-on-surface-variant leading-relaxed">
+                  {t("Unless there is an immediate threat of fire or explosion, never move an injured person, as this can worsen critical spinal or internal injuries. Wait for the paramedics.")}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* AI Voice Assistant */}
       <AIVoiceAssistant />
     </div>
