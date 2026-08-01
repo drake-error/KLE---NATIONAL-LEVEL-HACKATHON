@@ -9,6 +9,7 @@ import { patientFlowPart } from "./parts/patientFlowPart";
 import { fleetStatusPart } from "./parts/fleetStatusPart";
 import { parentalPart } from "./parts/parentalPart";
 import { settingsPart as settingsExpandedPart } from "./parts/settingsPart";
+import { safetyHubPart } from "./parts/safetyHubPart";
 
 export const dictionary = mergeParts([
   commonPart,
@@ -21,4 +22,5 @@ export const dictionary = mergeParts([
   fleetStatusPart,
   parentalPart,
   settingsExpandedPart,
+  safetyHubPart,
 ]);

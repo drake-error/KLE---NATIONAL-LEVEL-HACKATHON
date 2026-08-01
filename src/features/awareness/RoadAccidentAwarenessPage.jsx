@@ -307,8 +307,8 @@ export default function RoadAccidentAwarenessPage() {
                 </div>
                 
                 <div className="z-10 mt-2">
-                  <p className="text-[10px] uppercase tracking-wider font-extrabold text-on-surface-variant/80 mb-0.5">{stepItem.timeframe}</p>
-                  <p className="text-xs font-black text-on-surface leading-tight line-clamp-2">{stepItem.title}</p>
+                  <p className="text-[10px] uppercase tracking-wider font-extrabold text-on-surface-variant/80 mb-0.5">{t(stepItem.timeframe)}</p>
+                  <p className="text-xs font-black text-on-surface leading-tight line-clamp-2">{t(stepItem.title)}</p>
                 </div>
 
                 <div className="absolute right-[-10px] bottom-[-10px] opacity-10 text-on-surface-variant pointer-events-none transform group-hover:scale-125 transition-transform duration-500">
@@ -335,11 +335,11 @@ export default function RoadAccidentAwarenessPage() {
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <span className="px-2.5 py-0.5 rounded-md bg-surface text-[10px] font-black uppercase text-primary border border-outline-variant">
-                        Stage {item.step} Protocol
+                        {t("Stage")} {item.step} {t("Protocol")}
                       </span>
-                      <span className="text-xs font-bold text-on-surface-variant">• {item.timeframe}</span>
+                      <span className="text-xs font-bold text-on-surface-variant">• {t(item.timeframe)}</span>
                     </div>
-                    <h3 className="text-xl md:text-2xl font-black text-on-surface tracking-tight">{item.title}</h3>
+                    <h3 className="text-xl md:text-2xl font-black text-on-surface tracking-tight">{t(item.title)}</h3>
                   </div>
                 </div>
 
@@ -373,13 +373,13 @@ export default function RoadAccidentAwarenessPage() {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 <div className="lg:col-span-8 space-y-4">
                   <p className="text-sm font-black text-on-surface bg-surface p-4 rounded-2xl border-l-4 border-rose-500 shadow-sm leading-relaxed">
-                    "{item.headline}"
+                    "{t(item.headline)}"
                   </p>
                   
                   <div className="space-y-3 pt-1">
                     <h4 className="text-xs font-extrabold uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5">
                       <span className="material-symbols-outlined text-sm text-emerald-500">task_alt</span>
-                      Required Immediate Actions Checklist:
+                      {t("Required Immediate Actions Checklist:")}
                     </h4>
                     
                     <div className="space-y-2.5">
@@ -388,7 +388,7 @@ export default function RoadAccidentAwarenessPage() {
                           <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex-shrink-0 flex items-center justify-center font-black text-xs mt-0.5">
                             {i + 1}
                           </div>
-                          <p className="text-xs font-semibold text-on-surface leading-relaxed pt-0.5">{act}</p>
+                          <p className="text-xs font-semibold text-on-surface leading-relaxed pt-0.5">{t(act)}</p>
                         </div>
                       ))}
                     </div>
@@ -403,20 +403,20 @@ export default function RoadAccidentAwarenessPage() {
                       {t("Critical Safety Warning")}
                     </div>
                     <p className="text-xs text-on-surface font-extrabold leading-relaxed">
-                      {item.warning}
+                      {t(item.warning)}
                     </p>
                   </div>
 
                   <div className="bg-gradient-to-br from-surface to-surface-container p-5 rounded-2xl border border-outline-variant/60 shadow-sm space-y-3">
                     <h5 className="text-xs font-black text-on-surface uppercase tracking-wider flex items-center justify-between">
-                      ResQ-Plus Live Triage Aid
+                      {t("ResQ-Plus Live Triage Aid")}
                       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     </h5>
                     <p className="text-[11px] text-on-surface-variant font-medium leading-relaxed">
-                      In the event of physical entrapment, hold your phone power switch 5 times to bypass lock-screens and invoke ResQ-Plus Silent SOS Satellite link.
+                      {t("In the event of physical entrapment, hold your phone power switch 5 times to bypass lock-screens and invoke ResQ-Plus Silent SOS Satellite link.")}
                     </p>
                     <div className="pt-1 flex items-center justify-between text-[10px] font-bold text-primary border-t border-outline-variant/50 pt-2">
-                      <span>Telemetry Response Time:</span>
+                      <span>{t("Telemetry Response Time:")}</span>
                       <span className="font-mono bg-primary/10 px-2 py-0.5 rounded">&lt; 200 milliseconds</span>
                     </div>
                   </div>
@@ -436,12 +436,12 @@ export default function RoadAccidentAwarenessPage() {
               {t("How ResQ-Plus Prevents Road Accidents Through Software")}
             </h2>
             <p className="text-xs text-on-surface-variant font-medium mt-0.5">
-              Explore our state-of-the-art vehicular telemetry overlay and predictive safety algorithms designed to halt collisions before impact.
+              {t("Explore our state-of-the-art vehicular telemetry overlay and predictive safety algorithms designed to halt collisions before impact.")}
             </p>
           </div>
           <span className="text-xs font-black text-primary bg-primary/10 px-3.5 py-1.5 rounded-full border border-primary/20 flex items-center gap-1.5 shadow-sm">
             <span className="material-symbols-outlined text-sm">verified_user</span>
-            Proactive Telematics Engine Enabled
+            {t("Proactive Telematics Engine Enabled")}
           </span>
         </div>
 
@@ -450,18 +450,18 @@ export default function RoadAccidentAwarenessPage() {
           <div className="absolute top-4 left-4 z-20 flex gap-2">
             <span className="px-3 py-1 bg-slate-900/90 backdrop-blur-md text-emerald-400 border border-emerald-500/30 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-lg">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              Live Telemetry Simulation Radar
+              {t("Live Telemetry Simulation Radar")}
             </span>
             <span className="px-3 py-1 bg-slate-900/90 backdrop-blur-md text-slate-200 border border-slate-700 rounded-full text-[10px] font-black uppercase tracking-wider shadow-lg hidden sm:inline-block">
-              ResQ-Plus Anti-Collision OS v4.2
+              {t("ResQ-Plus Anti-Collision OS v4.2")}
             </span>
           </div>
 
           <div className="absolute bottom-0 inset-x-0 h-36 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent z-10 pointer-events-none flex items-end p-6 md:p-8">
             <div className="space-y-1 z-20">
-              <p className="text-xs font-black uppercase tracking-widest text-cyan-400">ResQ-Plus Predictive Prevention Core</p>
+              <p className="text-xs font-black uppercase tracking-widest text-cyan-400">{t("ResQ-Plus Predictive Prevention Core")}</p>
               <h3 className="text-lg md:text-2xl font-black text-white tracking-tight leading-tight">
-                Synthesizing vehicle LiDAR vectors with medical Health Vault emergency routing in real time.
+                {t("Synthesizing vehicle LiDAR vectors with medical Health Vault emergency routing in real time.")}
               </h3>
             </div>
           </div>
@@ -492,21 +492,21 @@ export default function RoadAccidentAwarenessPage() {
                       <span className="material-symbols-outlined text-2xl">{tip.icon}</span>
                     </div>
                     <span className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant bg-surface px-2.5 py-1 rounded-full border border-outline-variant/60">
-                      {tip.category}
+                      {t(tip.category)}
                     </span>
                   </div>
                   <h4 className="text-sm font-black text-on-surface leading-snug mb-2 group-hover:text-primary transition-colors">
-                    {tip.title}
+                    {t(tip.title)}
                   </h4>
                   <p className="text-xs text-on-surface-variant font-medium leading-relaxed">
-                    {tip.description}
+                    {t(tip.description)}
                   </p>
                 </div>
 
                 <div className="pt-4 mt-4 border-t border-outline-variant/40 flex items-center justify-between text-[11px] font-bold text-on-surface/70">
-                  <span>ResQ-Plus Protection:</span>
+                  <span>{t("ResQ-Plus Protection:")}</span>
                   <span className="text-emerald-500 flex items-center gap-1 font-black">
-                    <span className="material-symbols-outlined text-xs">check_circle</span> Active Monitor
+                    <span className="material-symbols-outlined text-xs">check_circle</span> {t("Active Monitor")}
                   </span>
                 </div>
               </div>
@@ -520,13 +520,13 @@ export default function RoadAccidentAwarenessPage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-outline-variant/50 pb-4">
           <div>
             <span className="text-[10px] font-black uppercase tracking-wider text-rose-500 bg-rose-500/10 px-3 py-1 rounded-full border border-rose-500/20 mb-2 inline-block">
-              Interactive Live Triage Drill
+              {t("Interactive Live Triage Drill")}
             </span>
             <h3 className="text-xl md:text-2xl font-black text-on-surface tracking-tight">
               {t("Test Your Emergency Reaction Decision-Making")}
             </h3>
             <p className="text-xs text-on-surface-variant font-medium mt-0.5">
-              Select an emergency scenario below and choose the correct medical survival protocol to test your readiness.
+              {t("Select an emergency scenario below and choose the correct medical survival protocol to test your readiness.")}
             </p>
           </div>
           
@@ -552,14 +552,14 @@ export default function RoadAccidentAwarenessPage() {
                   : 'bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-high'
               }`}
             >
-              Scenario {idx + 1}: {idx === 0 ? 'Highway Rollover Scene Safety' : 'Arterial Bleeding Control'}
+              {t(idx === 0 ? 'Scenario 1: Highway Rollover Scene Safety' : 'Scenario 2: Arterial Bleeding Control')}
             </button>
           ))}
         </div>
 
         <div className="space-y-4">
           <p className="text-sm font-black text-on-surface bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/60 leading-relaxed">
-            🚨 <strong>Scenario Challenge:</strong> {drillScenarios[selectedScenario].question}
+            🚨 <strong>{t("Scenario Challenge:")}</strong> {t(drillScenarios[selectedScenario].question)}
           </p>
 
           <div className="space-y-3">
@@ -589,13 +589,13 @@ export default function RoadAccidentAwarenessPage() {
                       }`}>
                         {String.fromCharCode(65 + optIdx)}
                       </span>
-                      <span>{opt.label}</span>
+                      <span>{t(opt.label)}</span>
                     </div>
                     {hasAnswered && isChosen && (
                       <span className={`px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${
                         opt.correct ? 'bg-emerald-500 text-slate-950' : 'bg-rose-500 text-white'
                       }`}>
-                        {opt.correct ? 'Correct Action' : 'Critical Mistake'}
+                        {t(opt.correct ? 'Correct Action' : 'Critical Mistake')}
                       </span>
                     )}
                   </button>
@@ -604,7 +604,7 @@ export default function RoadAccidentAwarenessPage() {
                     <div className={`mt-3 pt-3 border-t text-xs font-semibold leading-relaxed ${
                       opt.correct ? 'border-emerald-500/30 text-emerald-600 dark:text-emerald-400' : 'border-rose-500/30 text-rose-600 dark:text-rose-400'
                     }`}>
-                      <strong>{opt.correct ? '✨ Protocol Confirmed:' : '⚠️ Triage Analysis:'}</strong> {opt.explanation}
+                      <strong>{t(opt.correct ? '✨ Protocol Confirmed:' : '⚠️ Triage Analysis:')}</strong> {t(opt.explanation)}
                     </div>
                   )}
                 </div>
