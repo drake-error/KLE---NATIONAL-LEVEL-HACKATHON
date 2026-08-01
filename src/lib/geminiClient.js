@@ -79,7 +79,8 @@ export async function analyzeImage(base64Data, mimeType, prompt) {
     ],
     generationConfig: {
       temperature: 0.2,
-      maxOutputTokens: 4096,
+      maxOutputTokens: 8192,
+      responseMimeType: 'application/json',
     },
   };
 
@@ -99,17 +100,77 @@ export async function analyzeImage(base64Data, mimeType, prompt) {
 }
 
 /**
- * Extract JSON from a Gemini response that may contain markdown fences.
+ * Robustly extract JSON from a Gemini response.
+ * Handles: markdown fences, preamble text, truncated responses, extra trailing commas.
  * @param {string} text - Raw model output.
  * @returns {object} Parsed JSON object.
  */
 export function extractJSON(text) {
-  // Strip markdown code fences if present
+  if (!text) throw new Error('Empty response from Gemini API.');
+
   let cleaned = text.trim();
-  if (cleaned.startsWith('```')) {
-    cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
+
+  // 1. Strip markdown code fences
+  if (cleaned.includes('```')) {
+    const fenceMatch = cleaned.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+    if (fenceMatch) cleaned = fenceMatch[1].trim();
+    else cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '').trim();
   }
-  return JSON.parse(cleaned);
+
+  // 2. Try to parse directly
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    // 3. Try extracting the first {...} or [...] block from the text
+    const objMatch = cleaned.match(/\{[\s\S]*\}/);
+    const arrMatch = cleaned.match(/\[[\s\S]*\]/);
+    const candidate = objMatch ? objMatch[0] : arrMatch ? arrMatch[0] : null;
+
+    if (candidate) {
+      try {
+        return JSON.parse(candidate);
+      } catch {
+        // 4. Try fixing truncated JSON by closing open brackets
+        const fixed = fixTruncatedJSON(candidate);
+        return JSON.parse(fixed);
+      }
+    }
+
+    throw new Error('Could not extract valid JSON from AI response. The model may have returned an unexpected format.');
+  }
+}
+
+/**
+ * Attempt to auto-close a truncated JSON string.
+ * Handles the case where Gemini cuts off mid-response due to token limits.
+ */
+function fixTruncatedJSON(str) {
+  let fixed = str
+    .replace(/,\s*$/, '')           // remove trailing comma
+    .replace(/,\s*([}\]])/, '$1');   // remove comma before closing bracket
+
+  const opens = [];
+  let inString = false;
+  let escape = false;
+
+  for (const ch of fixed) {
+    if (escape) { escape = false; continue; }
+    if (ch === '\\') { escape = true; continue; }
+    if (ch === '"' && !escape) { inString = !inString; continue; }
+    if (!inString) {
+      if (ch === '{') opens.push('}');
+      else if (ch === '[') opens.push(']');
+      else if (ch === '}' || ch === ']') opens.pop();
+    }
+  }
+
+  // If we're mid-string, close it
+  if (inString) fixed += '"';
+
+  // Close all unclosed brackets in reverse order
+  while (opens.length) fixed += opens.pop();
+
+  return fixed;
 }
 
 /**
