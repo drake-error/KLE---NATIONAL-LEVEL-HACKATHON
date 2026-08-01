@@ -624,8 +624,8 @@ export default function RoadAccidentAwarenessPage() {
       {/* Critical Immediate Actions - Simplified Overview */}
       <div className="bg-surface-container border border-outline-variant/30 rounded-[2rem] p-6 lg:p-8 mt-8">
         <div className="flex items-center gap-4 mb-6 pb-6 border-b border-outline-variant/30">
-          <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center">
-            <span className="material-symbols-rounded text-2xl font-black">emergency</span>
+          <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center flex-shrink-0">
+            <span className="material-symbols-outlined text-2xl font-black">emergency</span>
           </div>
           <div>
             <h2 className="text-xl font-black text-on-surface tracking-tight">
@@ -634,6 +634,21 @@ export default function RoadAccidentAwarenessPage() {
             <p className="text-sm font-semibold text-on-surface-variant mt-1">
               {t("3 Most Critical Steps Based on Real-World Accident Scenes")}
             </p>
+          </div>
+        </div>
+
+        {/* User uploaded image placeholder */}
+        <div className="w-full mb-8 rounded-2xl overflow-hidden border border-outline-variant/40 shadow-lg bg-surface-container-highest relative group">
+          <img 
+            src="/images/car-accident-bengaluru.jpg" 
+            alt="Car Accident Scene" 
+            className="w-full h-auto object-cover max-h-[400px]"
+            onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+          />
+          <div className="hidden w-full h-48 flex-col items-center justify-center text-on-surface-variant bg-surface-container-highest">
+            <span className="material-symbols-outlined text-4xl mb-2 opacity-50">image</span>
+            <p className="text-sm font-bold">{t("Image Placeholder")}</p>
+            <p className="text-xs opacity-70 mt-1">{t("Upload your image as 'car-accident-bengaluru.jpg' in the public/images folder")}</p>
           </div>
         </div>
 
@@ -679,8 +694,8 @@ export default function RoadAccidentAwarenessPage() {
       {/* CPR & AED Usage - Simplified Overview */}
       <div className="bg-surface-container border border-outline-variant/30 rounded-[2rem] p-6 lg:p-8 mt-8">
         <div className="flex items-center gap-4 mb-6 pb-6 border-b border-outline-variant/30">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
-            <span className="material-symbols-rounded text-2xl font-black">monitor_heart</span>
+          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center flex-shrink-0">
+            <span className="material-symbols-outlined text-2xl font-black">monitor_heart</span>
           </div>
           <div>
             <h2 className="text-xl font-black text-on-surface tracking-tight">
@@ -689,6 +704,21 @@ export default function RoadAccidentAwarenessPage() {
             <p className="text-sm font-semibold text-on-surface-variant mt-1">
               {t("Life-Saving Actions for Cardiac Emergencies")}
             </p>
+          </div>
+        </div>
+
+        {/* User uploaded image placeholder */}
+        <div className="w-full mb-8 rounded-2xl overflow-hidden border border-outline-variant/40 shadow-lg bg-surface-container-highest relative group">
+          <img 
+            src="/images/cpr-scene.jpg" 
+            alt="CPR Scene" 
+            className="w-full h-auto object-cover max-h-[400px]"
+            onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+          />
+          <div className="hidden w-full h-48 flex-col items-center justify-center text-on-surface-variant bg-surface-container-highest">
+            <span className="material-symbols-outlined text-4xl mb-2 opacity-50">image</span>
+            <p className="text-sm font-bold">{t("Image Placeholder")}</p>
+            <p className="text-xs opacity-70 mt-1">{t("Upload your image as 'cpr-scene.jpg' in the public/images folder")}</p>
           </div>
         </div>
 
@@ -745,8 +775,8 @@ export default function RoadAccidentAwarenessPage() {
       {/* Two-Wheeler / Cyclist Accident Protocols */}
       <div className="bg-surface-container border border-outline-variant/30 rounded-[2rem] p-6 lg:p-8 mt-8">
         <div className="flex items-center gap-4 mb-6 pb-6 border-b border-outline-variant/30">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
-            <span className="material-symbols-rounded text-2xl font-black">two_wheeler</span>
+          <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center flex-shrink-0">
+            <span className="material-symbols-outlined text-2xl font-black">two_wheeler</span>
           </div>
           <div>
             <h2 className="text-xl font-black text-on-surface tracking-tight">
@@ -755,6 +785,21 @@ export default function RoadAccidentAwarenessPage() {
             <p className="text-sm font-semibold text-on-surface-variant mt-1">
               {t("Critical Steps for High-Impact Falls & Spinal Risks")}
             </p>
+          </div>
+        </div>
+
+        {/* User uploaded image placeholder */}
+        <div className="w-full mb-8 rounded-2xl overflow-hidden border border-outline-variant/40 shadow-lg bg-surface-container-highest relative group">
+          <img 
+            src="/images/cyclist-accident-scene.jpg" 
+            alt="Cyclist Accident Scene" 
+            className="w-full h-auto object-cover max-h-[400px]"
+            onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+          />
+          <div className="hidden w-full h-48 flex-col items-center justify-center text-on-surface-variant bg-surface-container-highest">
+            <span className="material-symbols-outlined text-4xl mb-2 opacity-50">image</span>
+            <p className="text-sm font-bold">{t("Image Placeholder")}</p>
+            <p className="text-xs opacity-70 mt-1">{t("Upload your image as 'cyclist-accident-scene.jpg' in the public/images folder")}</p>
           </div>
         </div>
 
