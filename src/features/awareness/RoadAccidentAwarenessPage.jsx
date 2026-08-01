@@ -742,6 +742,69 @@ export default function RoadAccidentAwarenessPage() {
         </div>
       </div>
 
+      {/* Two-Wheeler / Cyclist Accident Protocols */}
+      <div className="bg-surface-container border border-outline-variant/30 rounded-[2rem] p-6 lg:p-8 mt-8">
+        <div className="flex items-center gap-4 mb-6 pb-6 border-b border-outline-variant/30">
+          <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
+            <span className="material-symbols-rounded text-2xl font-black">two_wheeler</span>
+          </div>
+          <div>
+            <h2 className="text-xl font-black text-on-surface tracking-tight">
+              {t("Two-Wheeler & Bicycle Accident Protocols")}
+            </h2>
+            <p className="text-sm font-semibold text-on-surface-variant mt-1">
+              {t("Critical Steps for High-Impact Falls & Spinal Risks")}
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 hover:border-primary/50 transition-colors">
+            <div className="flex gap-4">
+              <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black flex-shrink-0">1</div>
+              <div>
+                <h3 className="font-black text-on-surface text-sm mb-1">{t("Protect the Neck and Keep the Helmet On")}</h3>
+                <p className="text-xs font-semibold text-on-surface-variant leading-relaxed mb-2">
+                  <span className="text-rose-500 mr-1">❌</span>
+                  <strong>{t("Do NOT move the cyclist or remove their helmet:")}</strong> {t("High-impact falls carry a severe risk of cervical spine (neck) injury. Moving them can cause permanent paralysis.")}
+                </p>
+                <p className="text-xs font-semibold text-on-surface-variant leading-relaxed text-indigo-600 dark:text-indigo-400">
+                  <strong>{t("Only remove the helmet if:")}</strong> {t("It is actively blocking their breathing or preventing you from clearing an obstructed airway.")}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 hover:border-amber-500/50 transition-colors">
+            <div className="flex gap-4">
+              <div className="w-8 h-8 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center font-black flex-shrink-0">2</div>
+              <div>
+                <h3 className="font-black text-on-surface text-sm mb-1">{t("Open the Airway Safely (Jaw-Thrust)")}</h3>
+                <p className="text-xs font-semibold text-on-surface-variant leading-relaxed mb-2">
+                  <span className="text-rose-500 mr-1">❌</span>
+                  <strong>{t("Do NOT tilt the head back:")}</strong> {t("Standard head-tilt can severely damage a fractured spine.")}
+                </p>
+                <p className="text-xs font-semibold text-on-surface-variant leading-relaxed text-indigo-600 dark:text-indigo-400">
+                  <strong>{t("Use Jaw-Thrust:")}</strong> {t("Kneel at the top of their head, place fingers under the lower jaw, and gently lift the jaw upward without moving the neck.")}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 hover:border-rose-500/50 transition-colors">
+            <div className="flex gap-4">
+              <div className="w-8 h-8 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center font-black flex-shrink-0">3</div>
+              <div>
+                <h3 className="font-black text-on-surface text-sm mb-1">{t("Secure Scene to Prevent Secondary Impacts")}</h3>
+                <p className="text-xs font-semibold text-on-surface-variant leading-relaxed">
+                  <strong>{t("Block Oncoming Traffic:")}</strong> {t("Position a vehicle ahead of the victim with hazard lights flashing, or set up hazard triangles at least 50 meters down the road to warn drivers before a bend/site.")}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* AI Voice Assistant */}
       <AIVoiceAssistant />
     </div>
