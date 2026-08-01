@@ -621,7 +621,8 @@ export default function RoadAccidentAwarenessPage() {
         </div>
       </div>
 
-      {/* Critical Immediate Actions - Simplified Overview */}
+      {/* ─── SECTION 1: Highway Car Crash (car-accident.jpeg) ─────────────── */}
+      {/* Image: Bengaluru highway multi-car collision, ambulance, traffic police, KSRTC bus, metro overhead */}
       <div className="bg-surface-container border border-outline-variant/30 rounded-[2rem] p-6 lg:p-8 mt-8">
         <div className="flex items-center gap-4 mb-6 pb-6 border-b border-outline-variant/30">
           <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center flex-shrink-0">
@@ -629,27 +630,21 @@ export default function RoadAccidentAwarenessPage() {
           </div>
           <div>
             <h2 className="text-xl font-black text-on-surface tracking-tight">
-              {t("Critical Immediate Actions")}
+              {t("Highway Multi-Vehicle Collision")}
             </h2>
             <p className="text-sm font-semibold text-on-surface-variant mt-1">
-              {t("3 Most Critical Steps Based on Real-World Accident Scenes")}
+              {t("Critical Immediate Actions at the Crash Site")}
             </p>
           </div>
         </div>
 
-        {/* User uploaded image placeholder */}
-        <div className="w-full mb-8 rounded-2xl overflow-hidden border border-outline-variant/40 shadow-lg bg-surface-container-highest relative group">
+        <div className="w-full mb-6 rounded-2xl overflow-hidden border border-outline-variant/40 shadow-lg">
           <img 
             src="/car-accident.jpeg" 
-            alt="Car Accident Scene" 
-            className="w-full h-auto object-cover max-h-[400px]"
-            onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+            alt="Highway multi-vehicle collision in Bengaluru with ambulance and traffic police" 
+            className="w-full h-auto object-cover"
+            style={{ maxHeight: '380px' }}
           />
-          <div className="hidden w-full h-48 flex-col items-center justify-center text-on-surface-variant bg-surface-container-highest">
-            <span className="material-symbols-outlined text-4xl mb-2 opacity-50">image</span>
-            <p className="text-sm font-bold">{t("Image Placeholder")}</p>
-            <p className="text-xs opacity-70 mt-1">{t("Upload your image as 'car-accident-bengaluru.jpg' in the public/images folder")}</p>
-          </div>
         </div>
 
         <div className="space-y-4">
@@ -659,7 +654,7 @@ export default function RoadAccidentAwarenessPage() {
               <div>
                 <h3 className="font-black text-on-surface text-sm mb-1">{t("Call Emergency Services Immediately")}</h3>
                 <p className="text-xs font-semibold text-on-surface-variant leading-relaxed">
-                  {t("Dial 112 (or 108/100) immediately. Provide the exact location, mentioning major landmarks visible in the area (e.g., Elevated Metro, near specific signboard).")}
+                  {t("Dial 112 (or 108 for ambulance). Provide the exact location mentioning visible landmarks like the Elevated Metro, KSRTC bus stop, or highway signboards.")}
                 </p>
               </div>
             </div>
@@ -669,9 +664,9 @@ export default function RoadAccidentAwarenessPage() {
             <div className="flex gap-4">
               <div className="w-8 h-8 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center font-black flex-shrink-0">2</div>
               <div>
-                <h3 className="font-black text-on-surface text-sm mb-1">{t("Ensure On-Scene Safety (Do Not Become a Victim)")}</h3>
+                <h3 className="font-black text-on-surface text-sm mb-1">{t("Secure the Scene for Safety")}</h3>
                 <p className="text-xs font-semibold text-on-surface-variant leading-relaxed">
-                  {t("Activate hazard lights and move vehicles off the active lanes if possible. Put out emergency triangles *far* behind the crash site (at least 150m on a highway).")}
+                  {t("Turn on hazard lights. Place emergency triangles at least 150 meters behind the crash site to warn oncoming highway traffic and prevent secondary collisions.")}
                 </p>
               </div>
             </div>
@@ -683,7 +678,7 @@ export default function RoadAccidentAwarenessPage() {
               <div>
                 <h3 className="font-black text-on-surface text-sm mb-1">{t("Do Not Move Injured Persons")}</h3>
                 <p className="text-xs font-semibold text-on-surface-variant leading-relaxed">
-                  {t("Unless there is an immediate threat of fire or explosion, never move an injured person, as this can worsen critical spinal or internal injuries. Wait for the paramedics.")}
+                  {t("Unless there is an immediate threat of fire or explosion, never move an injured person. Wait for the paramedics and stretcher team visible in the image.")}
                 </p>
               </div>
             </div>
@@ -691,7 +686,8 @@ export default function RoadAccidentAwarenessPage() {
         </div>
       </div>
 
-      {/* CPR & AED Usage - Simplified Overview */}
+      {/* ─── SECTION 2: CPR & AED (cyclist-accident.jpeg) ─────────────── */}
+      {/* Image: Man performing chest compressions on unconscious person, AED unit on building, hazard triangles, bystander calling 112 */}
       <div className="bg-surface-container border border-outline-variant/30 rounded-[2rem] p-6 lg:p-8 mt-8">
         <div className="flex items-center gap-4 mb-6 pb-6 border-b border-outline-variant/30">
           <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center flex-shrink-0">
@@ -699,7 +695,7 @@ export default function RoadAccidentAwarenessPage() {
           </div>
           <div>
             <h2 className="text-xl font-black text-on-surface tracking-tight">
-              {t("Start Hands-Only CPR & AED Usage")}
+              {t("Hands-Only CPR & AED Usage")}
             </h2>
             <p className="text-sm font-semibold text-on-surface-variant mt-1">
               {t("Life-Saving Actions for Cardiac Emergencies")}
@@ -707,19 +703,13 @@ export default function RoadAccidentAwarenessPage() {
           </div>
         </div>
 
-        {/* User uploaded image placeholder */}
-        <div className="w-full mb-8 rounded-2xl overflow-hidden border border-outline-variant/40 shadow-lg bg-surface-container-highest relative group">
+        <div className="w-full mb-6 rounded-2xl overflow-hidden border border-outline-variant/40 shadow-lg">
           <img 
-            src="/cpr-scene.jpeg" 
-            alt="CPR Scene" 
-            className="w-full h-auto object-cover max-h-[400px]"
-            onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+            src="/cyclist-accident.jpeg" 
+            alt="Bystander performing CPR chest compressions with AED unit visible nearby" 
+            className="w-full h-auto object-cover"
+            style={{ maxHeight: '380px' }}
           />
-          <div className="hidden w-full h-48 flex-col items-center justify-center text-on-surface-variant bg-surface-container-highest">
-            <span className="material-symbols-outlined text-4xl mb-2 opacity-50">image</span>
-            <p className="text-sm font-bold">{t("Image Placeholder")}</p>
-            <p className="text-xs opacity-70 mt-1">{t("Upload your image as 'cpr-scene.jpg' in the public/images folder")}</p>
-          </div>
         </div>
 
         <div className="space-y-4">
@@ -729,10 +719,10 @@ export default function RoadAccidentAwarenessPage() {
               <div>
                 <h3 className="font-black text-on-surface text-sm mb-1">{t("Start Hands-Only CPR (Push Hard & Fast)")}</h3>
                 <p className="text-xs font-semibold text-on-surface-variant leading-relaxed mb-2">
-                  <strong>{t("Action:")}</strong> {t("Place the heel of your hand in the center of the chest, interlock your fingers, keep your elbows straight, and push down hard (about 2 inches/5 cm deep).")}
+                  <strong>{t("Action:")}</strong> {t("Place the heel of your hand in the center of the chest, interlock your fingers, keep your elbows straight, and push down hard (about 5 cm deep).")}
                 </p>
-                <p className="text-xs font-semibold text-on-surface-variant leading-relaxed text-emerald-600 dark:text-emerald-400">
-                  <strong>{t("Rhythm Tip:")}</strong> {t("Aim for 100–120 beats per minute—push to the tempo of the song \"Stayin' Alive\".")}
+                <p className="text-xs font-semibold leading-relaxed text-emerald-600 dark:text-emerald-400">
+                  <strong>{t("Rhythm Tip:")}</strong> {t("Aim for 100–120 compressions per minute — push to the tempo of the song \"Stayin' Alive\".")}
                 </p>
               </div>
             </div>
@@ -744,10 +734,10 @@ export default function RoadAccidentAwarenessPage() {
               <div>
                 <h3 className="font-black text-on-surface text-sm mb-1">{t("Get and Use an AED")}</h3>
                 <p className="text-xs font-semibold text-on-surface-variant leading-relaxed mb-2">
-                  <strong>{t("Action:")}</strong> {t("Point directly at a specific bystander and say, \"You, go find an AED!\" (Public devices are often located in metro stations, security booths, or main gates).")}
+                  <strong>{t("Action:")}</strong> {t("Point at a specific bystander and say: \"You, go get the AED from that building!\" AED units are often found at metro stations, security booths, or main gates.")}
                 </p>
-                <p className="text-xs font-semibold text-on-surface-variant leading-relaxed text-emerald-600 dark:text-emerald-400">
-                  <strong>{t("Key Tip:")}</strong> {t("As soon as the AED arrives, turn it on—it will give you clear, spoken step-by-step instructions.")}
+                <p className="text-xs font-semibold leading-relaxed text-emerald-600 dark:text-emerald-400">
+                  <strong>{t("Key Tip:")}</strong> {t("Turn on the AED — it will give you clear, spoken step-by-step instructions automatically.")}
                 </p>
               </div>
             </div>
@@ -757,14 +747,14 @@ export default function RoadAccidentAwarenessPage() {
             <div className="flex gap-4">
               <div className="w-8 h-8 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center font-black flex-shrink-0">3</div>
               <div>
-                <h3 className="font-black text-on-surface text-sm mb-1">{t('2 Essential "DO NOTs"')}</h3>
+                <h3 className="font-black text-on-surface text-sm mb-1">{t('Essential "DO NOTs"')}</h3>
                 <p className="text-xs font-semibold text-on-surface-variant leading-relaxed mb-2">
                   <span className="text-rose-500 mr-1">❌</span>
-                  <strong>{t("Do NOT stop compressions to check for a pulse:")}</strong> {t("If they are unconscious and not breathing normally (or only gasping), keep doing chest compressions until medics arrive.")}
+                  <strong>{t("Do NOT stop compressions to check for a pulse:")}</strong> {t("If they are unconscious and not breathing normally, keep doing chest compressions until medics arrive.")}
                 </p>
                 <p className="text-xs font-semibold text-on-surface-variant leading-relaxed">
                   <span className="text-rose-500 mr-1">❌</span>
-                  <strong>{t("Do NOT worry about cracking ribs:")}</strong> {t("Hearing or feeling a pop during compressions is common. Effective depth is required to keep blood flowing to the brain—focus on keeping the rhythm.")}
+                  <strong>{t("Do NOT worry about cracking ribs:")}</strong> {t("A pop during compressions is common. Effective depth keeps blood flowing to the brain — focus on keeping the rhythm.")}
                 </p>
               </div>
             </div>
@@ -772,7 +762,8 @@ export default function RoadAccidentAwarenessPage() {
         </div>
       </div>
 
-      {/* Two-Wheeler / Cyclist Accident Protocols */}
+      {/* ─── SECTION 3: Cyclist Accident (snake-bite.jpeg) ─────────────── */}
+      {/* Image: Cyclist lying on road with helmet, bicycle, auto-rickshaw, hazard triangles, bystander calling, woman signaling traffic */}
       <div className="bg-surface-container border border-outline-variant/30 rounded-[2rem] p-6 lg:p-8 mt-8">
         <div className="flex items-center gap-4 mb-6 pb-6 border-b border-outline-variant/30">
           <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center flex-shrink-0">
@@ -780,7 +771,7 @@ export default function RoadAccidentAwarenessPage() {
           </div>
           <div>
             <h2 className="text-xl font-black text-on-surface tracking-tight">
-              {t("Two-Wheeler & Bicycle Accident Protocols")}
+              {t("Two-Wheeler & Bicycle Accident Response")}
             </h2>
             <p className="text-sm font-semibold text-on-surface-variant mt-1">
               {t("Critical Steps for High-Impact Falls & Spinal Risks")}
@@ -788,19 +779,13 @@ export default function RoadAccidentAwarenessPage() {
           </div>
         </div>
 
-        {/* User uploaded image placeholder */}
-        <div className="w-full mb-8 rounded-2xl overflow-hidden border border-outline-variant/40 shadow-lg bg-surface-container-highest relative group">
+        <div className="w-full mb-6 rounded-2xl overflow-hidden border border-outline-variant/40 shadow-lg">
           <img 
-            src="/cyclist-accident.jpeg" 
-            alt="Cyclist Accident Scene" 
-            className="w-full h-auto object-cover max-h-[400px]"
-            onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+            src="/snake-bite.jpeg" 
+            alt="Cyclist lying unconscious on road with helmet on, bystanders helping and directing traffic" 
+            className="w-full h-auto object-cover"
+            style={{ maxHeight: '380px' }}
           />
-          <div className="hidden w-full h-48 flex-col items-center justify-center text-on-surface-variant bg-surface-container-highest">
-            <span className="material-symbols-outlined text-4xl mb-2 opacity-50">image</span>
-            <p className="text-sm font-bold">{t("Image Placeholder")}</p>
-            <p className="text-xs opacity-70 mt-1">{t("Upload your image as 'cyclist-accident-scene.jpg' in the public/images folder")}</p>
-          </div>
         </div>
 
         <div className="space-y-4">
@@ -808,13 +793,13 @@ export default function RoadAccidentAwarenessPage() {
             <div className="flex gap-4">
               <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black flex-shrink-0">1</div>
               <div>
-                <h3 className="font-black text-on-surface text-sm mb-1">{t("Protect the Neck and Keep the Helmet On")}</h3>
+                <h3 className="font-black text-on-surface text-sm mb-1">{t("Protect the Neck — Keep the Helmet On")}</h3>
                 <p className="text-xs font-semibold text-on-surface-variant leading-relaxed mb-2">
                   <span className="text-rose-500 mr-1">❌</span>
-                  <strong>{t("Do NOT move the cyclist or remove their helmet:")}</strong> {t("High-impact falls carry a severe risk of cervical spine (neck) injury. Moving them can cause permanent paralysis.")}
+                  <strong>{t("Do NOT remove the helmet:")}</strong> {t("High-impact bicycle falls carry severe risk of cervical spine injury. Removing the helmet can cause permanent paralysis.")}
                 </p>
-                <p className="text-xs font-semibold text-on-surface-variant leading-relaxed text-indigo-600 dark:text-indigo-400">
-                  <strong>{t("Only remove the helmet if:")}</strong> {t("It is actively blocking their breathing or preventing you from clearing an obstructed airway.")}
+                <p className="text-xs font-semibold leading-relaxed text-indigo-600 dark:text-indigo-400">
+                  <strong>{t("Exception:")}</strong> {t("Only remove if it is actively blocking their breathing or preventing you from clearing an obstructed airway.")}
                 </p>
               </div>
             </div>
@@ -824,12 +809,12 @@ export default function RoadAccidentAwarenessPage() {
             <div className="flex gap-4">
               <div className="w-8 h-8 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center font-black flex-shrink-0">2</div>
               <div>
-                <h3 className="font-black text-on-surface text-sm mb-1">{t("Open the Airway Safely (Jaw-Thrust)")}</h3>
+                <h3 className="font-black text-on-surface text-sm mb-1">{t("Open Airway Safely (Jaw-Thrust)")}</h3>
                 <p className="text-xs font-semibold text-on-surface-variant leading-relaxed mb-2">
                   <span className="text-rose-500 mr-1">❌</span>
                   <strong>{t("Do NOT tilt the head back:")}</strong> {t("Standard head-tilt can severely damage a fractured spine.")}
                 </p>
-                <p className="text-xs font-semibold text-on-surface-variant leading-relaxed text-indigo-600 dark:text-indigo-400">
+                <p className="text-xs font-semibold leading-relaxed text-indigo-600 dark:text-indigo-400">
                   <strong>{t("Use Jaw-Thrust:")}</strong> {t("Kneel at the top of their head, place fingers under the lower jaw, and gently lift the jaw upward without moving the neck.")}
                 </p>
               </div>
@@ -840,9 +825,9 @@ export default function RoadAccidentAwarenessPage() {
             <div className="flex gap-4">
               <div className="w-8 h-8 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center font-black flex-shrink-0">3</div>
               <div>
-                <h3 className="font-black text-on-surface text-sm mb-1">{t("Secure Scene to Prevent Secondary Impacts")}</h3>
+                <h3 className="font-black text-on-surface text-sm mb-1">{t("Block Oncoming Traffic")}</h3>
                 <p className="text-xs font-semibold text-on-surface-variant leading-relaxed">
-                  <strong>{t("Block Oncoming Traffic:")}</strong> {t("Position a vehicle ahead of the victim with hazard lights flashing, or set up hazard triangles at least 50 meters down the road to warn drivers before a bend/site.")}
+                  {t("Position a vehicle (like the auto-rickshaw) ahead of the victim with hazard lights flashing. Place warning triangles at least 50 meters down the road to alert approaching drivers.")}
                 </p>
               </div>
             </div>
@@ -850,35 +835,30 @@ export default function RoadAccidentAwarenessPage() {
         </div>
       </div>
 
-      {/* Snake Bite Emergency Protocols */}
+      {/* ─── SECTION 4: Snake/Animal Bite First Aid (cpr-scene.jpeg) ─────────────── */}
+      {/* Image: Rural health worker treating a boy's leg wound/bite with first-aid kit and splint, village setting */}
       <div className="bg-surface-container border border-outline-variant/30 rounded-[2rem] p-6 lg:p-8 mt-8">
         <div className="flex items-center gap-4 mb-6 pb-6 border-b border-outline-variant/30">
           <div className="w-12 h-12 rounded-2xl bg-violet-500/10 text-violet-500 flex items-center justify-center flex-shrink-0">
-            <span className="material-symbols-outlined text-2xl font-black">pest_control</span>
+            <span className="material-symbols-outlined text-2xl font-black">healing</span>
           </div>
           <div>
             <h2 className="text-xl font-black text-on-surface tracking-tight">
-              {t("Snake Bite Emergency Protocols")}
+              {t("Snake Bite & Animal Bite First Aid")}
             </h2>
             <p className="text-sm font-semibold text-on-surface-variant mt-1">
-              {t("Immediate First-Aid for Venomous Bites")}
+              {t("Immediate Rural First-Aid for Venomous Bites & Wounds")}
             </p>
           </div>
         </div>
 
-        {/* User uploaded image placeholder */}
-        <div className="w-full mb-8 rounded-2xl overflow-hidden border border-outline-variant/40 shadow-lg bg-surface-container-highest relative group">
+        <div className="w-full mb-6 rounded-2xl overflow-hidden border border-outline-variant/40 shadow-lg">
           <img 
-            src="/snake-bite.jpeg" 
-            alt="Snake Bite Emergency" 
-            className="w-full h-auto object-cover max-h-[400px]"
-            onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+            src="/cpr-scene.jpeg" 
+            alt="Rural health worker treating a boy's bite wound with first-aid kit and immobilization splint" 
+            className="w-full h-auto object-cover"
+            style={{ maxHeight: '380px' }}
           />
-          <div className="hidden w-full h-48 flex-col items-center justify-center text-on-surface-variant bg-surface-container-highest">
-            <span className="material-symbols-outlined text-4xl mb-2 opacity-50">image</span>
-            <p className="text-sm font-bold">{t("Image Placeholder")}</p>
-            <p className="text-xs opacity-70 mt-1">{t("Upload your image as 'snake-bite.jpeg' in the public/images folder")}</p>
-          </div>
         </div>
 
         <div className="space-y-4">
@@ -886,9 +866,9 @@ export default function RoadAccidentAwarenessPage() {
             <div className="flex gap-4">
               <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black flex-shrink-0">1</div>
               <div>
-                <h3 className="font-black text-on-surface text-sm mb-1">{t("Keep Calm and Immobilize")}</h3>
-                <p className="text-xs font-semibold text-on-surface-variant leading-relaxed mb-2">
-                  <strong>{t("Action:")}</strong> {t("Do NOT panic. Keep the bitten limb completely still, at or below heart level, to slow the spread of venom.")}
+                <h3 className="font-black text-on-surface text-sm mb-1">{t("Immobilize the Bitten Limb")}</h3>
+                <p className="text-xs font-semibold text-on-surface-variant leading-relaxed">
+                  {t("Keep the bitten limb completely still using a splint or stick — exactly as shown in the image. Keep it at or below heart level to slow the spread of venom through the body.")}
                 </p>
               </div>
             </div>
@@ -898,9 +878,9 @@ export default function RoadAccidentAwarenessPage() {
             <div className="flex gap-4">
               <div className="w-8 h-8 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center font-black flex-shrink-0">2</div>
               <div>
-                <h3 className="font-black text-on-surface text-sm mb-1">{t("Remove Tight Items")}</h3>
-                <p className="text-xs font-semibold text-on-surface-variant leading-relaxed mb-2">
-                  <strong>{t("Action:")}</strong> {t("Immediately remove rings, watches, or tight clothing around the bitten area before swelling begins.")}
+                <h3 className="font-black text-on-surface text-sm mb-1">{t("Clean and Bandage the Wound")}</h3>
+                <p className="text-xs font-semibold text-on-surface-variant leading-relaxed">
+                  {t("Gently clean the wound with clean water. Apply a firm pressure bandage over the bite site using a clean cloth. Remove any rings, watches, or tight clothing before swelling starts.")}
                 </p>
               </div>
             </div>
@@ -910,14 +890,18 @@ export default function RoadAccidentAwarenessPage() {
             <div className="flex gap-4">
               <div className="w-8 h-8 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center font-black flex-shrink-0">3</div>
               <div>
-                <h3 className="font-black text-on-surface text-sm mb-1">{t('2 Essential "DO NOTs"')}</h3>
+                <h3 className="font-black text-on-surface text-sm mb-1">{t('Dangerous Myths — "DO NOTs"')}</h3>
                 <p className="text-xs font-semibold text-on-surface-variant leading-relaxed mb-2">
                   <span className="text-rose-500 mr-1">❌</span>
-                  <strong>{t("Do NOT apply a tourniquet:")}</strong> {t("Cutting off blood flow can cause severe tissue damage and lead to amputation.")}
+                  <strong>{t("Do NOT apply a tourniquet:")}</strong> {t("Cutting off blood flow causes severe tissue damage and can lead to amputation.")}
+                </p>
+                <p className="text-xs font-semibold text-on-surface-variant leading-relaxed mb-2">
+                  <span className="text-rose-500 mr-1">❌</span>
+                  <strong>{t("Do NOT cut or suck the wound:")}</strong> {t("This is a dangerous myth. It worsens the injury and risks infection. Rush to the nearest hospital for anti-venom treatment.")}
                 </p>
                 <p className="text-xs font-semibold text-on-surface-variant leading-relaxed">
                   <span className="text-rose-500 mr-1">❌</span>
-                  <strong>{t("Do NOT cut or suck the wound:")}</strong> {t("This is a dangerous myth. It worsens the injury and risks poisoning the helper. Seek immediate medical anti-venom treatment.")}
+                  <strong>{t("Do NOT apply ice or herbal pastes:")}</strong> {t("These folk remedies waste precious time and can worsen tissue damage. Only medical anti-venom saves lives.")}
                 </p>
               </div>
             </div>
