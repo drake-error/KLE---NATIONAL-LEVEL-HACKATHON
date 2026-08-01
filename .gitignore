@@ -24,3 +24,8 @@ dist-ssr
 *.sw?
 Smart-Traffic-Management-System-for-Emergency-Services/
 temp-hia-repo/
+
+# Environment Variables
+.env
+.env.*
+!.env.example
