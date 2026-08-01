@@ -65,6 +65,15 @@ export default function Sidebar({ currentTab, setCurrentTab }) {
           <span className="font-body-md text-body-md">{t("Safety Hub")}</span>
         </button>
         <button 
+          onClick={() => setCurrentTab('health-agent')}
+          className={`w-full flex items-center gap-sm px-sm py-xs font-bold rounded-xl transition-all duration-200 ${
+            currentTab === 'health-agent' ? 'bg-surface-container-high text-on-surface scale-[0.99]' : 'text-on-surface-variant hover:bg-surface-container-low'
+          }`}
+        >
+          <span className="material-symbols-outlined" data-icon="smart_toy">smart_toy</span>
+          <span className="font-body-md text-body-md">{t("AI Health Agent")}</span>
+        </button>
+        <button 
           onClick={() => setCurrentTab('settings')}
           className={`w-full flex items-center gap-sm px-sm py-xs font-bold rounded-xl transition-all duration-200 ${
             currentTab === 'settings' ? 'bg-surface-container-high text-on-surface scale-[0.99]' : 'text-on-surface-variant hover:bg-surface-container-low'
