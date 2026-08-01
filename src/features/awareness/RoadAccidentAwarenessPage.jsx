@@ -640,7 +640,7 @@ export default function RoadAccidentAwarenessPage() {
         {/* User uploaded image placeholder */}
         <div className="w-full mb-8 rounded-2xl overflow-hidden border border-outline-variant/40 shadow-lg bg-surface-container-highest relative group">
           <img 
-            src="/images/car-accident-bengaluru.jpg" 
+            src="/car-accident.jpeg" 
             alt="Car Accident Scene" 
             className="w-full h-auto object-cover max-h-[400px]"
             onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
@@ -710,7 +710,7 @@ export default function RoadAccidentAwarenessPage() {
         {/* User uploaded image placeholder */}
         <div className="w-full mb-8 rounded-2xl overflow-hidden border border-outline-variant/40 shadow-lg bg-surface-container-highest relative group">
           <img 
-            src="/images/cpr-scene.jpg" 
+            src="/cpr-scene.jpeg" 
             alt="CPR Scene" 
             className="w-full h-auto object-cover max-h-[400px]"
             onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
@@ -791,7 +791,7 @@ export default function RoadAccidentAwarenessPage() {
         {/* User uploaded image placeholder */}
         <div className="w-full mb-8 rounded-2xl overflow-hidden border border-outline-variant/40 shadow-lg bg-surface-container-highest relative group">
           <img 
-            src="/images/cyclist-accident-scene.jpg" 
+            src="/cyclist-accident.jpeg" 
             alt="Cyclist Accident Scene" 
             className="w-full h-auto object-cover max-h-[400px]"
             onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
@@ -843,6 +843,81 @@ export default function RoadAccidentAwarenessPage() {
                 <h3 className="font-black text-on-surface text-sm mb-1">{t("Secure Scene to Prevent Secondary Impacts")}</h3>
                 <p className="text-xs font-semibold text-on-surface-variant leading-relaxed">
                   <strong>{t("Block Oncoming Traffic:")}</strong> {t("Position a vehicle ahead of the victim with hazard lights flashing, or set up hazard triangles at least 50 meters down the road to warn drivers before a bend/site.")}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Snake Bite Emergency Protocols */}
+      <div className="bg-surface-container border border-outline-variant/30 rounded-[2rem] p-6 lg:p-8 mt-8">
+        <div className="flex items-center gap-4 mb-6 pb-6 border-b border-outline-variant/30">
+          <div className="w-12 h-12 rounded-2xl bg-violet-500/10 text-violet-500 flex items-center justify-center flex-shrink-0">
+            <span className="material-symbols-outlined text-2xl font-black">pest_control</span>
+          </div>
+          <div>
+            <h2 className="text-xl font-black text-on-surface tracking-tight">
+              {t("Snake Bite Emergency Protocols")}
+            </h2>
+            <p className="text-sm font-semibold text-on-surface-variant mt-1">
+              {t("Immediate First-Aid for Venomous Bites")}
+            </p>
+          </div>
+        </div>
+
+        {/* User uploaded image placeholder */}
+        <div className="w-full mb-8 rounded-2xl overflow-hidden border border-outline-variant/40 shadow-lg bg-surface-container-highest relative group">
+          <img 
+            src="/snake-bite.jpeg" 
+            alt="Snake Bite Emergency" 
+            className="w-full h-auto object-cover max-h-[400px]"
+            onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+          />
+          <div className="hidden w-full h-48 flex-col items-center justify-center text-on-surface-variant bg-surface-container-highest">
+            <span className="material-symbols-outlined text-4xl mb-2 opacity-50">image</span>
+            <p className="text-sm font-bold">{t("Image Placeholder")}</p>
+            <p className="text-xs opacity-70 mt-1">{t("Upload your image as 'snake-bite.jpeg' in the public/images folder")}</p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 hover:border-primary/50 transition-colors">
+            <div className="flex gap-4">
+              <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black flex-shrink-0">1</div>
+              <div>
+                <h3 className="font-black text-on-surface text-sm mb-1">{t("Keep Calm and Immobilize")}</h3>
+                <p className="text-xs font-semibold text-on-surface-variant leading-relaxed mb-2">
+                  <strong>{t("Action:")}</strong> {t("Do NOT panic. Keep the bitten limb completely still, at or below heart level, to slow the spread of venom.")}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 hover:border-amber-500/50 transition-colors">
+            <div className="flex gap-4">
+              <div className="w-8 h-8 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center font-black flex-shrink-0">2</div>
+              <div>
+                <h3 className="font-black text-on-surface text-sm mb-1">{t("Remove Tight Items")}</h3>
+                <p className="text-xs font-semibold text-on-surface-variant leading-relaxed mb-2">
+                  <strong>{t("Action:")}</strong> {t("Immediately remove rings, watches, or tight clothing around the bitten area before swelling begins.")}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-surface-container-lowest border border-outline-variant/50 hover:border-rose-500/50 transition-colors">
+            <div className="flex gap-4">
+              <div className="w-8 h-8 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center font-black flex-shrink-0">3</div>
+              <div>
+                <h3 className="font-black text-on-surface text-sm mb-1">{t('2 Essential "DO NOTs"')}</h3>
+                <p className="text-xs font-semibold text-on-surface-variant leading-relaxed mb-2">
+                  <span className="text-rose-500 mr-1">❌</span>
+                  <strong>{t("Do NOT apply a tourniquet:")}</strong> {t("Cutting off blood flow can cause severe tissue damage and lead to amputation.")}
+                </p>
+                <p className="text-xs font-semibold text-on-surface-variant leading-relaxed">
+                  <span className="text-rose-500 mr-1">❌</span>
+                  <strong>{t("Do NOT cut or suck the wound:")}</strong> {t("This is a dangerous myth. It worsens the injury and risks poisoning the helper. Seek immediate medical anti-venom treatment.")}
                 </p>
               </div>
             </div>
