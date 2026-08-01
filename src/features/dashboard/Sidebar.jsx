@@ -1,7 +1,9 @@
 import React from 'react';
 import { Logo } from '../../components/Logo';
+import { useI18n } from '../../i18n';
 
 export default function Sidebar({ currentTab, setCurrentTab }) {
+  const { t } = useI18n();
   return (
     <aside className="w-64 h-screen fixed left-0 top-0 bg-surface-container-lowest border-r border-outline-variant shadow-sm flex flex-col p-sm z-50">
       <div className="mb-lg px-xs">
@@ -15,7 +17,7 @@ export default function Sidebar({ currentTab, setCurrentTab }) {
           }`}
         >
           <span className="material-symbols-outlined" data-icon="dashboard">dashboard</span>
-          <span className="font-body-md text-body-md">Dashboard</span>
+          <span className="font-body-md text-body-md">{t("Dashboard")}</span>
         </button>
         <button 
           onClick={() => setCurrentTab('patient-flow')}
@@ -24,7 +26,7 @@ export default function Sidebar({ currentTab, setCurrentTab }) {
           }`}
         >
           <span className="material-symbols-outlined" data-icon="emergency">emergency</span>
-          <span className="font-body-md text-body-md">Patient Flow</span>
+          <span className="font-body-md text-body-md">{t("Patient Flow")}</span>
         </button>
         <button 
           onClick={() => setCurrentTab('health-vault')}
@@ -33,7 +35,7 @@ export default function Sidebar({ currentTab, setCurrentTab }) {
           }`}
         >
           <span className="material-symbols-outlined" data-icon="folder_shared">folder_shared</span>
-          <span className="font-body-md text-body-md">Health Vault</span>
+          <span className="font-body-md text-body-md">{t("Health Vault")}</span>
         </button>
         <button 
           onClick={() => setCurrentTab('fleet')}
@@ -42,7 +44,7 @@ export default function Sidebar({ currentTab, setCurrentTab }) {
           }`}
         >
           <span className="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
-          <span className="font-body-md text-body-md">Fleet Status</span>
+          <span className="font-body-md text-body-md">{t("Fleet Status")}</span>
         </button>
         <button 
           onClick={() => setCurrentTab('parental-monitoring')}
@@ -51,7 +53,7 @@ export default function Sidebar({ currentTab, setCurrentTab }) {
           }`}
         >
           <span className="material-symbols-outlined" data-icon="supervisor_account">supervisor_account</span>
-          <span className="font-body-md text-body-md">Parental Monitoring</span>
+          <span className="font-body-md text-body-md">{t("Parental Monitoring")}</span>
         </button>
         <button 
           onClick={() => setCurrentTab('awareness')}
@@ -60,7 +62,7 @@ export default function Sidebar({ currentTab, setCurrentTab }) {
           }`}
         >
           <span className="material-symbols-outlined" data-icon="health_and_safety">health_and_safety</span>
-          <span className="font-body-md text-body-md">Safety Hub</span>
+          <span className="font-body-md text-body-md">{t("Safety Hub")}</span>
         </button>
         <button 
           onClick={() => setCurrentTab('settings')}
@@ -69,11 +71,11 @@ export default function Sidebar({ currentTab, setCurrentTab }) {
           }`}
         >
           <span className="material-symbols-outlined" data-icon="settings">settings</span>
-          <span className="font-body-md text-body-md">Settings</span>
+          <span className="font-body-md text-body-md">{t("Settings")}</span>
         </button>
       </nav>
       <button className="mb-lg w-full py-sm bg-primary text-on-primary rounded-xl font-label-md text-label-md shadow-md active:scale-95 transition-transform">
-        New Dispatch
+        {t("New Dispatch")}
       </button>
       <div className="space-y-1 pt-sm border-t border-outline-variant">
         <button
@@ -83,7 +85,7 @@ export default function Sidebar({ currentTab, setCurrentTab }) {
           }`}
         >
           <span className="material-symbols-outlined" data-icon="help">help</span>
-          <span className="font-label-md text-label-md">Support</span>
+          <span className="font-label-md text-label-md">{t("Support")}</span>
         </button>
         <button
           onClick={() => setCurrentTab('system-status')}
@@ -92,7 +94,7 @@ export default function Sidebar({ currentTab, setCurrentTab }) {
           }`}
         >
           <span className="material-symbols-outlined" data-icon="pulse">switch_account</span>
-          <span className="font-label-md text-label-md">System Status</span>
+          <span className="font-label-md text-label-md">{t("System Status")}</span>
         </button>
       </div>
     </aside>

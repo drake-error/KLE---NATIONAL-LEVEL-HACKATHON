@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
+import { useI18n } from "../i18n";
 
 export function Intro({ onDone }) {
+  const { t } = useI18n();
   const [leaving, setLeaving] = useState(false);
 
   useEffect(() => {
@@ -58,7 +60,7 @@ export function Intro({ onDone }) {
           <p className="text-2xl font-extrabold tracking-tight text-white">
             ResQ<span className="text-[#38bdf8]">-Plus</span>
           </p>
-          <p className="mt-2 text-sm text-white/70 font-medium tracking-wide">Preparing emergency network…</p>
+          <p className="mt-2 text-sm text-white/70 font-medium tracking-wide">{t("Preparing emergency network…")}</p>
         </div>
         <div className="h-1 w-48 overflow-hidden rounded-full bg-white/15">
           <div
@@ -71,7 +73,7 @@ export function Intro({ onDone }) {
         onClick={onDone}
         className="absolute bottom-8 right-8 rounded-full border border-white/25 px-4 py-2 text-xs font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
       >
-        Skip intro
+        {t("Skip intro")}
       </button>
 
       <style>{`
