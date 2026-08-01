@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useI18n } from '../../i18n';
 import AIVoiceAssistant from './AIVoiceAssistant';
+import { initSpeechVoices, getBestNativeVoice } from '../../utils/speechVoice';
 
 export default function RoadAccidentAwarenessPage() {
   const { t, lang } = useI18n();
@@ -10,6 +11,10 @@ export default function RoadAccidentAwarenessPage() {
   const [quizAnswer, setQuizAnswer] = useState(null);
   const [quizScore, setQuizScore] = useState({ correct: 0, total: 0 });
   const [audioPlayingStep, setAudioPlayingStep] = useState(null);
+
+  useEffect(() => {
+    initSpeechVoices();
+  }, []);
 
   const emergencySteps = [
     {
@@ -197,27 +202,16 @@ export default function RoadAccidentAwarenessPage() {
     ].join(' . ');
 
     const utterance = new SpeechSynthesisUtterance(script);
+    const nativeSelection = getBestNativeVoice(lang);
+    utterance.lang = nativeSelection.bcp47;
     utterance.rate = 0.95;
     utterance.pitch = 1.0;
     utterance.volume = 1.0;
 
-    // Map selected language to BCP 47 audio language tags
-    const langMap = {
-      en: "en-US",
-      hi: "hi-IN",
-      kn: "kn-IN",
-      ta: "ta-IN",
-      te: "te-IN",
-    };
-    const targetLang = langMap[lang] || "en-US";
-    utterance.lang = targetLang;
-
-    // Try to pick a clear native voice for the specific language (Hindi, Kannada, Tamil, Telugu, English)
-    const voices = window.speechSynthesis.getVoices();
-    const preferred = voices.find(v => v.lang === targetLang || (v.lang.startsWith(lang) && v.name.includes("Google")))
-      || voices.find(v => v.lang.startsWith(lang))
-      || voices.find(v => v.lang.replace('_', '-').startsWith(lang));
-    if (preferred) utterance.voice = preferred;
+    // Assign explicit native voice if available; NEVER fall back to English so the OS speaks native Kannada/Tamil/Telugu
+    if (nativeSelection.voice) {
+      utterance.voice = nativeSelection.voice;
+    }
 
     utterance.onstart = () => setAudioPlayingStep(stepNum);
     utterance.onend = () => setAudioPlayingStep(null);

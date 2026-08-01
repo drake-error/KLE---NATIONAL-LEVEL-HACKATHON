@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useI18n } from '../../i18n';
+import { initSpeechVoices, getBestNativeVoice } from '../../utils/speechVoice';
 
 // ─── Language-specific voice mapping for Web Speech API ────────────────
 const LANG_VOICE_MAP = {
@@ -80,6 +81,11 @@ export default function AIVoiceAssistant() {
   const chatEndRef = useRef(null);
   const recognitionRef = useRef(null);
 
+  // Initialize speech voices asynchronously on component mount
+  useEffect(() => {
+    initSpeechVoices();
+  }, []);
+
   // Auto-scroll chat
   useEffect(() => {
     if (chatEndRef.current) {
@@ -99,18 +105,16 @@ export default function AIVoiceAssistant() {
   const speakText = (text) => {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    const voiceConfig = LANG_VOICE_MAP[lang] || LANG_VOICE_MAP.en;
-    utterance.lang = voiceConfig.bcp47;
+    const nativeSelection = getBestNativeVoice(lang);
+    utterance.lang = nativeSelection.bcp47;
     utterance.rate = 0.92;
     utterance.pitch = 1.05;
     utterance.volume = 1.0;
 
-    // Try to find a matching voice
-    const voices = window.speechSynthesis.getVoices();
-    const bestVoice = voices.find(v => v.lang === voiceConfig.bcp47)
-      || voices.find(v => v.lang.startsWith(voiceConfig.bcp47.split('-')[0]))
-      || voices.find(v => v.lang.startsWith('en'));
-    if (bestVoice) utterance.voice = bestVoice;
+    // Only set explicit voice if a matching native voice was found; NEVER fall back to English!
+    if (nativeSelection.voice) {
+      utterance.voice = nativeSelection.voice;
+    }
 
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);
