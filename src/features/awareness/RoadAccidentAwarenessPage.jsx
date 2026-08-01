@@ -3,7 +3,7 @@ import { useI18n } from '../../i18n';
 import AIVoiceAssistant from './AIVoiceAssistant';
 
 export default function RoadAccidentAwarenessPage() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [activeStep, setActiveStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState([]);
   const [selectedScenario, setSelectedScenario] = useState(0);
@@ -187,25 +187,36 @@ export default function RoadAccidentAwarenessPage() {
     const step = emergencySteps.find(s => s.step === stepNum);
     if (!step) return;
 
-    // Build the full script to read aloud
+    // Build the full script to read aloud in the currently selected language
     const script = [
-      `Stage ${step.step} Protocol: ${step.title}.`,
-      `Timeframe: ${step.timeframe}.`,
-      step.headline,
-      ...step.actions.map((act, i) => `Action ${i + 1}: ${act}`),
-      `Critical Warning: ${step.warning}`
-    ].join(' ... ');
+      `${t("Stage")} ${step.step} ${t("Protocol")}: ${t(step.title)}.`,
+      `${t("Timeframe")}: ${t(step.timeframe)}.`,
+      t(step.headline),
+      ...step.actions.map((act, i) => `${i + 1}: ${t(act)}`),
+      `${t("Critical Safety Warning")}: ${t(step.warning)}`
+    ].join(' . ');
 
     const utterance = new SpeechSynthesisUtterance(script);
     utterance.rate = 0.95;
     utterance.pitch = 1.0;
     utterance.volume = 1.0;
 
-    // Try to pick a clear English voice
+    // Map selected language to BCP 47 audio language tags
+    const langMap = {
+      en: "en-US",
+      hi: "hi-IN",
+      kn: "kn-IN",
+      ta: "ta-IN",
+      te: "te-IN",
+    };
+    const targetLang = langMap[lang] || "en-US";
+    utterance.lang = targetLang;
+
+    // Try to pick a clear native voice for the specific language (Hindi, Kannada, Tamil, Telugu, English)
     const voices = window.speechSynthesis.getVoices();
-    const preferred = voices.find(v => v.lang.startsWith('en') && v.name.includes('Google'))
-      || voices.find(v => v.lang.startsWith('en-US'))
-      || voices.find(v => v.lang.startsWith('en'));
+    const preferred = voices.find(v => v.lang === targetLang || (v.lang.startsWith(lang) && v.name.includes("Google")))
+      || voices.find(v => v.lang.startsWith(lang))
+      || voices.find(v => v.lang.replace('_', '-').startsWith(lang));
     if (preferred) utterance.voice = preferred;
 
     utterance.onstart = () => setAudioPlayingStep(stepNum);

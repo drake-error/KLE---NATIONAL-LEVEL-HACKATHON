@@ -3,6 +3,7 @@ import type { DictPart } from "../types";
 export const safetyHubPart: DictPart = {
   kn: {
     // Emergency Steps Titles & Timeframes
+    "Timeframe": "ಸಮಯದ ಅವಧಿ",
     "Immediate Hazard Mitigation & Scene Safety": "ತುರ್ತು ಅಪಾಯ ನಿಯಂತ್ರಣ & ಸ್ಥಳದ ಸುರಕ್ಷತೆ",
     "0 - 60 Seconds": "0 - 60 ಸೆಕೆಂಡ್‌ಗಳು",
     "Never become a second casualty in an ongoing collision scenario.": "ನಡೆಯುತ್ತಿರುವ ಡಿಕ್ಕಿ ಸನ್ನಿವೇಶದಲ್ಲಿ ಎಂದಿಗೂ ಎರಡನೇ ಗಾಯಾಳುವಾಗಬೇಡಿ.",
@@ -120,6 +121,7 @@ export const safetyHubPart: DictPart = {
     "Click any numbered emergency stage below to expand detailed operational checklists and safety boundaries.": "ಲವಿಲಸ್ಲತಲರలತಲ ವලಿලവಲರలಗಲളಲನലನಲಲ ವලീලക്ഷలిలസలലಲ ಕೆಳಲಗినಲ यಲാലവలുലదಲാಲദలరಲുಲ ಸಂలഖల્યાలలಂಲകിಲತಲ ತലರలતುల హలಂలತలవలನలల್നಲಲಿ ಕలಲలిಲക്കలಲ ಮലാಲడి."
   },
   hi: {
+    "Timeframe": "समय अवधि",
     "Immediate Hazard Mitigation & Scene Safety": "तत्काल खतरा निवारण और घटनास्थल की सुरक्षा",
     "0 - 60 Seconds": "0 - 60 सेकंड",
     "Never become a second casualty in an ongoing collision scenario.": "चल रही दुर्घटना की स्थिति में कभी भी दूसरा पीड़ित न बनें।",
@@ -237,6 +239,7 @@ export const safetyHubPart: DictPart = {
     "Click any numbered emergency stage below to expand detailed operational checklists and safety boundaries.": "विस्तृत परिचालन चेकलिस्ट और सुरक्षा सीमाओं का विस्तार करने के लिए नीचे किसी भी क्रमांकित आपातकालीन चरण पर क्लिक करें।"
   },
   ta: {
+    "Timeframe": "கால அளவு",
     "Immediate Hazard Mitigation & Scene Safety": "உடனடி ஆபத்து தடுப்பு & சம்பவ இடப் பாதுகாப்பு",
     "0 - 60 Seconds": "0 - 60 வினாடிகள்",
     "Never become a second casualty in an ongoing collision scenario.": "நடந்து கொண்டிருக்கும் விபத்தில் நீங்கள் இரண்டாவது பாதிக்கப்பட்டவராக மாறக்கூடாது.",
@@ -354,6 +357,7 @@ export const safetyHubPart: DictPart = {
     "Click any numbered emergency stage below to expand detailed operational checklists and safety boundaries.": "விரிவான செக்லிஸ்ட் மற்றும் பாதுகாப்பு முறைகளை அறிய கீழே உள்ள எண்களைக் கொண்ட அவசர நிலைகளை கிளிக் செய்யவும்."
   },
   te: {
+    "Timeframe": "సమయ వ్యవధి",
     "Immediate Hazard Mitigation & Scene Safety": "తక్షణ ప్రమాద నివారణ & ఘటనా స్థల భద్రత",
     "0 - 60 Seconds": "0 - 60 సెకన్లు",
     "Never become a second casualty in an ongoing collision scenario.": "జరుగుతున్న ప్రమాద పరిస్థితుల్లో మీరు ఎప్పటికీ రెండవ బాధితుడిగా మారవద్దు.",
