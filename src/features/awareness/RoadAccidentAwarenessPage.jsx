@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
+import { useI18n } from '../../i18n';
+import AIVoiceAssistant from './AIVoiceAssistant';
 
 export default function RoadAccidentAwarenessPage() {
+  const { t } = useI18n();
   const [activeStep, setActiveStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState([]);
   const [selectedScenario, setSelectedScenario] = useState(0);
@@ -233,22 +236,22 @@ export default function RoadAccidentAwarenessPage() {
         <div className="z-10 space-y-3 max-w-2xl">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-500/15 border border-rose-500/30 text-xs font-black tracking-wider uppercase text-rose-500">
             <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-            ResQ-Plus Emergency Protocol & Awareness
+            {t("ResQ-Plus Emergency Protocol & Awareness")}
           </div>
           <h1 className="text-3xl md:text-4xl font-black text-on-surface tracking-tight leading-tight">
-            How to React During a <span className="text-rose-500 underline decoration-rose-500/40 underline-offset-4">Road Accident</span>
+            {t("How to React During a")} <span className="text-rose-500 underline decoration-rose-500/40 underline-offset-4">{t("Road Accident")}</span>
           </h1>
           <p className="text-sm text-on-surface-variant font-medium leading-relaxed">
-            ResQ-Plus is an advanced digital healthcare & vehicle emergency platform focused primarily on <strong>Preventing Road Accidents through AI smart software</strong> and accelerating zero-touch triage when collisions happen. Study this step-by-step reaction guide to protect lives.
+            {t("ResQ-Plus is an advanced digital healthcare & vehicle emergency platform focused primarily on")} <strong>{t("Preventing Road Accidents through AI smart software")}</strong> {t("and accelerating zero-touch triage when collisions happen. Study this step-by-step reaction guide to protect lives.")}
           </p>
         </div>
 
         <div className="z-10 flex flex-row md:flex-col gap-3 w-full md:w-auto min-w-[200px]">
           <div className="flex-1 bg-surface-container-lowest/90 backdrop-blur-md px-5 py-3.5 rounded-2xl border border-outline-variant/80 shadow-md text-center">
-            <span className="text-[11px] font-extrabold uppercase tracking-widest text-on-surface-variant block mb-1">Protocol Status</span>
+            <span className="text-[11px] font-extrabold uppercase tracking-widest text-on-surface-variant block mb-1">{t("Protocol Status")}</span>
             <span className="text-xl font-black text-emerald-500 flex items-center justify-center gap-1.5">
               <span className="material-symbols-outlined text-lg">verified</span>
-              {completedSteps.length} of 5 Reviewed
+              {completedSteps.length} {t("of")} 5 {t("Reviewed")}
             </span>
           </div>
           <button 
@@ -258,7 +261,7 @@ export default function RoadAccidentAwarenessPage() {
             className="flex-1 px-4 py-3 bg-primary hover:bg-primary/90 text-on-primary text-xs font-black rounded-xl transition-all shadow-lg shadow-primary/20 active:scale-95 flex items-center justify-center gap-2"
           >
             <span className="material-symbols-outlined text-sm">done_all</span>
-            Mark All Verified
+            {t("Mark All Verified")}
           </button>
         </div>
       </div>
@@ -269,12 +272,12 @@ export default function RoadAccidentAwarenessPage() {
           <div>
             <h2 className="text-xl font-black text-on-surface tracking-tight flex items-center gap-2">
               <span className="material-symbols-outlined text-rose-500">format_list_numbered</span>
-              Step-by-Step Accident Response Protocol
+              {t("Step-by-Step Accident Response Protocol")}
             </h2>
-            <p className="text-xs text-on-surface-variant font-medium mt-0.5">Click any numbered emergency stage below to expand detailed operational checklists and safety boundaries.</p>
+            <p className="text-xs text-on-surface-variant font-medium mt-0.5">{t("Click any numbered emergency stage below to expand detailed operational checklists and safety boundaries.")}</p>
           </div>
           <span className="text-xs font-bold text-on-surface-variant bg-surface-container px-3 py-1.5 rounded-xl border border-outline-variant/60">
-            ⏳ Golden Hour Target: Under 15 Min
+            ⏳ {t("Golden Hour Target: Under 15 Min")}
           </span>
         </div>
 
@@ -350,7 +353,7 @@ export default function RoadAccidentAwarenessPage() {
                     }`}
                   >
                     <span className="material-symbols-outlined text-sm">{isPlaying ? 'volume_up' : 'play_circle'}</span>
-                    {isPlaying ? 'Broadcasting AI Audio Protocol...' : 'Listen to Audio Guidance'}
+                    {isPlaying ? t('Broadcasting AI Audio Protocol...') : t('Listen to Audio Guidance')}
                   </button>
 
                   <button
@@ -362,7 +365,7 @@ export default function RoadAccidentAwarenessPage() {
                     }`}
                   >
                     <span className="material-symbols-outlined text-sm">{isDone ? 'task_alt' : 'check_circle_outline'}</span>
-                    {isDone ? 'Reviewed & Acknowledged' : 'Mark Step as Reviewed'}
+                    {isDone ? t('Reviewed & Acknowledged') : t('Mark Step as Reviewed')}
                   </button>
                 </div>
               </div>
@@ -397,7 +400,7 @@ export default function RoadAccidentAwarenessPage() {
                   <div className="bg-rose-500/10 border-2 border-rose-500/30 rounded-2xl p-5 text-left space-y-2.5 shadow-lg">
                     <div className="flex items-center gap-2 text-rose-500 font-black text-xs uppercase tracking-wider">
                       <span className="material-symbols-outlined text-base">gpp_maybe</span>
-                      Critical Safety Warning
+                      {t("Critical Safety Warning")}
                     </div>
                     <p className="text-xs text-on-surface font-extrabold leading-relaxed">
                       {item.warning}
@@ -430,7 +433,7 @@ export default function RoadAccidentAwarenessPage() {
           <div>
             <h2 className="text-2xl font-black text-on-surface tracking-tight flex items-center gap-2">
               <span className="material-symbols-outlined text-primary">online_prediction</span>
-              How ResQ-Plus Prevents Road Accidents Through Software
+              {t("How ResQ-Plus Prevents Road Accidents Through Software")}
             </h2>
             <p className="text-xs text-on-surface-variant font-medium mt-0.5">
               Explore our state-of-the-art vehicular telemetry overlay and predictive safety algorithms designed to halt collisions before impact.
@@ -474,7 +477,7 @@ export default function RoadAccidentAwarenessPage() {
         <div className="space-y-3 pt-2">
           <h3 className="text-base font-black text-on-surface uppercase tracking-wider flex items-center gap-2">
             <span className="material-symbols-outlined text-rose-500">lightbulb</span>
-            Essential Road Safety Tips & Software Prevention Secrets
+            {t("Essential Road Safety Tips & Software Prevention Secrets")}
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -520,7 +523,7 @@ export default function RoadAccidentAwarenessPage() {
               Interactive Live Triage Drill
             </span>
             <h3 className="text-xl md:text-2xl font-black text-on-surface tracking-tight">
-              Test Your Emergency Reaction Decision-Making
+              {t("Test Your Emergency Reaction Decision-Making")}
             </h3>
             <p className="text-xs text-on-surface-variant font-medium mt-0.5">
               Select an emergency scenario below and choose the correct medical survival protocol to test your readiness.
@@ -528,9 +531,9 @@ export default function RoadAccidentAwarenessPage() {
           </div>
           
           <div className="bg-surface px-5 py-3 rounded-2xl border border-outline-variant shadow-sm text-center min-w-[150px]">
-            <span className="text-[10px] uppercase tracking-wider font-extrabold text-on-surface-variant block">Drill Score</span>
+            <span className="text-[10px] uppercase tracking-wider font-extrabold text-on-surface-variant block">{t("Drill Score")}</span>
             <span className="text-lg font-black text-on-surface">
-              {quizScore.correct} / {quizScore.total} <span className="text-xs font-bold text-on-surface-variant">Correct</span>
+              {quizScore.correct} / {quizScore.total} <span className="text-xs font-bold text-on-surface-variant">{t("Correct")}</span>
             </span>
           </div>
         </div>
@@ -615,13 +618,15 @@ export default function RoadAccidentAwarenessPage() {
                 onClick={() => setQuizAnswer(null)}
                 className="px-4 py-2 bg-surface-container-highest hover:bg-surface-container-high text-on-surface rounded-xl text-xs font-black transition-all"
               >
-                Reset & Retry Scenario
+                {t("Reset & Retry Scenario")}
               </button>
             </div>
           )}
         </div>
       </div>
 
+      {/* AI Voice Assistant */}
+      <AIVoiceAssistant />
     </div>
   );
 }

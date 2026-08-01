@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { parseBloodReport, generateAnalysis, generateChatResponse } from '../../lib/BloodReportAnalyzer';
+import { useI18n } from '../../i18n';
 
 // ─── Sample Reports (raw text — the AGENT will actually parse these) ────────
 const SAMPLE_REPORTS = {
@@ -122,6 +123,7 @@ const SUGGESTED_QUESTIONS = [
 ];
 
 export default function PatientFlow() {
+  const { t } = useI18n();
   const [patientName, setPatientName] = useState('John Doe');
   const [patientAge, setPatientAge] = useState(48);
   const [patientGender, setPatientGender] = useState('Male');
@@ -364,17 +366,17 @@ Respiratory rt: 16 /min
         <div>
           <h2 className="text-xl font-bold flex items-center gap-2 text-rose-500">
             <span className="material-symbols-outlined text-rose-500">emergency</span>
-            AI Patient Flow & Diagnostic Agent (HIA)
+            {t("AI Patient Flow & Diagnostic Agent (HIA)")}
           </h2>
-          <p className="text-xs text-on-surface-variant">Intelligent Agent — Actually parses, evaluates & diagnoses blood reports against 40+ medical reference ranges</p>
+          <p className="text-xs text-on-surface-variant">{t("Intelligent Agent — Actually parses, evaluates & diagnoses blood reports against 40+ medical reference ranges")}</p>
         </div>
         <div className="flex gap-2">
           <span className="px-3 py-1 text-[10px] bg-surface-container border border-outline-variant rounded-full font-bold text-on-surface flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            Analysis Engine: Live
+            {t("Analysis Engine: Live")}
           </span>
           <span className="px-3 py-1 text-[10px] bg-surface-container border border-outline-variant rounded-full font-bold text-on-surface">
-            Rule Engine: 40+ Reference Ranges
+            {t("Rule Engine: 40+ Reference Ranges")}
           </span>
         </div>
       </div>
@@ -383,34 +385,34 @@ Respiratory rt: 16 /min
         {/* Left Section */}
         <div className="col-span-12 lg:col-span-5 flex flex-col gap-gutter">
           <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-5 flex flex-col gap-4">
-            <h3 className="text-sm font-black text-on-surface uppercase tracking-wider">Patient Intake Information</h3>
+            <h3 className="text-sm font-black text-on-surface uppercase tracking-wider">{t("Patient Intake Information")}</h3>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-[10px] uppercase font-black tracking-wider text-on-surface-variant block mb-1">Patient Name</label>
+                <label className="text-[10px] uppercase font-black tracking-wider text-on-surface-variant block mb-1">{t("Patient Name")}</label>
                 <input type="text" value={patientName} onChange={(e) => setPatientName(e.target.value)}
                   className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-rose-500" />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-[10px] uppercase font-black tracking-wider text-on-surface-variant block mb-1">Age</label>
+                  <label className="text-[10px] uppercase font-black tracking-wider text-on-surface-variant block mb-1">{t("Age")}</label>
                   <input type="number" value={patientAge} onChange={(e) => setPatientAge(Number(e.target.value))}
                     className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-rose-500" />
                 </div>
                 <div>
-                  <label className="text-[10px] uppercase font-black tracking-wider text-on-surface-variant block mb-1">Gender</label>
+                  <label className="text-[10px] uppercase font-black tracking-wider text-on-surface-variant block mb-1">{t("Gender")}</label>
                   <select value={patientGender} onChange={(e) => setPatientGender(e.target.value)}
                     className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl px-2 py-2 text-xs font-semibold focus:outline-none focus:border-rose-500">
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
+                    <option value="Male">{t("Male")}</option>
+                    <option value="Female">{t("Female")}</option>
+                    <option value="Other">{t("Other")}</option>
                   </select>
                 </div>
               </div>
             </div>
 
             <div>
-              <label className="text-[10px] uppercase font-black tracking-wider text-on-surface-variant block mb-1">Select Blood Report Source</label>
+              <label className="text-[10px] uppercase font-black tracking-wider text-on-surface-variant block mb-1">{t("Select Blood Report Source")}</label>
               <div className="flex flex-col gap-2">
                 {Object.entries(SAMPLE_REPORTS).map(([key, report]) => (
                   <label key={key} className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
@@ -438,23 +440,23 @@ Respiratory rt: 16 /min
               <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center gap-2">
                 <span className="material-symbols-outlined text-on-surface-variant text-3xl">upload_file</span>
                 <span className="text-xs font-bold text-on-surface">
-                  {uploadedFile ? `Attached: ${uploadedFile.name}` : "Upload blood report TXT/CSV/Image"}
+                  {uploadedFile ? `Attached: ${uploadedFile.name}` : t("Upload blood report TXT/CSV/Image")}
                 </span>
-                <span className="text-[10px] text-on-surface-variant">Drag & drop or click to browse — agent will ACTUALLY parse values</span>
+                <span className="text-[10px] text-on-surface-variant">{t("Drag & drop or click to browse — agent will ACTUALLY parse values")}</span>
               </label>
             </div>
 
             <button onClick={runAnalysis} disabled={isAnalyzing}
               className="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-rose-950/20 active:scale-95 disabled:bg-rose-900 disabled:text-rose-400 flex items-center justify-center gap-2">
               <span className="material-symbols-outlined text-sm">psychology</span>
-              {isAnalyzing ? "Agent is Analyzing Real Values..." : "RUN INTELLIGENT CLINICAL ANALYSIS"}
+              {isAnalyzing ? t("Agent is Analyzing Real Values...") : t("RUN INTELLIGENT CLINICAL ANALYSIS")}
             </button>
           </div>
 
           {/* Agent Console */}
           <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-5 flex flex-col gap-2 flex-1 min-h-[220px]">
             <div className="flex items-center justify-between border-b border-outline-variant pb-2 mb-2">
-              <span className="text-xs font-black text-on-surface-variant uppercase tracking-wider">Intelligent Agent Processing Logs</span>
+              <span className="text-xs font-black text-on-surface-variant uppercase tracking-wider">{t("Intelligent Agent Processing Logs")}</span>
               <span className="flex h-2 w-2 relative">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
@@ -463,7 +465,7 @@ Respiratory rt: 16 /min
             <div ref={logsContainerRef}
               className="font-mono text-[10px] text-emerald-400 bg-surface-container-lowest p-4 rounded-xl border border-outline-variant flex-1 overflow-y-auto max-h-[220px] leading-relaxed">
               {analysisLogs.length === 0 ? (
-                <span className="text-on-surface-variant">Waiting for clinical diagnosis trigger...</span>
+                <span className="text-on-surface-variant">{t("Waiting for clinical diagnosis trigger...")}</span>
               ) : (
                 analysisLogs.map((log, i) => (
                   <div key={i} className="mb-1.5 animate-fadeIn">{log}</div>
@@ -644,10 +646,10 @@ Respiratory rt: 16 /min
               <div className="max-w-md z-10 space-y-2">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-[11px] font-black tracking-wider uppercase text-primary mb-1">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  AI Clinical Engine Standing By
+                  {t("AI Clinical Engine Standing By")}
                 </div>
                 <h3 className="text-2xl md:text-3xl font-black text-on-surface tracking-tight leading-tight">
-                  No Active Report Evaluated
+                  {t("No Active Report Evaluated")}
                 </h3>
                 <p className="text-sm text-on-surface-variant font-medium leading-relaxed">
                   Select an intake profile on the left or drop an actual blood report to trigger our high-precision <strong>Intelligent Clinical Analysis</strong> pipeline.
@@ -661,7 +663,7 @@ Respiratory rt: 16 /min
                     <span className="material-symbols-outlined text-xl">science</span>
                   </div>
                   <div>
-                    <p className="text-xs font-extrabold text-on-surface">Real Value Parsing</p>
+                    <p className="text-xs font-extrabold text-on-surface">{t("Real Value Parsing")}</p>
                     <p className="text-[11px] text-on-surface-variant leading-tight mt-0.5 font-medium">Extracts exact biological markers directly from raw text</p>
                   </div>
                 </div>
@@ -671,7 +673,7 @@ Respiratory rt: 16 /min
                     <span className="material-symbols-outlined text-xl">rule</span>
                   </div>
                   <div>
-                    <p className="text-xs font-extrabold text-on-surface">40+ Reference Ranges</p>
+                    <p className="text-xs font-extrabold text-on-surface">{t("40+ Reference Ranges")}</p>
                     <p className="text-[11px] text-on-surface-variant leading-tight mt-0.5 font-medium">Evaluates metrics against established medical bounds</p>
                   </div>
                 </div>
@@ -681,7 +683,7 @@ Respiratory rt: 16 /min
                     <span className="material-symbols-outlined text-xl">smart_toy</span>
                   </div>
                   <div>
-                    <p className="text-xs font-extrabold text-on-surface">Interactive Medical AI</p>
+                    <p className="text-xs font-extrabold text-on-surface">{t("Interactive Medical AI")}</p>
                     <p className="text-[11px] text-on-surface-variant leading-tight mt-0.5 font-medium">Context-aware conversational diagnostic guidance</p>
                   </div>
                 </div>
@@ -689,7 +691,7 @@ Respiratory rt: 16 /min
 
               <div className="pt-2 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant/70 flex items-center gap-2">
                 <span className="w-8 h-[1px] bg-outline-variant/60"></span>
-                Ready for Clinical Ingest
+                {t("Ready for Clinical Ingest")}
                 <span className="w-8 h-[1px] bg-outline-variant/60"></span>
               </div>
             </div>

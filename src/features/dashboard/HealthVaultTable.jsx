@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useI18n } from '../../i18n';
 
 export default function HealthVaultTable() {
+  const { t } = useI18n();
   const [sosTriggered, setSosTriggered] = useState(false);
 
   const handleSosClick = () => {
@@ -38,11 +40,11 @@ export default function HealthVaultTable() {
         <div className="flex justify-between items-center mb-md">
           <h3 className="font-headline-sm text-headline-sm text-primary flex items-center gap-xs">
             <span className="material-symbols-outlined" data-icon="lan">lan</span>
-            System Topology &amp; AI Agents
+            {t("System Topology & AI Agents")}
           </h3>
           <div className="flex items-center gap-xs">
             <span className="flex h-2 w-2 rounded-full bg-secondary"></span>
-            <span className="font-label-sm text-label-sm text-on-surface-variant">All Nodes Optimal</span>
+            <span className="font-label-sm text-label-sm text-on-surface-variant">{t("All Nodes Optimal")}</span>
           </div>
         </div>
         <div className="grid grid-cols-3 gap-sm">
@@ -57,14 +59,14 @@ export default function HealthVaultTable() {
             </div>
             <div className="space-y-xs">
               <div className="flex justify-between text-[11px]">
-                <span className="text-on-surface-variant">Load Metric</span>
+                <span className="text-on-surface-variant">{t("Load Metric")}</span>
                 <span className="font-bold text-on-surface">42%</span>
               </div>
               <div className="w-full bg-outline-variant/20 h-1 rounded-full">
                 <div className="bg-primary h-full w-[42%] rounded-full"></div>
               </div>
               <div className="flex items-center gap-xs mt-xs">
-                <span className="px-1.5 py-0.5 bg-secondary-container/50 text-on-secondary-container text-[10px] font-bold rounded uppercase">Clearance Active</span>
+                <span className="px-1.5 py-0.5 bg-secondary-container/50 text-on-secondary-container text-[10px] font-bold rounded uppercase">{t("Clearance Active")}</span>
               </div>
             </div>
           </div>
@@ -79,7 +81,7 @@ export default function HealthVaultTable() {
             </div>
             <div className="space-y-xs">
               <div className="flex justify-between text-[11px]">
-                <span className="text-on-surface-variant">Load Metric</span>
+                <span className="text-on-surface-variant">{t("Load Metric")}</span>
                 <span className="font-bold text-on-surface">68%</span>
               </div>
               <div className="w-full bg-outline-variant/20 h-1 rounded-full">
@@ -87,7 +89,7 @@ export default function HealthVaultTable() {
               </div>
               <div className="flex items-center gap-xs mt-xs text-on-surface-variant text-[10px]">
                 <span className="material-symbols-outlined text-[12px]" data-icon="router">router</span>
-                14 Active Up-links
+                14 {t("Active Up-links")}
               </div>
             </div>
           </div>
@@ -102,14 +104,14 @@ export default function HealthVaultTable() {
             </div>
             <div className="space-y-xs">
               <div className="flex justify-between text-[11px]">
-                <span className="text-on-surface-variant">Load Metric</span>
+                <span className="text-on-surface-variant">{t("Load Metric")}</span>
                 <span className="font-bold text-status-emergency">91%</span>
               </div>
               <div className="w-full bg-outline-variant/20 h-1 rounded-full">
                 <div className="bg-status-emergency h-full w-[91%] rounded-full"></div>
               </div>
               <div className="flex items-center gap-xs mt-xs">
-                <span className="px-1.5 py-0.5 bg-error-container text-status-emergency text-[10px] font-bold rounded uppercase">Priority Alpha</span>
+                <span className="px-1.5 py-0.5 bg-error-container text-status-emergency text-[10px] font-bold rounded uppercase">{t("Priority Alpha")}</span>
               </div>
             </div>
           </div>
@@ -127,13 +129,13 @@ export default function HealthVaultTable() {
             <div>
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-950/40 text-[10px] font-black tracking-wider uppercase text-cyan-200 border border-cyan-300/30 mb-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
-                Instant Telemetry Trigger
+                {t("Instant Telemetry Trigger")}
               </div>
               <h3 className="text-lg font-black tracking-tight leading-tight">
-                Emergency Fleet &amp; Hospital SOS Dispatch
+                {t("Emergency Fleet & Hospital SOS Dispatch")}
               </h3>
               <p className="text-xs text-blue-100 font-medium">
-                Clicking sounds an acoustic hazard siren &amp; primes high-priority route clearance. <span className="underline decoration-white/50 font-bold">Backend dispatch logic pending</span>.
+                {t("Clicking sounds an acoustic hazard siren & primes high-priority route clearance.")} <span className="underline decoration-white/50 font-bold">{t("Backend dispatch logic pending")}</span>.
               </p>
             </div>
           </div>
@@ -147,7 +149,7 @@ export default function HealthVaultTable() {
             }`}
           >
             <span className="material-symbols-outlined text-lg">{sosTriggered ? 'volume_up' : 'campaign'}</span>
-            {sosTriggered ? 'BEEP! Siren Broadcasting...' : 'ACTIVATE SOS BEACON'}
+            {sosTriggered ? t('BEEP! Siren Broadcasting...') : t('ACTIVATE SOS BEACON')}
           </button>
         </div>
 
@@ -155,10 +157,7 @@ export default function HealthVaultTable() {
           <div className="mt-4 pt-3 border-t border-white/20 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs font-bold bg-slate-950/20 px-4 py-2 rounded-xl animate-fadeIn">
             <span className="flex items-center gap-2 text-amber-200">
               <span className="material-symbols-outlined text-base text-amber-400">gpp_good</span>
-              Acoustic alarm triggered! Local emergency beacon simulated successfully.
-            </span>
-            <span className="text-[11px] bg-white/20 px-2.5 py-0.5 rounded text-white font-mono">
-              ⚡ Reminder: Backend API connection will be attached in later phase.
+              {t("Acoustic alarm triggered! Local emergency beacon simulated successfully.")}
             </span>
           </div>
         )}
@@ -167,12 +166,12 @@ export default function HealthVaultTable() {
       {/* Fixed Floating Emergency SOS Circular Button */}
       <button
         onClick={handleSosClick}
-        title="Activate Emergency SOS Beacon (Beeps)"
+        title={t("Emergency SOS")}
         className="fixed bottom-8 right-8 z-50 bg-gradient-to-tr from-blue-700 via-blue-600 to-cyan-500 text-white p-4 rounded-full shadow-2xl border-2 border-white/40 flex items-center justify-center hover:scale-110 active:scale-90 transition-all duration-300 group ring-4 ring-blue-500/30 animate-bounce"
       >
         <span className="material-symbols-outlined text-3xl font-black">sos</span>
         <span className="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs group-hover:ml-2 group-hover:pr-2 transition-all duration-300 text-xs font-black tracking-wider uppercase">
-          Emergency SOS
+          {t("Emergency SOS")}
         </span>
       </button>
 
@@ -181,7 +180,7 @@ export default function HealthVaultTable() {
         <div className="flex justify-between items-center mb-md">
           <h3 className="font-headline-sm text-headline-sm text-primary flex items-center gap-xs">
             <span className="material-symbols-outlined" data-icon="query_stats">query_stats</span>
-            Emergency Response Analytics
+            {t("Emergency Response Analytics")}
           </h3>
           <div className="flex gap-sm">
             <button className="text-label-sm font-label-sm px-sm py-1 bg-surface-container-low rounded-full border border-outline-variant/30 hover:bg-surface-container-high">24H</button>
@@ -191,7 +190,7 @@ export default function HealthVaultTable() {
         <div className="grid grid-cols-2 gap-gutter h-64">
           {/* Response Time Trends */}
           <div className="flex flex-col">
-            <p className="font-label-md text-label-md text-on-surface-variant mb-xs">Response Time Trends (sec)</p>
+            <p className="font-label-md text-label-md text-on-surface-variant mb-xs">{t("Response Time Trends (sec)")}</p>
             <div className="flex-1 relative flex items-end justify-between border-b border-l border-outline-variant/30 p-2">
               {/* Simple Bar Chart Representation */}
               <div className="w-[12%] bg-primary-container h-[40%] rounded-t-sm" title="08:00"></div>
@@ -212,7 +211,7 @@ export default function HealthVaultTable() {
           </div>
           {/* Traffic Clearance Efficiency */}
           <div className="flex flex-col">
-            <p className="font-label-md text-label-md text-on-surface-variant mb-xs">Traffic Clearance Efficiency (%)</p>
+            <p className="font-label-md text-label-md text-on-surface-variant mb-xs">{t("Traffic Clearance Efficiency (%)")}</p>
             <div className="flex-1 relative flex items-center justify-center p-2">
               {/* SVG Multi-Series Trend Line */}
               <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 200 100">
@@ -226,18 +225,18 @@ export default function HealthVaultTable() {
                 <path d="M0,85 Q50,88 100,75 T200,65" fill="none" stroke="#747783" strokeDasharray="2,2" strokeWidth="1.5"></path>
               </svg>
               <div className="absolute top-0 right-0 flex flex-col gap-1 text-[9px] font-bold">
-                <div className="flex items-center gap-1"><span className="w-2 h-0.5 bg-secondary"></span> AI OPTIMIZED</div>
-                <div className="flex items-center gap-1"><span className="w-2 h-0.5 bg-outline border-dashed"></span> HISTORIC</div>
+                <div className="flex items-center gap-1"><span className="w-2 h-0.5 bg-secondary"></span> {t("AI OPTIMIZED")}</div>
+                <div className="flex items-center gap-1"><span className="w-2 h-0.5 bg-outline border-dashed"></span> {t("HISTORIC")}</div>
               </div>
             </div>
             <div className="mt-xs p-xs bg-surface-container-low rounded-lg flex justify-around text-[11px]">
               <div className="text-center">
-                <p className="text-on-surface-variant text-[9px] uppercase">Efficiency Gain</p>
+                <p className="text-on-surface-variant text-[9px] uppercase">{t("Efficiency Gain")}</p>
                 <p className="font-bold text-secondary">+28.4%</p>
               </div>
               <div className="border-l border-outline-variant/30 h-full"></div>
               <div className="text-center">
-                <p className="text-on-surface-variant text-[9px] uppercase">Peak Flow</p>
+                <p className="text-on-surface-variant text-[9px] uppercase">{t("Peak Flow")}</p>
                 <p className="font-bold text-primary">88.2 veh/s</p>
               </div>
             </div>
