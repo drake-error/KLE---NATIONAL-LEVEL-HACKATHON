@@ -96,27 +96,80 @@ export default function HospitalLocator() {
     });
   }, []);
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchingCity, setIsSearchingCity] = useState(false);
+
+  const searchLocationByCity = useCallback(async (query) => {
+    if (!query || !query.trim()) return;
+    setIsSearchingCity(true);
+    setError(null);
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
+      const data = await res.json();
+      if (data && data.length > 0) {
+        const latitude = parseFloat(data[0].lat);
+        const longitude = parseFloat(data[0].lon);
+        setUserLocation({ lat: latitude, lon: longitude });
+        const hospitalData = await fetchNearbyHospitals(latitude, longitude);
+        setHospitals(hospitalData);
+        initMap(latitude, longitude, hospitalData);
+      } else {
+        setError(t('Location not found. Please try searching with a different city name.'));
+      }
+    } catch {
+      setError(t('Failed to search location. Please check your internet connection.'));
+    } finally {
+      setIsSearchingCity(false);
+    }
+  }, [t, initMap]);
+
   const locateUser = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
+    let latitude = null;
+    let longitude = null;
+
+    // Tier 1: Low-accuracy quick browser geolocation
     try {
       const pos = await new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000 });
+        if (!navigator.geolocation) return reject(new Error('Geolocation not supported'));
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: false,
+          timeout: 6000,
+          maximumAge: 60000,
+        });
       });
+      latitude = pos.coords.latitude;
+      longitude = pos.coords.longitude;
+    } catch {
+      // Tier 2: IP-based location fallback
+      try {
+        const ipRes = await fetch('https://ipapi.co/json/');
+        const ipData = await ipRes.json();
+        if (ipData && ipData.latitude && ipData.longitude) {
+          latitude = ipData.latitude;
+          longitude = ipData.longitude;
+        }
+      } catch {
+        // IP location failed
+      }
+    }
 
-      const { latitude, longitude } = pos.coords;
+    if (latitude && longitude) {
       setUserLocation({ lat: latitude, lon: longitude });
-
-      const hospitalData = await fetchNearbyHospitals(latitude, longitude);
-      setHospitals(hospitalData);
-      initMap(latitude, longitude, hospitalData);
-    } catch (err) {
-      setError(err.message === 'User denied Geolocation'
-        ? t('Location access denied. Please enable location in your browser settings.')
-        : t('Could not get your location. Please try again.'));
-    } finally {
+      try {
+        const hospitalData = await fetchNearbyHospitals(latitude, longitude);
+        setHospitals(hospitalData);
+        initMap(latitude, longitude, hospitalData);
+      } catch {
+        setError(t('Could not fetch hospitals near your location. Please search your city manually below.'));
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
       setIsLoading(false);
+      setError(t('Automatic location failed. Please type your city or area name below to find hospitals.'));
     }
   }, [t, initMap]);
 
@@ -132,31 +185,37 @@ export default function HospitalLocator() {
 
   return (
     <div className="space-y-4">
-      {/* Locate Button */}
-      {!userLocation && (
-        <div className="text-center py-10">
-          <span className="material-symbols-outlined text-5xl text-on-surface-variant/40 mb-4 block">location_on</span>
-          <h3 className="font-bold text-on-surface text-lg mb-2">{t("Find Nearby Hospitals")}</h3>
-          <p className="text-sm text-on-surface-variant mb-6">{t("We'll use your location to find government hospitals within 10km.")}</p>
+      {/* City Search Bar & Auto-Locate Button */}
+      <div className="p-4 rounded-2xl bg-surface-container-lowest border border-outline-variant space-y-3">
+        <label className="block text-xs font-bold text-on-surface-variant uppercase">{t("Search by City / Area or Use GPS")}</label>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && searchLocationByCity(searchQuery)}
+            placeholder={t("Enter city or district (e.g. Bengaluru, Belagavi, Hubli)")}
+            className="flex-1 p-3 rounded-xl bg-surface-container border border-outline-variant text-sm font-semibold outline-none focus:border-primary text-on-surface"
+          />
+          <button
+            onClick={() => searchLocationByCity(searchQuery)}
+            disabled={isSearchingCity || !searchQuery.trim()}
+            className="px-5 rounded-xl bg-primary text-on-primary font-bold text-xs hover:bg-primary/90 disabled:opacity-40 transition-all flex items-center gap-1.5"
+          >
+            {isSearchingCity ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <span className="material-symbols-outlined text-sm">search</span>}
+            {t("Search")}
+          </button>
           <button
             onClick={locateUser}
             disabled={isLoading}
-            className="px-8 py-3 rounded-2xl bg-primary text-on-primary font-bold shadow-md hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-50"
+            className="px-4 rounded-xl border border-primary text-primary font-bold text-xs hover:bg-primary/10 disabled:opacity-40 transition-all flex items-center gap-1.5"
+            title={t("Use Current Location")}
           >
-            {isLoading ? (
-              <span className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                {t("Locating...")}
-              </span>
-            ) : (
-              <span className="flex items-center gap-2">
-                <span className="material-symbols-outlined">my_location</span>
-                {t("Enable Location & Search")}
-              </span>
-            )}
+            {isLoading ? <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" /> : <span className="material-symbols-outlined text-sm">my_location</span>}
+            {t("Auto Locate")}
           </button>
         </div>
-      )}
+      </div>
 
       {/* Error */}
       {error && (
