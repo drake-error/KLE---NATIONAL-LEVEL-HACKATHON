@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
+import { useI18n } from '../../i18n';
 
 const CATEGORIES = ['All Records', 'Allergies', 'Medications', 'Conditions', 'Surgical', 'Vaccinations', 'Imaging', 'Insurance', 'Labs', 'Other'];
 
@@ -55,6 +56,7 @@ function readFileAsDataURL(file) {
 
 // ─────────────────────────────────────────────────────────────────
 export default function HealthVault({ searchQuery = '' }) {
+  const { t } = useI18n();
   // Load from localStorage ONCE on mount
   const [initData] = useState(() => loadVaultFromStorage());
   const [activeCategory, setActiveCategory] = useState('All Records');
@@ -296,10 +298,10 @@ export default function HealthVault({ searchQuery = '' }) {
         <div>
           <h2 className="font-headline-md text-on-surface font-bold flex items-center gap-2">
             <span className="material-symbols-outlined text-primary text-[28px]" data-icon="folder_shared">folder_shared</span>
-            Health Vault
+            {t("Health Vault")}
           </h2>
           <p className="text-body-sm text-on-surface-variant mt-1">
-            AI-powered document organizer with client-side AES-256 encryption • {documents.length} record{documents.length !== 1 ? 's' : ''} stored
+            {t("AI-powered document organizer with client-side AES-256 encryption")} • {documents.length} {t(documents.length !== 1 ? 'records stored' : 'record stored')}
           </p>
         </div>
       </div>
@@ -309,7 +311,7 @@ export default function HealthVault({ searchQuery = '' }) {
         <span className="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline" data-icon="search">search</span>
         <input
           className="w-full pl-xl pr-sm py-xs bg-surface-container-lowest border border-outline-variant focus:ring-2 focus:ring-primary rounded-xl text-body-sm font-body-sm"
-          placeholder="Search by filename or tags..."
+          placeholder={t("Search by filename or tags...")}
           type="text"
           value={vaultSearchQuery}
           onChange={(e) => setVaultSearchQuery(e.target.value)}
@@ -334,7 +336,7 @@ export default function HealthVault({ searchQuery = '' }) {
                   : 'bg-surface text-on-surface-variant border-outline-variant hover:bg-surface-container-low'
               }`}
             >
-              {cat === 'All Records' ? 'All Records' : 
+              {t(cat === 'All Records' ? 'All Records' : 
                cat === 'Allergies' ? '⚠️ Allergies' :
                cat === 'Medications' ? '💊 Medications' :
                cat === 'Conditions' ? '🩺 Conditions' :
@@ -342,7 +344,7 @@ export default function HealthVault({ searchQuery = '' }) {
                cat === 'Vaccinations' ? '💉 Vaccinations' :
                cat === 'Imaging' ? '🔬 Imaging' :
                cat === 'Insurance' ? '📄 Insurance' :
-               cat === 'Labs' ? '🧪 Labs' : '📁 Other'}
+               cat === 'Labs' ? '🧪 Labs' : '📁 Other')}
             </button>
           ))}
         </div>
@@ -353,10 +355,10 @@ export default function HealthVault({ searchQuery = '' }) {
         <div className="flex justify-between items-center mb-sm">
           <h3 className="font-headline-sm text-on-surface flex items-center gap-xs">
             <span className="material-symbols-outlined text-tertiary-fixed-dim" data-icon="folder">folder</span>
-            Folders
+            {t("Folders")}
           </h3>
           <button onClick={handleNewFolder} className="px-3 py-1 text-label-sm font-bold border border-outline-variant rounded-full text-on-surface hover:bg-surface-container-low transition-colors">
-            + New Folder
+            {t("+ New Folder")}
           </button>
         </div>
         <div className="flex gap-sm flex-wrap">
@@ -366,7 +368,7 @@ export default function HealthVault({ searchQuery = '' }) {
               activeFolder === 'All' ? 'bg-inverse-surface text-inverse-on-surface' : 'bg-surface-container text-on-surface hover:bg-surface-container-high'
             }`}
           >
-            All ({documents.length})
+            {t("All")} ({documents.length})
           </button>
           {folders.map(f => (
             <button
@@ -376,7 +378,7 @@ export default function HealthVault({ searchQuery = '' }) {
                 activeFolder === f.id ? 'bg-inverse-surface text-inverse-on-surface' : 'bg-surface-container text-on-surface hover:bg-surface-container-high'
               }`}
             >
-              {f.name} ({folderCounts[f.id] || 0})
+              {t(f.name)} ({folderCounts[f.id] || 0})
             </button>
           ))}
         </div>
@@ -386,20 +388,20 @@ export default function HealthVault({ searchQuery = '' }) {
       <div className="bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm relative overflow-hidden">
         <div className="flex justify-between items-center mb-md">
           <h3 className="font-headline-sm text-on-surface flex items-center gap-2">
-            Upload New Record
+            {t("Upload New Record")}
             <span className="text-body-sm text-on-surface-variant font-normal ml-2">
-              🤖 AI auto-organizes into folders
+              {t("🤖 AI auto-organizes into folders")}
             </span>
           </h3>
           <div className="flex items-center gap-2">
-            <span className="text-label-sm text-on-surface-variant font-bold">Category:</span>
+            <span className="text-label-sm text-on-surface-variant font-bold">{t("Category:")}</span>
             <select 
               value={uploadCategory}
               onChange={(e) => setUploadCategory(e.target.value)}
               className="bg-surface-container border border-outline-variant rounded-lg px-2 py-1 text-label-sm font-bold text-on-surface outline-none"
             >
               {CATEGORIES.filter(c => c !== 'All Records').map(c => (
-                <option key={c} value={c}>{c}</option>
+                <option key={c} value={c}>{t(c)}</option>
               ))}
             </select>
           </div>
@@ -418,25 +420,25 @@ export default function HealthVault({ searchQuery = '' }) {
           {uploadStatus === 'encrypting' ? (
             <div className="flex flex-col items-center gap-2">
               <span className="material-symbols-outlined text-primary text-4xl animate-spin" data-icon="enhanced_encryption">enhanced_encryption</span>
-              <p className="font-bold text-primary">Encrypting with AES-256...</p>
+              <p className="font-bold text-primary">{t("Encrypting with AES-256...")}</p>
             </div>
           ) : uploadStatus === 'uploading' ? (
             <div className="flex flex-col items-center gap-2">
               <span className="material-symbols-outlined text-primary text-4xl animate-spin" data-icon="cloud_upload">cloud_upload</span>
-              <p className="font-bold text-primary">Saving to vault...</p>
+              <p className="font-bold text-primary">{t("Saving to vault...")}</p>
             </div>
           ) : uploadStatus === 'done' ? (
             <div className="flex flex-col items-center gap-2">
               <span className="material-symbols-outlined text-secondary text-4xl" data-icon="check_circle">check_circle</span>
-              <p className="font-bold text-secondary">Saved successfully!</p>
+              <p className="font-bold text-secondary">{t("Saved successfully!")}</p>
             </div>
           ) : (
             <>
               <span className="material-symbols-outlined text-outline text-5xl mb-2 group-hover:text-primary transition-colors" data-icon="cloud_upload">cloud_upload</span>
-              <p className="font-headline-sm text-on-surface font-bold">Click or drag files here</p>
+              <p className="font-headline-sm text-on-surface font-bold">{t("Click or drag files here")}</p>
               <p className="text-body-sm text-on-surface-variant mt-1 flex items-center gap-1">
                 <span className="material-symbols-outlined text-[16px]" data-icon="lock">lock</span>
-                Client-side AES-256 encrypted
+                {t("Client-side AES-256 encrypted")}
               </p>
             </>
           )}
@@ -448,45 +450,45 @@ export default function HealthVault({ searchQuery = '' }) {
             <div className="bg-surface-container-lowest p-lg rounded-2xl shadow-2xl max-w-md w-full border border-outline-variant">
               <h4 className="font-headline-md text-on-surface font-bold flex items-center gap-2 mb-2">
                 <span className="material-symbols-outlined text-primary" data-icon="enhanced_encryption">enhanced_encryption</span>
-                Encrypt Record
+                {t("Encrypt Record")}
               </h4>
               <p className="text-body-sm text-on-surface-variant mb-sm">
-                Enter a secure password to encrypt <strong className="text-on-surface">{pendingFile?.name}</strong>.
+                {t("Enter a secure password to encrypt")} <strong className="text-on-surface">{pendingFile?.name}</strong>.
               </p>
               
               {pendingFile && (
                 <div className="mb-md p-sm bg-primary-fixed/20 border border-primary/20 rounded-xl">
                   <p className="text-body-sm text-primary font-bold flex items-center gap-2">
                     <span className="material-symbols-outlined text-[18px]">smart_toy</span>
-                    AI will organize this into: {classifyDocument(pendingFile.name, uploadCategory).label}
+                    {t("AI will organize this into:")} {t(classifyDocument(pendingFile.name, uploadCategory).label)}
                   </p>
                 </div>
               )}
 
-              <label className="text-label-sm font-bold text-on-surface-variant block mb-1">Password</label>
+              <label className="text-label-sm font-bold text-on-surface-variant block mb-1">{t("Password")}</label>
               <input 
                 type="password" 
-                placeholder="Create encryption password" 
+                placeholder={t("Create encryption password")} 
                 value={encryptionPassword}
                 onChange={(e) => setEncryptionPassword(e.target.value)}
                 className="w-full px-sm py-2 rounded-xl bg-surface-container border border-outline focus:border-primary outline-none text-on-surface mb-sm font-mono"
                 autoFocus
               />
-              <label className="text-label-sm font-bold text-on-surface-variant block mb-1">Confirm Password</label>
+              <label className="text-label-sm font-bold text-on-surface-variant block mb-1">{t("Confirm Password")}</label>
               <input 
                 type="password" 
-                placeholder="Re-enter password" 
+                placeholder={t("Re-enter password")} 
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="w-full px-sm py-2 rounded-xl bg-surface-container border border-outline focus:border-primary outline-none text-on-surface mb-sm font-mono"
               />
               {encryptionPassword && confirmPassword && encryptionPassword !== confirmPassword && (
-                <p className="text-status-emergency text-body-sm mb-sm font-bold">⚠️ Passwords don't match</p>
+                <p className="text-status-emergency text-body-sm mb-sm font-bold">{t("⚠️ Passwords don't match")}</p>
               )}
               
               <p className="text-[11px] text-on-surface-variant mb-md flex items-center gap-1">
                 <span className="material-symbols-outlined text-[14px]">info</span>
-                You'll need this password to view or download this file. Store it safely!
+                {t("You'll need this password to view or download this file. Store it safely!")}
               </p>
 
               <div className="flex justify-end gap-sm">
@@ -494,14 +496,14 @@ export default function HealthVault({ searchQuery = '' }) {
                   onClick={() => { setShowPasswordPrompt(false); setPendingFile(null); setEncryptionPassword(''); setConfirmPassword(''); }}
                   className="px-4 py-2 font-bold text-on-surface-variant hover:bg-surface-container rounded-xl transition-colors"
                 >
-                  Cancel
+                  {t("Cancel")}
                 </button>
                 <button 
                   onClick={executeUpload}
                   disabled={!encryptionPassword || encryptionPassword !== confirmPassword}
                   className="px-4 py-2 bg-primary text-on-primary font-bold rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50"
                 >
-                  🔒 Encrypt & Save
+                  {t("🔒 Encrypt & Save")}
                 </button>
               </div>
             </div>
@@ -536,7 +538,7 @@ export default function HealthVault({ searchQuery = '' }) {
             </div>
             <div className="flex items-center justify-between mt-auto">
               <span className="px-2 py-0.5 bg-surface-container text-on-surface-variant text-[10px] font-bold rounded uppercase">
-                {doc.folderLabel || doc.category}
+                {t(doc.folderLabel || doc.category)}
               </span>
               <div className="flex gap-1">
                 <button 
@@ -567,8 +569,8 @@ export default function HealthVault({ searchQuery = '' }) {
         {filteredDocs.length === 0 && (
           <div className="col-span-full py-xl text-center">
             <span className="material-symbols-outlined text-outline text-6xl mb-4" data-icon="folder_off">folder_off</span>
-            <p className="text-on-surface-variant font-body-lg font-bold">No records found</p>
-            <p className="text-on-surface-variant text-body-sm mt-1">Upload a medical document above to get started!</p>
+            <p className="text-on-surface-variant font-body-lg font-bold">{t("No records found")}</p>
+            <p className="text-on-surface-variant text-body-sm mt-1">{t("Upload a medical document above to get started!")}</p>
           </div>
         )}
       </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef, Component } f
 import { Map as MapGL, Source, Layer, Marker, NavigationControl } from 'react-map-gl/mapbox';
 import * as turf from '@turf/turf';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { useI18n } from '../../i18n';
 
 // Split token constants to bypass GitHub automated secret push protection scanners
 const T1 = 'pk.eyJ1IjoiYXJhdmluZGMiLCJhIjoiOTBhNDM0';
@@ -94,6 +95,7 @@ const REGION_PRESETS = {
 };
 
 function FleetStatus() {
+  const { t } = useI18n();
   /* =====================================================================
    * REGION & HIGH-ACCURACY GPS TRACKING
    * ===================================================================== */
@@ -677,17 +679,17 @@ function FleetStatus() {
             </div>
             <div>
               <h1 className="text-lg font-black tracking-wide text-white uppercase leading-tight">
-                LifeLane Corridor
+                {t("LifeLane Corridor")}
               </h1>
               <p className="text-[11px] font-bold text-slate-400">
-                Ambulance-Priority Traffic Command
+                {t("Ambulance-Priority Traffic Command")}
               </p>
             </div>
           </div>
 
           {/* Region Switch */}
           <div className="mt-4">
-            <label className="text-[10px] uppercase font-black tracking-wider text-slate-400 block mb-1.5">Switch Demo Region</label>
+            <label className="text-[10px] uppercase font-black tracking-wider text-slate-400 block mb-1.5">{t("Switch Demo Region")}</label>
             <div className="grid grid-cols-2 gap-2 p-1 bg-slate-950 rounded-2xl border border-slate-800">
               <button
                 onClick={() => setActiveRegionId('bangalore')}
@@ -696,7 +698,7 @@ function FleetStatus() {
                   activeRegionId === 'bangalore' ? 'bg-gradient-to-r from-rose-600 to-amber-600 text-white shadow' : 'text-slate-400 hover:text-white'
                 }`}
               >
-                Bengaluru HQ
+                {t("Bengaluru HQ")}
               </button>
               <button
                 onClick={() => setActiveRegionId('belagavi')}
@@ -705,7 +707,7 @@ function FleetStatus() {
                   activeRegionId === 'belagavi' ? 'bg-gradient-to-r from-rose-600 to-amber-600 text-white shadow' : 'text-slate-400 hover:text-white'
                 }`}
               >
-                Belagavi Sector
+                {t("Belagavi Sector")}
               </button>
             </div>
           </div>
@@ -715,32 +717,32 @@ function FleetStatus() {
         <div className="bg-slate-900/90 p-5 rounded-3xl border border-slate-800 shadow-2xl">
           <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
             <span className="material-symbols-outlined text-sm text-emerald-400 animate-pulse">analytics</span>
-            Live operational stats
+            {t("Live operational stats")}
           </h3>
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-slate-950/80 p-3 rounded-2xl border border-slate-800/80">
-              <p className="text-[10px] text-slate-400 font-extrabold uppercase">Active emergencies</p>
+              <p className="text-[10px] text-slate-400 font-extrabold uppercase">{t("Active emergencies")}</p>
               <p className="text-xl font-black text-rose-500 mt-1 font-mono">
                 {activeDispatches.filter(d => d.status === 'en-route').length}
               </p>
             </div>
             <div className="bg-slate-950/80 p-3 rounded-2xl border border-slate-800/80">
-              <p className="text-[10px] text-slate-400 font-extrabold uppercase">Corridors Open</p>
+              <p className="text-[10px] text-slate-400 font-extrabold uppercase">{t("Corridors Open")}</p>
               <p className="text-xl font-black text-emerald-400 mt-1 font-mono">
                 {signalNodes.filter(s => s.state === 'GREEN_WAVE_ACTIVE').length}
               </p>
             </div>
             <div className="bg-slate-950/80 p-3 rounded-2xl border border-slate-800/80">
-              <p className="text-[10px] text-slate-400 font-extrabold uppercase">Total dispatches</p>
+              <p className="text-[10px] text-slate-400 font-extrabold uppercase">{t("Total dispatches")}</p>
               <p className="text-xl font-black text-slate-200 mt-1 font-mono">{totalDispatchesCount}</p>
             </div>
             <div className="bg-slate-950/80 p-3 rounded-2xl border border-slate-800/80">
-              <p className="text-[10px] text-slate-400 font-extrabold uppercase">Total preemptions</p>
+              <p className="text-[10px] text-slate-400 font-extrabold uppercase">{t("Total preemptions")}</p>
               <p className="text-xl font-black text-cyan-400 mt-1 font-mono">{totalPreemptionsCount}</p>
             </div>
             <div className="bg-slate-950/80 p-3 rounded-2xl border border-slate-800/80 col-span-2">
-              <p className="text-[10px] text-slate-400 font-extrabold uppercase">Avg. detection lead time</p>
-              <p className="text-base font-black text-amber-400 mt-1 font-mono">{avgLeadTime} seconds</p>
+              <p className="text-[10px] text-slate-400 font-extrabold uppercase">{t("Avg. detection lead time")}</p>
+              <p className="text-base font-black text-amber-400 mt-1 font-mono">{avgLeadTime} {t("seconds")}</p>
             </div>
           </div>
         </div>
@@ -749,13 +751,13 @@ function FleetStatus() {
         <div className="bg-slate-900/90 p-5 rounded-3xl border border-slate-800 shadow-2xl">
           <h3 className="text-xs font-black text-slate-200 uppercase tracking-wider mb-3.5 flex items-center gap-1.5">
             <span className="material-symbols-outlined text-sm text-rose-500">add_alert</span>
-            Dispatch emergency vehicle
+            {t("Dispatch emergency vehicle")}
           </h3>
 
           <div className="space-y-3">
             {/* Start point */}
             <div>
-              <label className="text-[10px] uppercase font-black tracking-wider text-slate-400 block mb-1">Start Junction</label>
+              <label className="text-[10px] uppercase font-black tracking-wider text-slate-400 block mb-1">{t("Start Junction")}</label>
               <select
                 value={selectedStartId}
                 onChange={(e) => setSelectedStartId(e.target.value)}
@@ -773,7 +775,7 @@ function FleetStatus() {
 
             {/* Destination */}
             <div>
-              <label className="text-[10px] uppercase font-black tracking-wider text-slate-400 block mb-1">End Hospital</label>
+              <label className="text-[10px] uppercase font-black tracking-wider text-slate-400 block mb-1">{t("End Hospital")}</label>
               <select
                 value={selectedHospitalId}
                 onChange={(e) => setSelectedHospitalId(e.target.value)}
@@ -798,16 +800,16 @@ function FleetStatus() {
 
             {/* Dispatch Speed */}
             <div>
-              <label className="text-[10px] uppercase font-black tracking-wider text-slate-400 block mb-1">Transit speed</label>
+              <label className="text-[10px] uppercase font-black tracking-wider text-slate-400 block mb-1">{t("Transit speed")}</label>
               <select
                 value={simulationSpeed}
                 onChange={(e) => setSimulationSpeed(e.target.value)}
                 className="w-full py-2.5 px-3 bg-slate-950 border border-slate-800 rounded-xl text-xs font-bold text-slate-200 focus:outline-none focus:border-rose-500"
               >
-                <option value="slow">Slow (40 km/h)</option>
-                <option value="medium">Medium (60 km/h)</option>
-                <option value="fast">Fast (90 km/h)</option>
-                <option value="high">⚡ High Speed (120 km/h)</option>
+                <option value="slow">{t("Slow (40 km/h)")}</option>
+                <option value="medium">{t("Medium (60 km/h)")}</option>
+                <option value="fast">{t("Fast (90 km/h)")}</option>
+                <option value="high">{t("⚡ High Speed (120 km/h)")}</option>
               </select>
             </div>
 
@@ -817,7 +819,7 @@ function FleetStatus() {
               className="w-full mt-2 py-3.5 px-4 bg-red-600 hover:bg-red-500 text-white rounded-xl font-black text-xs tracking-wider shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2 uppercase"
             >
               <span className="material-symbols-outlined text-sm">emergency</span>
-              Dispatch emergency vehicle
+              {t("Dispatch emergency vehicle")}
             </button>
 
             {/* Auto Generate Checkbox */}
@@ -830,7 +832,7 @@ function FleetStatus() {
                 className="w-4 h-4 rounded border-slate-800 bg-slate-950 text-emerald-600 focus:ring-0 cursor-pointer"
               />
               <label htmlFor="auto-scenarios-check" className="text-[11px] font-black text-slate-300 uppercase tracking-wider cursor-pointer select-none">
-                Auto-generate scenarios
+                {t("Auto-generate scenarios")}
               </label>
             </div>
           </div>
@@ -839,7 +841,7 @@ function FleetStatus() {
         {/* Active Dispatches Card List */}
         {activeDispatches.length > 0 && (
           <div className="bg-slate-900/90 p-4 rounded-3xl border border-slate-800 shadow-2xl">
-            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Active Units</h3>
+            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">{t("Active Units")}</h3>
             <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
               {activeDispatches.map(disp => (
                 <div key={disp.id} className="p-3 bg-slate-950 rounded-2xl border border-slate-800 flex items-center justify-between gap-2.5">
@@ -856,7 +858,7 @@ function FleetStatus() {
                     <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${
                       disp.status === 'en-route' ? 'bg-rose-950 text-rose-400 border border-rose-800 animate-pulse' : 'bg-emerald-950 text-emerald-400 border border-emerald-800'
                     }`}>
-                      {disp.status === 'en-route' ? 'Transit' : 'Arrived'}
+                      {t(disp.status === 'en-route' ? 'Transit' : 'Arrived')}
                     </span>
                     <button
                       onClick={() => {
@@ -888,9 +890,9 @@ function FleetStatus() {
             <div className="flex items-center gap-2 font-extrabold text-slate-300">
               <span className="px-2.5 py-1 bg-emerald-900/80 text-emerald-300 border border-emerald-500/50 rounded-lg flex items-center gap-1">
                 <span className="material-symbols-outlined text-sm">pan_tool</span>
-                ✋ Hand Drag & Zoom Controls Active
+                {t("✋ Hand Drag & Zoom Controls Active")}
               </span>
-              <span className="text-slate-400">Click and drag. Zoom using buttons or trackpad.</span>
+              <span className="text-slate-400">{t("Click and drag. Zoom using buttons or trackpad.")}</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -900,7 +902,7 @@ function FleetStatus() {
                 className="px-3 py-1 bg-slate-800 border border-slate-700 text-emerald-400 hover:text-emerald-300 hover:bg-slate-700 rounded-xl font-bold transition-all flex items-center gap-1.5"
               >
                 <span className="material-symbols-outlined text-sm animate-pulse">my_location</span>
-                <span>Center GPS Location</span>
+                <span>{t("Center GPS Location")}</span>
               </button>
 
               {/* Camera Follow Toggle */}
@@ -915,7 +917,7 @@ function FleetStatus() {
                 <span className="material-symbols-outlined text-sm">
                   {cameraFollowVehicle ? 'lock' : 'pan_tool_alt'}
                 </span>
-                <span>{cameraFollowVehicle ? 'Locked to Vehicle' : 'Free Camera'}</span>
+                <span>{t(cameraFollowVehicle ? 'Locked to Vehicle' : 'Free Camera')}</span>
               </button>
             </div>
           </div>
@@ -1100,11 +1102,11 @@ function FleetStatus() {
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
               <span className="material-symbols-outlined text-emerald-400 text-base">terminal</span>
               <h3 className="font-mono font-bold text-xs tracking-wider uppercase text-slate-200">
-                LifeLane V2X AI Communications Log
+                {t("LifeLane V2X AI Communications Log")}
               </h3>
             </div>
             <span className="text-[10px] font-mono text-cyan-300 font-extrabold bg-cyan-950/80 px-2.5 py-0.5 rounded border border-cyan-700/50">
-              V2X PROTOCOL ACTIVE
+              {t("V2X PROTOCOL ACTIVE")}
             </span>
           </div>
 

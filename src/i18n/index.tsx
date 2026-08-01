@@ -26,7 +26,13 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const t = useCallback(
-    (s: string) => (lang === "en" ? s : (dictionary[lang]?.[s] ?? s)),
+    (s?: string | number) => {
+      if (s == null) return "";
+      if (typeof s !== "string") return String(s);
+      if (lang === "en") return s;
+      const trimmed = s.trim();
+      return dictionary[lang]?.[s] ?? dictionary[lang]?.[trimmed] ?? s;
+    },
     [lang]
   );
 

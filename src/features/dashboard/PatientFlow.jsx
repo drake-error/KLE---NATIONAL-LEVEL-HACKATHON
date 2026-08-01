@@ -421,11 +421,11 @@ Respiratory rt: 16 /min
                     <div className="flex items-center gap-2">
                       <input type="radio" name="reportSource" checked={reportSource === key} onChange={() => setReportSource(key)} className="accent-rose-500" />
                       <div className="text-left">
-                        <p className="text-xs font-bold">{report.title}</p>
-                        <p className="text-[10px] text-on-surface-variant">{report.description}</p>
+                        <p className="text-xs font-bold">{t(report.title)}</p>
+                        <p className="text-[10px] text-on-surface-variant">{t(report.description)}</p>
                       </div>
                     </div>
-                    <span className={`text-[10px] px-2 py-0.5 font-bold rounded ${badgeColors[report.badgeColor]}`}>{report.badge}</span>
+                    <span className={`text-[10px] px-2 py-0.5 font-bold rounded ${badgeColors[report.badgeColor]}`}>{t(report.badge)}</span>
                   </label>
                 ))}
               </div>
@@ -483,7 +483,7 @@ Respiratory rt: 16 /min
               <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-5 flex flex-col gap-3">
                 <div className="flex justify-between items-center">
                   <h3 className="text-sm font-black text-on-surface uppercase tracking-wider">
-                    Parsed Lab Parameters ({analysisResult.parameterCount} extracted)
+                    {t("Parsed Lab Parameters")} ({analysisResult.parameterCount} extracted)
                   </h3>
                   <span className={`px-2.5 py-0.5 text-[10px] font-black rounded-full ${
                     analysisResult.abnormalCount > 0
@@ -491,8 +491,8 @@ Respiratory rt: 16 /min
                       : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
                   }`}>
                     {analysisResult.abnormalCount > 0 
-                      ? `${analysisResult.abnormalCount} Abnormal Finding${analysisResult.abnormalCount > 1 ? 's' : ''}`
-                      : 'All Values Optimal'}
+                      ? `${analysisResult.abnormalCount} ${t(analysisResult.abnormalCount > 1 ? 'Abnormal Findings' : 'Abnormal Finding')}`
+                      : t('All Values Optimal')}
                   </span>
                 </div>
 
@@ -500,11 +500,11 @@ Respiratory rt: 16 /min
                   <table className="w-full text-left border-collapse text-xs">
                     <thead>
                       <tr className="bg-surface-container-lowest/80 text-on-surface-variant font-bold border-b border-outline-variant/50">
-                        <th className="p-3">Category</th>
-                        <th className="p-3">Marker</th>
-                        <th className="p-3 text-center">Extracted Value</th>
-                        <th className="p-3 text-center">Status</th>
-                        <th className="p-3 text-right">Reference Range</th>
+                        <th className="p-3">{t("Category")}</th>
+                        <th className="p-3">{t("Marker")}</th>
+                        <th className="p-3 text-center">{t("Extracted Value")}</th>
+                        <th className="p-3 text-center">{t("Status")}</th>
+                        <th className="p-3 text-right">{t("Reference Range")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -518,7 +518,7 @@ Respiratory rt: 16 /min
                               metric.status === 'High' ? 'bg-amber-500/20 text-amber-300'
                                 : metric.status === 'Low' ? 'bg-rose-500/20 text-rose-300'
                                 : 'bg-emerald-500/20 text-emerald-300'
-                            }`}>{metric.status}</span>
+                            }`}>{t(metric.status)}</span>
                           </td>
                           <td className="p-3 text-right font-mono text-on-surface-variant">{metric.ref}</td>
                         </tr>
@@ -531,9 +531,9 @@ Respiratory rt: 16 /min
               {/* AI Diagnosis — REAL generated from actual values */}
               <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-5 flex flex-col gap-3">
                 <div className="flex justify-between items-center border-b border-outline-variant/50 pb-2">
-                  <h3 className="text-sm font-black text-on-surface uppercase tracking-wider">Intelligent Clinical Analysis</h3>
+                  <h3 className="text-sm font-black text-on-surface uppercase tracking-wider">{t("Intelligent Clinical Analysis")}</h3>
                   <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                    ✓ Generated from actual parsed values
+                    ✓ {t("Generated from actual parsed values")}
                   </span>
                 </div>
                 <div className="text-xs leading-relaxed text-on-surface space-y-3 pt-1">
@@ -570,9 +570,9 @@ Respiratory rt: 16 /min
                 <div className="flex justify-between items-center border-b border-outline-variant/50 pb-2">
                   <h3 className="text-sm font-black text-on-surface uppercase tracking-wider flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-xs text-rose-400">forum</span>
-                    Context-Aware Clinical Chat Agent
+                    {t("Context-Aware Clinical Chat Agent")}
                   </h3>
-                  <span className="text-[10px] text-on-surface-variant font-medium">Grounded in your actual lab data</span>
+                  <span className="text-[10px] text-on-surface-variant font-medium">{t("Grounded in your actual lab data")}</span>
                 </div>
 
                 <div className="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-thin">
@@ -584,7 +584,7 @@ Respiratory rt: 16 /min
                           : 'bg-surface-container-lowest border border-outline-variant/50 text-on-surface rounded-tl-none'
                       }`}>
                         <p className="font-bold text-[9px] uppercase tracking-wider opacity-60 mb-1">
-                          {msg.role === 'user' ? 'Patient' : 'Clinical AI Agent'}
+                          {t(msg.role === 'user' ? 'Patient' : 'Clinical AI Agent')}
                         </p>
                         <p className="whitespace-pre-line">{msg.content}</p>
                       </div>
@@ -597,7 +597,7 @@ Respiratory rt: 16 /min
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-slate-600 opacity-75"></span>
                           <span className="relative inline-flex rounded-full h-2 w-2 bg-slate-500"></span>
                         </span>
-                        Analyzing your actual lab data...
+                        {t("Analyzing your actual lab data...")}
                       </div>
                     </div>
                   )}
@@ -609,7 +609,7 @@ Respiratory rt: 16 /min
                     {SUGGESTED_QUESTIONS.map((q, i) => (
                       <button key={i} onClick={() => handleSendMessage(q)}
                         className="text-left p-2.5 bg-surface-container-lowest border border-outline-variant/50 hover:border-outline rounded-xl text-[10px] text-on-surface hover:text-white transition-all font-semibold leading-snug hover:bg-surface-container">
-                        {q}
+                        {t(q)}
                       </button>
                     ))}
                   </div>
@@ -618,7 +618,7 @@ Respiratory rt: 16 /min
                 <div className="flex gap-2 border-t border-outline-variant/50 pt-3">
                   <input type="text" value={userInput} onChange={(e) => setUserInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                    placeholder="Ask about your actual lab results — diet, urgency, follow-up tests..."
+                    placeholder={t("Ask about your actual lab results — diet, urgency, follow-up tests...")}
                     className="flex-1 bg-surface-container-lowest border border-outline-variant rounded-xl px-3 py-2.5 text-xs text-on-surface focus:outline-none focus:border-rose-500 font-semibold" />
                   <button onClick={() => handleSendMessage()} disabled={isReplying || !userInput.trim()}
                     className="bg-rose-600 hover:bg-rose-500 disabled:bg-rose-900 disabled:text-rose-400 text-white font-bold px-4 rounded-xl transition-all active:scale-95 flex items-center justify-center">
@@ -652,7 +652,7 @@ Respiratory rt: 16 /min
                   {t("No Active Report Evaluated")}
                 </h3>
                 <p className="text-sm text-on-surface-variant font-medium leading-relaxed">
-                  Select an intake profile on the left or drop an actual blood report to trigger our high-precision <strong>Intelligent Clinical Analysis</strong> pipeline.
+                  {t("Select an intake profile on the left or drop an actual blood report to trigger our high-precision Intelligent Clinical Analysis pipeline.")}
                 </p>
               </div>
 
@@ -664,7 +664,7 @@ Respiratory rt: 16 /min
                   </div>
                   <div>
                     <p className="text-xs font-extrabold text-on-surface">{t("Real Value Parsing")}</p>
-                    <p className="text-[11px] text-on-surface-variant leading-tight mt-0.5 font-medium">Extracts exact biological markers directly from raw text</p>
+                    <p className="text-[11px] text-on-surface-variant leading-tight mt-0.5 font-medium">{t("Extracts exact biological markers directly from raw text")}</p>
                   </div>
                 </div>
 
@@ -674,7 +674,7 @@ Respiratory rt: 16 /min
                   </div>
                   <div>
                     <p className="text-xs font-extrabold text-on-surface">{t("40+ Reference Ranges")}</p>
-                    <p className="text-[11px] text-on-surface-variant leading-tight mt-0.5 font-medium">Evaluates metrics against established medical bounds</p>
+                    <p className="text-[11px] text-on-surface-variant leading-tight mt-0.5 font-medium">{t("Evaluates metrics against established medical bounds")}</p>
                   </div>
                 </div>
 
@@ -684,7 +684,7 @@ Respiratory rt: 16 /min
                   </div>
                   <div>
                     <p className="text-xs font-extrabold text-on-surface">{t("Interactive Medical AI")}</p>
-                    <p className="text-[11px] text-on-surface-variant leading-tight mt-0.5 font-medium">Context-aware conversational diagnostic guidance</p>
+                    <p className="text-[11px] text-on-surface-variant leading-tight mt-0.5 font-medium">{t("Context-aware conversational diagnostic guidance")}</p>
                   </div>
                 </div>
               </div>

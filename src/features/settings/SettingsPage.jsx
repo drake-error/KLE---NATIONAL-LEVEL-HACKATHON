@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useI18n } from '../../i18n';
 
 const STORAGE_KEY = 'resq_plus_settings';
 
@@ -63,6 +64,7 @@ const DEFAULT_SETTINGS = {
 };
 
 export default function SettingsPage({ session, theme, setTheme }) {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState('profile');
   const [settings, setSettings] = useState(() => {
     try {
@@ -252,10 +254,10 @@ export default function SettingsPage({ session, theme, setTheme }) {
       {/* Header section */}
       <div className="mb-8 pl-1">
         <h1 className="text-3xl md:text-4xl font-extrabold text-[#002764] dark:text-[#b0c6ff] tracking-tight mb-2">
-          Settings
+          {t("Settings")}
         </h1>
         <p className="text-on-surface-variant text-base font-medium max-w-3xl">
-          Everything responders see about you in an emergency, and how ResQ-Plus contacts you.
+          {t("Everything responders see about you in an emergency, and how ResQ-Plus contacts you.")}
         </p>
       </div>
 
@@ -279,7 +281,7 @@ export default function SettingsPage({ session, theme, setTheme }) {
                 <span className={`material-symbols-outlined text-xl ${isActive ? 'text-blue-300 dark:text-[#001945]' : 'text-on-surface-variant'}`}>
                   {tab.icon}
                 </span>
-                <span className="text-base truncate">{tab.label}</span>
+                <span className="text-base truncate">{t(tab.label)}</span>
               </button>
             );
           })}
@@ -293,8 +295,8 @@ export default function SettingsPage({ session, theme, setTheme }) {
             {activeTab === 'profile' && (
               <div>
                 <div className="border-b border-outline-variant/30 pb-4 mb-6">
-                  <h2 className="text-2xl font-bold text-on-surface mb-1">Profile</h2>
-                  <p className="text-sm text-on-surface-variant">Shown to dispatchers and paramedics when you request help.</p>
+                  <h2 className="text-2xl font-bold text-on-surface mb-1">{t("Profile")}</h2>
+                  <p className="text-sm text-on-surface-variant">{t("Shown to dispatchers and paramedics when you request help.")}</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -972,12 +974,12 @@ export default function SettingsPage({ session, theme, setTheme }) {
               {hasChanges ? (
                 <span className="text-sm font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                  Unsaved changes pending
+                  {t("Unsaved changes pending")}
                 </span>
               ) : (
                 <span className="text-sm font-medium text-on-surface-variant/70 flex items-center gap-1.5">
                   <span className="material-symbols-outlined text-sm text-emerald-500">check</span>
-                  All changes synced with local vault
+                  {t("All changes synced with local vault")}
                 </span>
               )}
             </div>
@@ -993,7 +995,7 @@ export default function SettingsPage({ session, theme, setTheme }) {
                     : 'border-outline-variant/30 text-outline cursor-not-allowed opacity-50'
                 }`}
               >
-                Cancel
+                {t("Cancel")}
               </button>
               <button
                 type="button"
@@ -1004,7 +1006,7 @@ export default function SettingsPage({ session, theme, setTheme }) {
                     : 'bg-[#002764]/80 dark:bg-primary/80 hover:bg-[#002764] active:scale-95'
                 }`}
               >
-                Save changes
+                {t("Save changes")}
               </button>
             </div>
           </div>
