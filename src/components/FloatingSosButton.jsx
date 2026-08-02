@@ -274,7 +274,7 @@ export default function FloatingSosButton() {
         {/* Main Floating SOS Button Container */}
         <div className="relative group">
           {/* Pulsating Red Glow Effect */}
-          <div className={`absolute -inset-3 rounded-full blur-xl transition-all duration-300 pointer-events-none ${
+          <div style={{ borderRadius: '9999px' }} className={`absolute -inset-3 blur-xl transition-all duration-300 pointer-events-none ${
             status === 'countdown'
               ? 'bg-amber-500/80 animate-ping'
               : status === 'triggered'
@@ -286,7 +286,8 @@ export default function FloatingSosButton() {
           <button
             onClick={triggerSosCountdown}
             aria-label="Emergency SOS Dispatch"
-            className={`relative w-20 h-20 aspect-square shrink-0 rounded-full flex flex-col items-center justify-center text-white font-black shadow-[0_0_35px_rgba(239,68,68,0.9)] border-2 transition-all duration-300 transform active:scale-90 ${
+            style={{ borderRadius: '9999px' }}
+            className={`relative w-20 h-20 aspect-square shrink-0 flex flex-col items-center justify-center text-white font-black shadow-[0_0_35px_rgba(239,68,68,0.9)] border-2 transition-all duration-300 transform active:scale-90 ${
               status === 'countdown'
                 ? 'bg-gradient-to-br from-amber-500 via-orange-600 to-red-600 border-amber-300 scale-110 shadow-amber-500/80'
                 : status === 'triggered'

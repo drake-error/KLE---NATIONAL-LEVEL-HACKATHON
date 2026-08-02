@@ -262,17 +262,18 @@ export default function SosBeaconCard() {
 
       <div className="relative flex items-center justify-center my-6 py-10 w-full">
         {/* Continuous Staggered Outward Expanding 100% Perfect Circular Wave Rings */}
-        <div className="absolute w-64 h-64 aspect-square shrink-0 rounded-full border-2 border-red-500/40 bg-red-500/10 pointer-events-none animate-sonar-1" />
-        <div className="absolute w-64 h-64 aspect-square shrink-0 rounded-full border-2 border-rose-500/40 bg-rose-500/10 pointer-events-none animate-sonar-2" />
-        <div className="absolute w-64 h-64 aspect-square shrink-0 rounded-full border-2 border-red-400/40 bg-red-400/10 pointer-events-none animate-sonar-3" />
+        <div style={{ borderRadius: '9999px' }} className="absolute w-64 h-64 aspect-square shrink-0 border-2 border-red-500/40 bg-red-500/10 pointer-events-none animate-sonar-1" />
+        <div style={{ borderRadius: '9999px' }} className="absolute w-64 h-64 aspect-square shrink-0 border-2 border-rose-500/40 bg-rose-500/10 pointer-events-none animate-sonar-2" />
+        <div style={{ borderRadius: '9999px' }} className="absolute w-64 h-64 aspect-square shrink-0 border-2 border-red-400/40 bg-red-400/10 pointer-events-none animate-sonar-3" />
 
         {/* Ambient Red Radial Backdrop Glow */}
-        <div className="absolute w-48 h-48 aspect-square shrink-0 rounded-full bg-red-600/30 blur-2xl animate-pulse pointer-events-none" />
+        <div style={{ borderRadius: '9999px' }} className="absolute w-48 h-48 aspect-square shrink-0 bg-red-600/30 blur-2xl animate-pulse pointer-events-none" />
 
         {/* 100% Perfect Circle 3D Red Center SOS Button */}
         <button
           onClick={handleButtonPress}
-          className={`relative z-10 w-36 h-36 aspect-square shrink-0 rounded-full text-white font-black shadow-[0_12px_40px_rgba(225,29,72,0.8)] border-4 border-red-300 flex flex-col items-center justify-center cursor-pointer transform active:scale-95 transition-all duration-300 ${
+          style={{ borderRadius: '9999px' }}
+          className={`relative z-10 w-36 h-36 aspect-square shrink-0 text-white font-black shadow-[0_12px_40px_rgba(225,29,72,0.8)] border-4 border-red-300 flex flex-col items-center justify-center cursor-pointer transform active:scale-95 transition-all duration-300 ${
             status === 'countdown'
               ? 'bg-gradient-to-b from-amber-500 to-rose-600 border-amber-200 scale-105 shadow-amber-500/90 animate-pulse'
               : status === 'triggered'
