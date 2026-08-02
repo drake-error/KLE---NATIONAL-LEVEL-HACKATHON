@@ -16,7 +16,6 @@ import SupportPage from '../support/SupportPage';
 import SystemStatusPage from '../support/SystemStatusPage';
 import RoadAccidentAwarenessPage from '../awareness/RoadAccidentAwarenessPage';
 import HealthAgentPage from '../health-agent/HealthAgentPage';
-import FloatingSosButton from '../../components/FloatingSosButton';
 
 export default function DashboardLayout({ session }) {
   const [currentTab, setCurrentTab] = useState('dashboard');
@@ -116,9 +115,6 @@ export default function DashboardLayout({ session }) {
           <HealthAgentPage />
         </main>
       )}
-
-      {/* Floating Red Glowing Emergency SOS Button */}
-      <FloatingSosButton />
     </div>
   );
 }
