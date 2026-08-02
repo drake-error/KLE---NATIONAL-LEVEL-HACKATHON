@@ -286,7 +286,7 @@ export default function FloatingSosButton() {
           <button
             onClick={triggerSosCountdown}
             aria-label="Emergency SOS Dispatch"
-            className={`relative w-20 h-20 rounded-full flex flex-col items-center justify-center text-white font-black shadow-[0_0_35px_rgba(239,68,68,0.9)] border-2 transition-all duration-300 transform active:scale-90 ${
+            className={`relative w-20 h-20 aspect-square shrink-0 rounded-full flex flex-col items-center justify-center text-white font-black shadow-[0_0_35px_rgba(239,68,68,0.9)] border-2 transition-all duration-300 transform active:scale-90 ${
               status === 'countdown'
                 ? 'bg-gradient-to-br from-amber-500 via-orange-600 to-red-600 border-amber-300 scale-110 shadow-amber-500/80'
                 : status === 'triggered'

@@ -260,19 +260,19 @@ export default function SosBeaconCard() {
         .animate-sonar-3 { animation: sonarWave 2.4s infinite ease-out 1.6s; }
       `}</style>
 
-      <div className="relative flex items-center justify-center my-4 py-8">
-        {/* Continuous Staggered Outward Expanding Wave Rings */}
-        <div className="absolute w-56 h-56 rounded-full border-2 border-red-500/40 bg-red-500/10 pointer-events-none animate-sonar-1" />
-        <div className="absolute w-56 h-56 rounded-full border-2 border-rose-500/40 bg-rose-500/10 pointer-events-none animate-sonar-2" />
-        <div className="absolute w-56 h-56 rounded-full border-2 border-red-400/40 bg-red-400/10 pointer-events-none animate-sonar-3" />
+      <div className="relative flex items-center justify-center my-6 py-10 w-full">
+        {/* Continuous Staggered Outward Expanding 100% Perfect Circular Wave Rings */}
+        <div className="absolute w-64 h-64 aspect-square shrink-0 rounded-full border-2 border-red-500/40 bg-red-500/10 pointer-events-none animate-sonar-1" />
+        <div className="absolute w-64 h-64 aspect-square shrink-0 rounded-full border-2 border-rose-500/40 bg-rose-500/10 pointer-events-none animate-sonar-2" />
+        <div className="absolute w-64 h-64 aspect-square shrink-0 rounded-full border-2 border-red-400/40 bg-red-400/10 pointer-events-none animate-sonar-3" />
 
         {/* Ambient Red Radial Backdrop Glow */}
-        <div className="absolute w-44 h-44 rounded-full bg-red-600/20 blur-xl animate-pulse pointer-events-none" />
+        <div className="absolute w-48 h-48 aspect-square shrink-0 rounded-full bg-red-600/30 blur-2xl animate-pulse pointer-events-none" />
 
-        {/* 3D Red Circular Center SOS Button */}
+        {/* 100% Perfect Circle 3D Red Center SOS Button */}
         <button
           onClick={handleButtonPress}
-          className={`relative z-10 w-32 h-32 rounded-full text-white font-black shadow-[0_12px_35px_rgba(225,29,72,0.7)] border-2 border-red-300 flex flex-col items-center justify-center cursor-pointer transform active:scale-95 transition-all duration-300 ${
+          className={`relative z-10 w-36 h-36 aspect-square shrink-0 rounded-full text-white font-black shadow-[0_12px_40px_rgba(225,29,72,0.8)] border-4 border-red-300 flex flex-col items-center justify-center cursor-pointer transform active:scale-95 transition-all duration-300 ${
             status === 'countdown'
               ? 'bg-gradient-to-b from-amber-500 to-rose-600 border-amber-200 scale-105 shadow-amber-500/90 animate-pulse'
               : status === 'triggered'
@@ -282,8 +282,8 @@ export default function SosBeaconCard() {
         >
           {status === 'idle' && (
             <>
-              <span className="text-3xl font-black tracking-widest leading-none drop-shadow-md">SOS</span>
-              <span className="text-[10px] font-black tracking-wider uppercase opacity-95 mt-1.5 bg-red-950/40 px-2 py-0.5 rounded-full border border-red-400/40">
+              <span className="text-4xl font-black tracking-widest leading-none drop-shadow-md">SOS</span>
+              <span className="text-[10px] font-black tracking-wider uppercase opacity-95 mt-2 bg-red-950/50 px-2.5 py-0.5 rounded-full border border-red-300/40">
                 {pressCount > 0 ? `PRESS (${pressCount}/3)` : 'PRESS 3X'}
               </span>
             </>
