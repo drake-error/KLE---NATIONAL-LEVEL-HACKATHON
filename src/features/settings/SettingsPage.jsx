@@ -21,9 +21,9 @@ const DEFAULT_SETTINGS = {
     dnrConsent: false,
   },
   contacts: [
-    { id: '1', name: 'Priya Mehta', relationship: 'Spouse', phone: '+91 98200 88990', priority: 'Primary' },
-    { id: '2', name: 'Dr. Rajesh Rao', relationship: 'Family Physician', phone: '+91 98211 33445', priority: 'Medical Specialist' },
-    { id: '3', name: 'Rohan Mehta', relationship: 'Brother', phone: '+91 98199 44556', priority: 'Secondary' },
+    { id: '1', name: 'Priya Mehta', relationship: 'Spouse', phone: '+91 98200 88990', email: 'priya.mehta@gmail.com', priority: 'Primary' },
+    { id: '2', name: 'Dr. Rajesh Rao', relationship: 'Family Physician', phone: '+91 98211 33445', email: 'dr.rajesh.rao@hospital.in', priority: 'Medical Specialist' },
+    { id: '3', name: 'Rohan Mehta', relationship: 'Brother', phone: '+91 98199 44556', email: 'rohan.mehta@gmail.com', priority: 'Secondary' },
   ],
   notifications: {
     smsEmergencyAlerts: true,
@@ -95,7 +95,7 @@ export default function SettingsPage({ session, theme, setTheme }) {
   const [newAllergy, setNewAllergy] = useState('');
   const [newCondition, setNewCondition] = useState('');
   const [showAddContactModal, setShowAddContactModal] = useState(false);
-  const [newContact, setNewContact] = useState({ name: '', relationship: '', phone: '', priority: 'Primary' });
+  const [newContact, setNewContact] = useState({ name: '', relationship: '', phone: '', email: '', priority: 'Primary' });
   
   // Password change simulator
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
@@ -170,7 +170,7 @@ export default function SettingsPage({ session, theme, setTheme }) {
     if (!newContact.name || !newContact.phone) return;
     const item = { ...newContact, id: Date.now().toString() };
     setSettings(prev => ({ ...prev, contacts: [...prev.contacts, item] }));
-    setNewContact({ name: '', relationship: '', phone: '', priority: 'Primary' });
+    setNewContact({ name: '', relationship: '', phone: '', email: '', priority: 'Primary' });
     setShowAddContactModal(false);
     triggerToast('Emergency contact added successfully.');
   };
@@ -546,6 +546,17 @@ export default function SettingsPage({ session, theme, setTheme }) {
                         />
                       </div>
                       <div>
+                        <label className="block text-xs font-bold text-on-surface-variant mb-1">Email Address *</label>
+                        <input
+                          type="email"
+                          required
+                          value={newContact.email}
+                          onChange={(e) => setNewContact({ ...newContact, email: e.target.value })}
+                          className="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant/60 rounded-xl text-sm"
+                          placeholder="contact@example.com"
+                        />
+                      </div>
+                      <div>
                         <label className="block text-xs font-bold text-on-surface-variant mb-1">Alert Priority</label>
                         <select
                           value={newContact.priority}
@@ -584,6 +595,7 @@ export default function SettingsPage({ session, theme, setTheme }) {
                             </span>
                           </div>
                           <p className="text-sm text-on-surface-variant">{contact.relationship} • <span className="font-mono font-bold text-on-surface">{contact.phone}</span></p>
+                          {contact.email && <p className="text-xs text-on-surface-variant">✉️ <span className="font-mono">{contact.email}</span></p>}
                         </div>
                       </div>
                       
