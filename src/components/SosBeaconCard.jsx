@@ -456,6 +456,19 @@ export default function SosBeaconCard() {
               📍 {t("View Location")} ({coords.lat.toFixed(4)}°, {coords.lon.toFixed(4)}°)
             </a>
           )}
+          {/* Debug: Show API response for troubleshooting */}
+          {dispatchResult && (
+            <div className="mt-2 p-2 rounded-lg bg-slate-900 text-green-400 font-mono text-[10px] text-left overflow-auto max-h-40 break-all">
+              <p>📡 WhatsApp: {dispatchResult?.results?.whatsapp ? '✅ SENT' : '❌ FAILED'}</p>
+              <p>📧 Email: {dispatchResult?.results?.email ? '✅ SENT' : '⏳ (sent from browser)'}</p>
+              {dispatchResult?.results?.whatsappResponse && (
+                <p className="mt-1 text-yellow-300">WA Response: {JSON.stringify(dispatchResult.results.whatsappResponse)}</p>
+              )}
+              {dispatchResult?.results?.whatsappError && (
+                <p className="mt-1 text-red-400">WA Error: {dispatchResult.results.whatsappError}</p>
+              )}
+            </div>
+          )}
           <button
             onClick={cancelSos}
             className="w-full mt-2 py-2 rounded-xl bg-rose-600 text-white font-bold text-xs hover:bg-rose-700 transition-colors"
