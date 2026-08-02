@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useI18n } from '../../i18n';
+import SosBeaconCard from '../../components/SosBeaconCard';
 
 export default function HealthVaultTable() {
   const { t } = useI18n();
@@ -118,62 +119,10 @@ export default function HealthVaultTable() {
         </div>
       </section>
 
-      {/* ─── Blue Floating Emergency SOS Control Hub (Below Topology) ─── */}
-      <section className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 rounded-2xl p-5 shadow-xl border border-blue-400/40 text-white animate-fadeIn transition-all duration-300 hover:shadow-blue-500/25">
-        <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 relative z-10">
-          <div className="flex items-center gap-4 text-left">
-            <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-inner animate-bounce">
-              <span className="material-symbols-outlined text-3xl font-black text-white">sos</span>
-            </div>
-            <div>
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-950/40 text-[10px] font-black tracking-wider uppercase text-cyan-200 border border-cyan-300/30 mb-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
-                {t("Instant Telemetry Trigger")}
-              </div>
-              <h3 className="text-lg font-black tracking-tight leading-tight">
-                {t("Emergency Fleet & Hospital SOS Dispatch")}
-              </h3>
-              <p className="text-xs text-blue-100 font-medium">
-                {t("Clicking sounds an acoustic hazard siren & primes high-priority route clearance.")} <span className="underline decoration-white/50 font-bold">{t("Backend dispatch logic pending")}</span>.
-              </p>
-            </div>
-          </div>
+      {/* ─── Red Concentric SOS Beacon Control Hub (Below Topology) ─── */}
+      <SosBeaconCard />
 
-          <button 
-            onClick={handleSosClick}
-            className={`px-6 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider shadow-2xl flex items-center gap-2 transition-all transform active:scale-95 border ${
-              sosTriggered 
-                ? 'bg-amber-400 text-slate-950 border-amber-300 scale-105 animate-pulse shadow-amber-400/50' 
-                : 'bg-white text-blue-700 hover:bg-slate-50 border-white/80 hover:shadow-xl'
-            }`}
-          >
-            <span className="material-symbols-outlined text-lg">{sosTriggered ? 'volume_up' : 'campaign'}</span>
-            {sosTriggered ? t('BEEP! Siren Broadcasting...') : t('ACTIVATE SOS BEACON')}
-          </button>
-        </div>
 
-        {sosTriggered && (
-          <div className="mt-4 pt-3 border-t border-white/20 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs font-bold bg-slate-950/20 px-4 py-2 rounded-xl animate-fadeIn">
-            <span className="flex items-center gap-2 text-amber-200">
-              <span className="material-symbols-outlined text-base text-amber-400">gpp_good</span>
-              {t("Acoustic alarm triggered! Local emergency beacon simulated successfully.")}
-            </span>
-          </div>
-        )}
-      </section>
-
-      {/* Fixed Floating Emergency SOS Circular Button */}
-      <button
-        onClick={handleSosClick}
-        title={t("Emergency SOS")}
-        className="fixed bottom-8 right-8 z-50 bg-gradient-to-tr from-blue-700 via-blue-600 to-cyan-500 text-white p-4 rounded-full shadow-2xl border-2 border-white/40 flex items-center justify-center hover:scale-110 active:scale-90 transition-all duration-300 group ring-4 ring-blue-500/30 animate-bounce"
-      >
-        <span className="material-symbols-outlined text-3xl font-black">sos</span>
-        <span className="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs group-hover:ml-2 group-hover:pr-2 transition-all duration-300 text-xs font-black tracking-wider uppercase">
-          {t("Emergency SOS")}
-        </span>
-      </button>
 
       {/* Emergency Response Analytics */}
       <section className="bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm flex-1">
