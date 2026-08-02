@@ -186,7 +186,7 @@ export default function SosBeaconCard() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              access_key: 'c90b6910-18e3-472e-8c3b-74fa5a932d84',
+              access_key: '8382c954-6c3a-4272-ba3d-75a39f393bdb',
               subject: `🚨 EMERGENCY SOS - ${info.userName || 'Patient'} Needs Immediate Help!`,
               from_name: 'ResQ-Plus Emergency Dispatch',
               to: contact.email,
