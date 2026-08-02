@@ -147,8 +147,9 @@ export default function SosBeaconCard() {
     const lat = loc?.lat || coords?.lat || 13.07158;
     const lon = loc?.lon || coords?.lon || 77.59685;
     const timestamp = new Date().toLocaleString();
+    const mapsUrl = `https://maps.google.com/?q=${lat},${lon}`;
 
-    // 1. Call serverless /api/sos → Automated WhatsApp (Meta Cloud API) + Email
+    // 1. Call serverless /api/sos → Automated WhatsApp (Meta Cloud API)
     try {
       const apiRes = await fetch('/api/sos', {
         method: 'POST',
@@ -166,14 +167,34 @@ export default function SosBeaconCard() {
       });
       const data = await apiRes.json();
       setDispatchResult(data);
-      console.log('[SOS] Automated dispatch result:', data);
+      console.log('[SOS] WhatsApp dispatch result:', data);
     } catch (err) {
-      console.error('[SOS] API dispatch error:', err);
+      console.error('[SOS] WhatsApp API dispatch error:', err);
     }
 
-    // 2. Log result for debugging
-    if (dispatchResult) {
-      console.log('[SOS] Dispatch completed. WhatsApp:', dispatchResult?.results?.whatsapp, 'Email:', dispatchResult?.results?.email);
+    // 2. Send Email directly from browser via EmailJS (browser origin = works reliably)
+    try {
+      const emailRes = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          service_id: 'service_36ux8ls',
+          template_id: 'template_d70hmsb',
+          user_id: '6j183Hs8FlZR34dvK',
+          template_params: {
+            to_email: contact.contactEmail || 'emergency@resqplus.app',
+            to_name: contact.contactName || 'Emergency Contact',
+            from_name: 'ResQ-Plus Emergency Dispatch',
+            name: contact.userName || 'Unknown Patient',
+            email: contact.contactEmail || '',
+            title: `🚨 EMERGENCY SOS - ${contact.userName || 'Patient'} Needs Help!`,
+            message: `🚨 AUTOMATED EMERGENCY SOS DISTRESS ALERT!\n\nPatient Name: ${contact.userName || 'Unknown'}\nPatient Phone: ${contact.userPhone || 'N/A'}\nTime of SOS: ${timestamp}\n\n📍 LIVE GPS LOCATION:\n${mapsUrl}\n\nPlease send emergency medical aid immediately.\n\n— ResQ-Plus Automated Emergency Dispatch System`
+          }
+        }),
+      });
+      console.log('[SOS] EmailJS browser dispatch status:', emailRes.status, emailRes.ok ? 'SUCCESS' : 'FAILED');
+    } catch (emailErr) {
+      console.error('[SOS] EmailJS browser dispatch error:', emailErr);
     }
   };
 
