@@ -171,13 +171,10 @@ export default function SosBeaconCard() {
       console.error('[SOS] API dispatch error:', err);
     }
 
-    // 2. Fallback: Open WhatsApp Web link as backup (in case Cloud API creds not set up yet)
-    try {
-      const mapsUrl = `https://maps.google.com/?q=${lat},${lon}`;
-      const waMsg = `🚨 *AUTOMATED EMERGENCY SOS ALERT!*%0A%0A👤 *Patient:* ${contact.userName}%0A📞 *Phone:* ${contact.userPhone}%0A🕐 *Time:* ${timestamp}%0A%0A📍 *LIVE GPS LOCATION:*%0A${mapsUrl}%0A%0A⚠️ Please send help immediately!`;
-      const cleanPhone = contact.contactPhone.replace(/[^0-9+]/g, '');
-      window.open(`https://api.whatsapp.com/send?phone=${encodeURIComponent(cleanPhone)}&text=${waMsg}`, '_blank');
-    } catch {}
+    // 2. Log result for debugging
+    if (dispatchResult) {
+      console.log('[SOS] Dispatch completed. WhatsApp:', dispatchResult?.results?.whatsapp, 'Email:', dispatchResult?.results?.email);
+    }
   };
 
   // ─── Handle SOS Button Press (3x press detection) ───

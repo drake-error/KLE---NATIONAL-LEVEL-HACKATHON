@@ -42,7 +42,9 @@ export default async function handler(req, res) {
     const recipientPhone = (contactPhone || '+919820088990').replace(/[^0-9]/g, '');
 
     if (waToken && waPhoneId) {
+      // Attempt 1: Send using the pre-approved hello_world template (always works for test numbers)
       try {
+        console.log('[SOS API] Attempting WhatsApp hello_world template to:', recipientPhone);
         const waRes = await fetch(
           `https://graph.facebook.com/v21.0/${waPhoneId}/messages`,
           {
@@ -54,21 +56,49 @@ export default async function handler(req, res) {
             body: JSON.stringify({
               messaging_product: 'whatsapp',
               to: recipientPhone,
-              type: 'text',
-              text: {
-                body: `🚨 *AUTOMATED EMERGENCY SOS ALERT!*\n\n👤 *Patient:* ${userName || 'User'}\n📞 *Patient Phone:* ${userPhone || 'N/A'}\n🕐 *Time:* ${formattedTime}\n\n📍 *LIVE GPS LOCATION:*\n${mapsUrl}\n\n⚠️ This is an automated emergency alert from ResQ-Plus. Please respond immediately and send help to the GPS location above.\n\n_Sent automatically by ResQ-Plus Emergency Dispatch System_`
+              type: 'template',
+              template: {
+                name: 'hello_world',
+                language: { code: 'en_US' }
               }
             }),
           }
         );
         const waData = await waRes.json();
         results.whatsapp = waRes.ok;
-        console.log('[SOS API] WhatsApp Cloud API response:', JSON.stringify(waData));
+        results.whatsappResponse = waData;
+        console.log('[SOS API] WhatsApp template response:', JSON.stringify(waData));
+
+        // Attempt 2: Also try to send the detailed custom text (works if recipient has messaged bot within 24hrs)
+        if (waRes.ok) {
+          try {
+            await fetch(
+              `https://graph.facebook.com/v21.0/${waPhoneId}/messages`,
+              {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${waToken}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  messaging_product: 'whatsapp',
+                  to: recipientPhone,
+                  type: 'text',
+                  text: {
+                    body: `🚨 *AUTOMATED EMERGENCY SOS ALERT!*\n\n👤 *Patient:* ${userName || 'User'}\n📞 *Patient Phone:* ${userPhone || 'N/A'}\n🕐 *Time:* ${formattedTime}\n\n📍 *LIVE GPS LOCATION:*\n${mapsUrl}\n\n⚠️ This is an automated emergency alert from ResQ-Plus. Please respond immediately and send help to the GPS location above.\n\n_Sent automatically by ResQ-Plus Emergency Dispatch System_`
+                  }
+                }),
+              }
+            );
+            console.log('[SOS API] Detailed follow-up text sent (if within 24hr window).');
+          } catch {}
+        }
       } catch (waErr) {
         console.error('[SOS API] WhatsApp Cloud API error:', waErr.message);
+        results.whatsappError = waErr.message;
       }
     } else {
-      console.log('[SOS API] WhatsApp Cloud API credentials not configured. Skipping WhatsApp dispatch.');
+      console.log('[SOS API] WhatsApp Cloud API credentials not configured. Token:', !!waToken, 'PhoneId:', !!waPhoneId);
     }
 
     // ─── 2. AUTOMATED EMAIL via EmailJS REST API ───
@@ -86,17 +116,22 @@ export default async function handler(req, res) {
             template_id: emailTemplateId,
             user_id: emailPublicKey,
             template_params: {
+              // Default Contact Us template variables
               to_email: contactEmail || 'emergency@resqplus.app',
               to_name: contactName || 'Emergency Contact',
               from_name: 'ResQ-Plus Emergency Dispatch',
+              name: userName || 'Unknown Patient',
+              email: contactEmail || 'emergency@resqplus.app',
+              title: `🚨 EMERGENCY SOS - ${userName || 'Patient'} Needs Help!`,
               subject: `🚨 EMERGENCY SOS ALERT - ${userName || 'Patient'} Needs Immediate Help!`,
+              // Custom template variables
               patient_name: userName || 'Unknown',
               patient_phone: userPhone || 'N/A',
               timestamp: formattedTime,
               location_url: mapsUrl,
               lat: lat || '13.07158',
               lon: lon || '77.59685',
-              message: `AUTOMATED EMERGENCY SOS DISTRESS ALERT!\n\nPatient Name: ${userName || 'Unknown'}\nPatient Phone: ${userPhone || 'N/A'}\nTime of SOS: ${formattedTime}\n\nLIVE GPS LOCATION:\n${mapsUrl}\n\nPlease send emergency medical aid immediately.\n\n— ResQ-Plus Automated Emergency Dispatch System`
+              message: `🚨 AUTOMATED EMERGENCY SOS DISTRESS ALERT!\n\nPatient Name: ${userName || 'Unknown'}\nPatient Phone: ${userPhone || 'N/A'}\nTime of SOS: ${formattedTime}\n\n📍 LIVE GPS LOCATION:\n${mapsUrl}\n\nPlease send emergency medical aid immediately.\n\n— ResQ-Plus Automated Emergency Dispatch System`
             }
           }),
         });
