@@ -179,31 +179,27 @@ export default function SosBeaconCard() {
         console.error(`[SOS] WhatsApp API error for ${contact.name}:`, err);
       }
 
-      // 2. Email via EmailJS (browser-side)
+      // 2. Email via Web3Forms (free, no domain restrictions needed)
       if (contact.email) {
         try {
-          const emailRes = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+          const emailRes = await fetch('https://api.web3forms.com/submit', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              service_id: 'service_36ux8ls',
-              template_id: 'template_d70hmsb',
-              user_id: '6j183Hs8FlZR34dvK',
-              template_params: {
-                to_email: contact.email,
-                to_name: contact.name,
-                from_name: 'ResQ-Plus Emergency Dispatch',
-                name: info.userName || 'Unknown Patient',
-                email: contact.email,
-                title: `🚨 EMERGENCY SOS - ${info.userName || 'Patient'} Needs Help!`,
-                message: `🚨 AUTOMATED EMERGENCY SOS DISTRESS ALERT!\n\nPatient Name: ${info.userName || 'Unknown'}\nPatient Phone: ${info.userPhone || 'N/A'}\nTime of SOS: ${timestamp}\n\n📍 LIVE GPS LOCATION:\n${mapsUrl}\n\nPlease send emergency medical aid immediately.\n\n— ResQ-Plus Automated Emergency Dispatch System`
-              }
+              access_key: 'c90b6910-18e3-472e-8c3b-74fa5a932d84',
+              subject: `🚨 EMERGENCY SOS - ${info.userName || 'Patient'} Needs Immediate Help!`,
+              from_name: 'ResQ-Plus Emergency Dispatch',
+              to: contact.email,
+              name: info.userName || 'Unknown Patient',
+              message: `🚨 AUTOMATED EMERGENCY SOS DISTRESS ALERT!\n\nPatient Name: ${info.userName || 'Unknown'}\nPatient Phone: ${info.userPhone || 'N/A'}\nEmergency Contact: ${contact.name}\nTime of SOS: ${timestamp}\n\n📍 LIVE GPS LOCATION:\n${mapsUrl}\n\nOpen this link to see their exact location:\n${mapsUrl}\n\nPlease send emergency medical aid immediately!\n\n— ResQ-Plus Automated Emergency Dispatch System`,
+              replyto: 'noreply@resqplus.app',
             }),
           });
-          allResults.email.push({ name: contact.name, email: contact.email, success: emailRes.ok });
-          console.log(`[SOS] Email to ${contact.name}:`, emailRes.ok ? 'SUCCESS' : 'FAILED');
+          const emailData = await emailRes.json();
+          allResults.email.push({ name: contact.name, email: contact.email, success: emailRes.ok, message: emailData.message });
+          console.log(`[SOS] Email (Web3Forms) to ${contact.name}:`, emailRes.ok ? 'SUCCESS' : 'FAILED', emailData);
         } catch (emailErr) {
-          allResults.email.push({ name: contact.name, email: contact.email, success: false });
+          allResults.email.push({ name: contact.name, email: contact.email, success: false, error: emailErr.message });
           console.error(`[SOS] Email error for ${contact.name}:`, emailErr);
         }
       }
