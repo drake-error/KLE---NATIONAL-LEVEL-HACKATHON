@@ -136,57 +136,61 @@ export default function HealthVaultTable() {
             <button className="text-label-sm font-label-sm px-sm py-1 bg-primary text-white rounded-full border border-primary">LIVE</button>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-gutter h-64">
-          {/* Response Time Trends */}
-          <div className="flex flex-col">
-            <p className="font-label-md text-label-md text-on-surface-variant mb-xs">{t("Response Time Trends (sec)")}</p>
-            <div className="flex-1 relative flex items-end justify-between border-b border-l border-outline-variant/30 p-2">
-              {/* Simple Bar Chart Representation */}
-              <div className="w-[12%] bg-primary-container h-[40%] rounded-t-sm" title="08:00"></div>
-              <div className="w-[12%] bg-primary-container h-[55%] rounded-t-sm" title="09:00"></div>
-              <div className="w-[12%] bg-primary-container h-[35%] rounded-t-sm" title="10:00"></div>
-              <div className="w-[12%] bg-primary h-[85%] rounded-t-sm" title="Current"></div>
-              <div className="w-[12%] bg-primary-container h-[45%] rounded-t-sm" title="Proj +1"></div>
-              <div className="w-[12%] bg-primary-container h-[40%] rounded-t-sm" title="Proj +2"></div>
-              <div className="absolute -left-6 top-0 h-full flex flex-col justify-between text-[10px] font-telemetry-mono text-on-surface-variant">
-                <span>600</span>
-                <span>300</span>
-                <span>0</span>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-gutter h-auto min-h-[16rem]">
+          {/* The Problem */}
+          <div className="flex flex-col p-6 bg-error-container/10 rounded-xl border border-error/20 relative overflow-hidden shadow-sm">
+            <div className="absolute -right-8 -top-8 text-error/5 rotate-12 pointer-events-none">
+              <span className="material-symbols-outlined text-[160px]">warning</span>
             </div>
-            <div className="flex justify-between px-2 mt-xs text-[10px] font-telemetry-mono text-on-surface-variant">
-              <span>08:00</span><span>09:00</span><span>10:00</span><span>NOW</span><span>11:00</span><span>12:00</span>
+            <p className="font-label-lg font-bold text-error mb-4 relative z-10 flex items-center gap-2">
+              <span className="material-symbols-outlined">gpp_bad</span>
+              {t("The Reality: Traffic Delays Kill")}
+            </p>
+            <div className="flex-1 flex flex-col justify-center relative z-10">
+              <div className="flex items-center gap-4 mb-3">
+                <span className="text-6xl font-black text-error drop-shadow-sm">20%+</span>
+                <span className="text-sm font-bold text-error/90 leading-snug">
+                  {t("of emergency patients")} <br/>
+                  {t("lose their lives en-route")}
+                </span>
+              </div>
+              <p className="text-sm text-on-surface-variant font-medium leading-relaxed">
+                {t("In dense urban cities, ambulances are frequently delayed by severe traffic congestion. The 'Golden Hour' is lost on the road, leading to a tragic loss of life before reaching the hospital.")}
+              </p>
             </div>
           </div>
-          {/* Traffic Clearance Efficiency */}
-          <div className="flex flex-col">
-            <p className="font-label-md text-label-md text-on-surface-variant mb-xs">{t("Traffic Clearance Efficiency (%)")}</p>
-            <div className="flex-1 relative flex items-center justify-center p-2">
-              {/* SVG Multi-Series Trend Line */}
-              <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 200 100">
-                {/* Grid Lines */}
-                <line stroke="#e1e7ff" strokeWidth="0.5" x1="0" x2="200" y1="25" y2="25"></line>
-                <line stroke="#e1e7ff" strokeWidth="0.5" x1="0" x2="200" y1="50" y2="50"></line>
-                <line stroke="#e1e7ff" strokeWidth="0.5" x1="0" x2="200" y1="75" y2="75"></line>
-                {/* Series 1: AI Optimized */}
-                <path d="M0,80 Q50,70 80,40 T150,20 T200,10" fill="none" stroke="#006c49" strokeWidth="2"></path>
-                {/* Series 2: Baseline */}
-                <path d="M0,85 Q50,88 100,75 T200,65" fill="none" stroke="#747783" strokeDasharray="2,2" strokeWidth="1.5"></path>
-              </svg>
-              <div className="absolute top-0 right-0 flex flex-col gap-1 text-[9px] font-bold">
-                <div className="flex items-center gap-1"><span className="w-2 h-0.5 bg-secondary"></span> {t("AI OPTIMIZED")}</div>
-                <div className="flex items-center gap-1"><span className="w-2 h-0.5 bg-outline border-dashed"></span> {t("HISTORIC")}</div>
-              </div>
+
+          {/* The Solution */}
+          <div className="flex flex-col p-6 bg-primary-container/10 rounded-xl border border-primary/20 relative overflow-hidden shadow-sm">
+            <div className="absolute -right-8 -top-8 text-primary/5 rotate-12 pointer-events-none">
+              <span className="material-symbols-outlined text-[160px]">health_and_safety</span>
             </div>
-            <div className="mt-xs p-xs bg-surface-container-low rounded-lg flex justify-around text-[11px]">
-              <div className="text-center">
-                <p className="text-on-surface-variant text-[9px] uppercase">{t("Efficiency Gain")}</p>
-                <p className="font-bold text-secondary">+28.4%</p>
+            <p className="font-label-lg font-bold text-primary mb-4 relative z-10 flex items-center gap-2">
+              <span className="material-symbols-outlined">verified</span>
+              {t("The Solution: ResQ-Plus Impact")}
+            </p>
+            <div className="flex-1 flex flex-col justify-center relative z-10">
+              <div className="flex items-center gap-4 mb-3">
+                <span className="text-6xl font-black text-primary drop-shadow-sm">40%</span>
+                <span className="text-sm font-bold text-primary/90 leading-snug">
+                  {t("Reduction in Ambulance")} <br/>
+                  {t("Travel Time")}
+                </span>
               </div>
-              <div className="border-l border-outline-variant/30 h-full"></div>
-              <div className="text-center">
-                <p className="text-on-surface-variant text-[9px] uppercase">{t("Peak Flow")}</p>
-                <p className="font-bold text-primary">88.2 veh/s</p>
+              <p className="text-sm text-on-surface-variant font-medium leading-relaxed mb-4">
+                {t("By implementing automated 1-click SOS dispatch and AI-driven smart traffic clearance, ResQ-Plus bypasses bottlenecks—ensuring patients reach the hospital on time.")}
+              </p>
+              
+              <div className="p-3 bg-surface-container-low rounded-xl flex justify-around text-xs border border-primary/10 shadow-inner">
+                <div className="text-center">
+                  <p className="text-on-surface-variant text-[10px] uppercase font-bold tracking-wider mb-1">{t("Avg City Delay")}</p>
+                  <p className="font-black text-error text-lg line-through decoration-2 opacity-80">22 Mins</p>
+                </div>
+                <div className="w-px bg-outline-variant/40 h-auto"></div>
+                <div className="text-center">
+                  <p className="text-on-surface-variant text-[10px] uppercase font-bold tracking-wider mb-1">{t("With ResQ-Plus")}</p>
+                  <p className="font-black text-secondary text-lg">~12 Mins</p>
+                </div>
               </div>
             </div>
           </div>
