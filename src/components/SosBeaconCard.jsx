@@ -237,53 +237,72 @@ export default function SosBeaconCard() {
         {t("Press the SOS button 3 times to alert your contacts by WhatsApp, SMS, and email with your live location plus the Agora video call link.")}
       </p>
 
-      {/* ─── Concentric Glowing Rings + Red Center 3D Button ─── */}
-      <div className="relative flex items-center justify-center my-2 py-4">
-        {/* Outer Wave Ring 3 */}
-        <div className={`w-56 h-56 rounded-full border border-rose-500/20 bg-rose-500/5 flex items-center justify-center transition-all duration-500 ${
-          status === 'countdown' || status === 'triggered' ? 'animate-ping' : ''
-        }`}>
-          {/* Outer Wave Ring 2 */}
-          <div className="w-44 h-44 rounded-full border border-rose-500/30 bg-rose-500/10 flex items-center justify-center shadow-[0_0_30px_rgba(244,63,94,0.15)]">
-            {/* Outer Wave Ring 1 */}
-            <div className="w-36 h-36 rounded-full border border-rose-500/40 bg-rose-500/20 flex items-center justify-center shadow-[0_0_40px_rgba(244,63,94,0.25)]">
-              {/* 3D Red SOS Center Button */}
-              <button
-                onClick={handleButtonPress}
-                className={`w-28 h-28 rounded-full text-white font-black shadow-[0_12px_30px_rgba(225,29,72,0.6)] border-2 border-red-400 flex flex-col items-center justify-center cursor-pointer transform active:scale-95 transition-all duration-300 ${
-                  status === 'countdown'
-                    ? 'bg-gradient-to-b from-amber-500 to-rose-600 border-amber-300 scale-105 shadow-amber-500/80 animate-pulse'
-                    : status === 'triggered'
-                      ? 'bg-gradient-to-b from-rose-600 to-red-800 border-white scale-105 shadow-rose-600/90 animate-pulse'
-                      : 'bg-gradient-to-b from-red-500 via-red-600 to-red-700 hover:from-red-600 hover:to-red-800'
-                }`}
-              >
-                {status === 'idle' && (
-                  <>
-                    <span className="text-2xl font-black tracking-widest leading-none drop-shadow-md">SOS</span>
-                    <span className="text-[10px] font-black tracking-wider uppercase opacity-90 mt-1">
-                      {pressCount > 0 ? `PRESS (${pressCount}/3)` : 'PRESS 3X'}
-                    </span>
-                  </>
-                )}
+      {/* ─── Dynamic Continuous Glowing Wave Animation ─── */}
+      <style>{`
+        @keyframes sonarWave {
+          0% {
+            transform: scale(0.9);
+            opacity: 0.85;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.7);
+          }
+          50% {
+            opacity: 0.45;
+            box-shadow: 0 0 40px rgba(239, 68, 68, 0.4);
+          }
+          100% {
+            transform: scale(1.45);
+            opacity: 0;
+            box-shadow: 0 0 60px rgba(239, 68, 68, 0);
+          }
+        }
+        .animate-sonar-1 { animation: sonarWave 2.4s infinite ease-out 0s; }
+        .animate-sonar-2 { animation: sonarWave 2.4s infinite ease-out 0.8s; }
+        .animate-sonar-3 { animation: sonarWave 2.4s infinite ease-out 1.6s; }
+      `}</style>
 
-                {status === 'countdown' && (
-                  <>
-                    <span className="text-xl font-black text-amber-200 leading-none">{countdown}s</span>
-                    <span className="text-[9px] font-black tracking-wider uppercase text-white mt-1">{t("CANCEL")}</span>
-                  </>
-                )}
+      <div className="relative flex items-center justify-center my-4 py-8">
+        {/* Continuous Staggered Outward Expanding Wave Rings */}
+        <div className="absolute w-56 h-56 rounded-full border-2 border-red-500/40 bg-red-500/10 pointer-events-none animate-sonar-1" />
+        <div className="absolute w-56 h-56 rounded-full border-2 border-rose-500/40 bg-rose-500/10 pointer-events-none animate-sonar-2" />
+        <div className="absolute w-56 h-56 rounded-full border-2 border-red-400/40 bg-red-400/10 pointer-events-none animate-sonar-3" />
 
-                {status === 'triggered' && (
-                  <>
-                    <span className="material-symbols-outlined text-2xl animate-spin">volume_up</span>
-                    <span className="text-[9px] font-black tracking-wider uppercase text-amber-200 mt-0.5">{t("ACTIVE")}</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
+        {/* Ambient Red Radial Backdrop Glow */}
+        <div className="absolute w-44 h-44 rounded-full bg-red-600/20 blur-xl animate-pulse pointer-events-none" />
+
+        {/* 3D Red Circular Center SOS Button */}
+        <button
+          onClick={handleButtonPress}
+          className={`relative z-10 w-32 h-32 rounded-full text-white font-black shadow-[0_12px_35px_rgba(225,29,72,0.7)] border-2 border-red-300 flex flex-col items-center justify-center cursor-pointer transform active:scale-95 transition-all duration-300 ${
+            status === 'countdown'
+              ? 'bg-gradient-to-b from-amber-500 to-rose-600 border-amber-200 scale-105 shadow-amber-500/90 animate-pulse'
+              : status === 'triggered'
+                ? 'bg-gradient-to-b from-rose-600 to-red-800 border-white scale-105 shadow-rose-600/90 animate-pulse'
+                : 'bg-gradient-to-b from-red-500 via-red-600 to-red-700 hover:from-red-600 hover:to-red-800 hover:scale-105'
+          }`}
+        >
+          {status === 'idle' && (
+            <>
+              <span className="text-3xl font-black tracking-widest leading-none drop-shadow-md">SOS</span>
+              <span className="text-[10px] font-black tracking-wider uppercase opacity-95 mt-1.5 bg-red-950/40 px-2 py-0.5 rounded-full border border-red-400/40">
+                {pressCount > 0 ? `PRESS (${pressCount}/3)` : 'PRESS 3X'}
+              </span>
+            </>
+          )}
+
+          {status === 'countdown' && (
+            <>
+              <span className="text-2xl font-black text-amber-200 leading-none">{countdown}s</span>
+              <span className="text-[9px] font-black tracking-wider uppercase text-white mt-1 bg-slate-950/40 px-2 py-0.5 rounded-full border border-white/30">{t("CANCEL")}</span>
+            </>
+          )}
+
+          {status === 'triggered' && (
+            <>
+              <span className="material-symbols-outlined text-3xl animate-spin">volume_up</span>
+              <span className="text-[9px] font-black tracking-wider uppercase text-amber-200 mt-0.5">{t("ACTIVE")}</span>
+            </>
+          )}
+        </button>
       </div>
 
       {/* Bottom Status / Cancel Action */}
