@@ -36,24 +36,26 @@ export default function SosBeaconCard() {
   const sirenOscRef = useRef(null);
   const sirenGainRef = useRef(null);
 
-  // ─── Load Primary Emergency Contact from Settings ───
+  // ─── Load ALL Emergency Contacts from Settings ───
   const loadContactInfo = useCallback(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        // Find the Primary emergency contact
-        const primary = parsed.contacts?.find(c => c.priority === 'Primary') || parsed.contacts?.[0];
         const profile = parsed.profile || {};
+        const allContacts = (parsed.contacts || []).map(c => ({
+          name: c.name || 'Emergency Contact',
+          phone: (c.phone || '').replace(/\s+/g, ''),
+          email: c.email || '',
+          priority: c.priority || 'Secondary',
+        }));
         return {
-          // User's own info (the person in emergency)
           userName: profile.fullName || 'User',
           userPhone: profile.mobileNumber || '+919820011223',
           userEmail: profile.email || '',
-          // Emergency contact (who gets alerted)
-          contactName: primary?.name || 'Emergency Contact',
-          contactPhone: primary?.phone?.replace(/\s+/g, '') || '+919820088990',
-          contactEmail: primary?.email || profile.email || '',
+          contacts: allContacts.length > 0 ? allContacts : [
+            { name: 'Emergency Contact', phone: '+919820088990', email: '', priority: 'Primary' }
+          ],
         };
       }
     } catch {}
@@ -61,9 +63,7 @@ export default function SosBeaconCard() {
       userName: 'User',
       userPhone: '+919820011223',
       userEmail: '',
-      contactName: 'Emergency Contact',
-      contactPhone: '+919820088990',
-      contactEmail: '',
+      contacts: [{ name: 'Emergency Contact', phone: '+919820088990', email: '', priority: 'Primary' }],
     };
   }, []);
 
@@ -142,60 +142,75 @@ export default function SosBeaconCard() {
 
   // ─── 100% AUTOMATED BACKGROUND DISPATCH ───
   // Called automatically after 10-second beep. Zero manual taps.
+  // Sends to ALL emergency contacts simultaneously.
   const dispatchAutomated = async (loc) => {
-    const contact = loadContactInfo();
+    const info = loadContactInfo();
     const lat = loc?.lat || coords?.lat || 13.07158;
     const lon = loc?.lon || coords?.lon || 77.59685;
     const timestamp = new Date().toLocaleString();
     const mapsUrl = `https://maps.google.com/?q=${lat},${lon}`;
+    const allResults = { whatsapp: [], email: [], totalContacts: info.contacts.length };
 
-    // 1. Call serverless /api/sos → Automated WhatsApp (Meta Cloud API)
-    try {
-      const apiRes = await fetch('/api/sos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userName: contact.userName,
-          userPhone: contact.userPhone,
-          contactName: contact.contactName,
-          contactEmail: contact.contactEmail,
-          contactPhone: contact.contactPhone,
-          lat,
-          lon,
-          timestamp,
-        }),
-      });
-      const data = await apiRes.json();
-      setDispatchResult(data);
-      console.log('[SOS] WhatsApp dispatch result:', data);
-    } catch (err) {
-      console.error('[SOS] WhatsApp API dispatch error:', err);
+    // Loop through ALL emergency contacts and send WhatsApp + Email to each
+    for (const contact of info.contacts) {
+      console.log(`[SOS] Dispatching to: ${contact.name} (${contact.phone}, ${contact.email})`);
+
+      // 1. WhatsApp via serverless /api/sos
+      try {
+        const apiRes = await fetch('/api/sos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userName: info.userName,
+            userPhone: info.userPhone,
+            contactName: contact.name,
+            contactEmail: contact.email,
+            contactPhone: contact.phone,
+            lat,
+            lon,
+            timestamp,
+          }),
+        });
+        const data = await apiRes.json();
+        allResults.whatsapp.push({ name: contact.name, phone: contact.phone, success: data?.results?.whatsapp, response: data?.results?.whatsappResponse });
+        console.log(`[SOS] WhatsApp to ${contact.name}:`, data?.results?.whatsapp ? 'SUCCESS' : 'FAILED');
+      } catch (err) {
+        allResults.whatsapp.push({ name: contact.name, phone: contact.phone, success: false, error: err.message });
+        console.error(`[SOS] WhatsApp API error for ${contact.name}:`, err);
+      }
+
+      // 2. Email via EmailJS (browser-side)
+      if (contact.email) {
+        try {
+          const emailRes = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              service_id: 'service_36ux8ls',
+              template_id: 'template_d70hmsb',
+              user_id: '6j183Hs8FlZR34dvK',
+              template_params: {
+                to_email: contact.email,
+                to_name: contact.name,
+                from_name: 'ResQ-Plus Emergency Dispatch',
+                name: info.userName || 'Unknown Patient',
+                email: contact.email,
+                title: `🚨 EMERGENCY SOS - ${info.userName || 'Patient'} Needs Help!`,
+                message: `🚨 AUTOMATED EMERGENCY SOS DISTRESS ALERT!\n\nPatient Name: ${info.userName || 'Unknown'}\nPatient Phone: ${info.userPhone || 'N/A'}\nTime of SOS: ${timestamp}\n\n📍 LIVE GPS LOCATION:\n${mapsUrl}\n\nPlease send emergency medical aid immediately.\n\n— ResQ-Plus Automated Emergency Dispatch System`
+              }
+            }),
+          });
+          allResults.email.push({ name: contact.name, email: contact.email, success: emailRes.ok });
+          console.log(`[SOS] Email to ${contact.name}:`, emailRes.ok ? 'SUCCESS' : 'FAILED');
+        } catch (emailErr) {
+          allResults.email.push({ name: contact.name, email: contact.email, success: false });
+          console.error(`[SOS] Email error for ${contact.name}:`, emailErr);
+        }
+      }
     }
 
-    // 2. Send Email directly from browser via EmailJS (browser origin = works reliably)
-    try {
-      const emailRes = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          service_id: 'service_36ux8ls',
-          template_id: 'template_d70hmsb',
-          user_id: '6j183Hs8FlZR34dvK',
-          template_params: {
-            to_email: contact.contactEmail || 'emergency@resqplus.app',
-            to_name: contact.contactName || 'Emergency Contact',
-            from_name: 'ResQ-Plus Emergency Dispatch',
-            name: contact.userName || 'Unknown Patient',
-            email: contact.contactEmail || '',
-            title: `🚨 EMERGENCY SOS - ${contact.userName || 'Patient'} Needs Help!`,
-            message: `🚨 AUTOMATED EMERGENCY SOS DISTRESS ALERT!\n\nPatient Name: ${contact.userName || 'Unknown'}\nPatient Phone: ${contact.userPhone || 'N/A'}\nTime of SOS: ${timestamp}\n\n📍 LIVE GPS LOCATION:\n${mapsUrl}\n\nPlease send emergency medical aid immediately.\n\n— ResQ-Plus Automated Emergency Dispatch System`
-          }
-        }),
-      });
-      console.log('[SOS] EmailJS browser dispatch status:', emailRes.status, emailRes.ok ? 'SUCCESS' : 'FAILED');
-    } catch (emailErr) {
-      console.error('[SOS] EmailJS browser dispatch error:', emailErr);
-    }
+    setDispatchResult({ results: allResults, mapsUrl, timestamp });
+    console.log('[SOS] All dispatches complete:', allResults);
   };
 
   // ─── Handle SOS Button Press (3x press detection) ───
@@ -458,15 +473,14 @@ export default function SosBeaconCard() {
           )}
           {/* Debug: Show API response for troubleshooting */}
           {dispatchResult && (
-            <div className="mt-2 p-2 rounded-lg bg-slate-900 text-green-400 font-mono text-[10px] text-left overflow-auto max-h-40 break-all">
-              <p>📡 WhatsApp: {dispatchResult?.results?.whatsapp ? '✅ SENT' : '❌ FAILED'}</p>
-              <p>📧 Email: {dispatchResult?.results?.email ? '✅ SENT' : '⏳ (sent from browser)'}</p>
-              {dispatchResult?.results?.whatsappResponse && (
-                <p className="mt-1 text-yellow-300">WA Response: {JSON.stringify(dispatchResult.results.whatsappResponse)}</p>
-              )}
-              {dispatchResult?.results?.whatsappError && (
-                <p className="mt-1 text-red-400">WA Error: {dispatchResult.results.whatsappError}</p>
-              )}
+            <div className="mt-2 p-2 rounded-lg bg-slate-900 text-green-400 font-mono text-[10px] text-left overflow-auto max-h-48 break-all">
+              <p className="text-cyan-300 font-bold">📊 Sent to {dispatchResult?.results?.totalContacts || 0} contact(s):</p>
+              {dispatchResult?.results?.whatsapp?.map((wa, i) => (
+                <p key={`wa-${i}`}>📡 WA → {wa.name} ({wa.phone}): {wa.success ? '✅' : '❌'} {wa.response ? JSON.stringify(wa.response) : wa.error || ''}</p>
+              ))}
+              {dispatchResult?.results?.email?.map((em, i) => (
+                <p key={`em-${i}`}>📧 Email → {em.name} ({em.email}): {em.success ? '✅' : '❌'}</p>
+              ))}
             </div>
           )}
           <button
