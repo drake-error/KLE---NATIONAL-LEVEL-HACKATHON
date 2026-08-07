@@ -162,7 +162,7 @@ export default function HealthVaultTable() {
 
           {/* The Solution */}
           <div className="flex flex-col p-6 bg-primary-container/10 rounded-xl border border-primary/20 relative overflow-hidden shadow-sm">
-            <div className="absolute -right-8 -top-8 text-primary/5 rotate-12 pointer-events-none">
+            <div className="absolute -right-8 -top-8 text-primary opacity-5 rotate-12 pointer-events-none">
               <span className="material-symbols-outlined text-[160px]">health_and_safety</span>
             </div>
             <p className="font-label-lg font-bold text-primary mb-4 relative z-10 flex items-center gap-2">
