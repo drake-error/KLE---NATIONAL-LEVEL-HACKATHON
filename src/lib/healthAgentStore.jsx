@@ -42,6 +42,7 @@ const initialState = {
   chatMessages: [],
   reminders: [],
   parentalLog: [],
+  diagnosticScans: [],
 };
 
 // ─── Reducer ─────────────────────────────────────────────────────────────────
@@ -113,6 +114,15 @@ function reducer(state, action) {
         ].slice(-500),
       };
 
+    case 'ADD_DIAGNOSTIC_SCAN':
+      return {
+        ...state,
+        diagnosticScans: [
+          { id: Date.now(), timestamp: new Date().toISOString(), ...action.payload },
+          ...state.diagnosticScans,
+        ].slice(0, 20),
+      };
+
     default:
       return state;
   }
@@ -150,6 +160,7 @@ export function HealthAgentProvider({ children }) {
   const toggleReminder = useCallback((id) => dispatch({ type: 'TOGGLE_REMINDER', payload: id }), []);
   const deleteReminder = useCallback((id) => dispatch({ type: 'DELETE_REMINDER', payload: id }), []);
   const logDose = useCallback((data) => dispatch({ type: 'LOG_DOSE', payload: data }), []);
+  const addDiagnosticScan = useCallback((data) => dispatch({ type: 'ADD_DIAGNOSTIC_SCAN', payload: data }), []);
 
   const value = {
     ...state,
@@ -161,6 +172,7 @@ export function HealthAgentProvider({ children }) {
     toggleReminder,
     deleteReminder,
     logDose,
+    addDiagnosticScan,
   };
 
   return (

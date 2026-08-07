@@ -11,9 +11,11 @@ import PrescriptionScanner from './PrescriptionScanner';
 import ExpiryScanner from './ExpiryScanner';
 import MedicalChatbot from './MedicalChatbot';
 import HospitalLocator from './HospitalLocator';
+import DiagnosticScanner from './DiagnosticScanner';
 
 const TABS = [
   { id: 'chatbot', icon: 'smart_toy', label: 'AI Medical Chat' },
+  { id: 'diagnostic', icon: 'radiology', label: 'MediScan Pro' },
   { id: 'prescription', icon: 'document_scanner', label: 'Prescription Reader' },
   { id: 'expiry', icon: 'inventory_2', label: 'Expiry Scanner' },
   { id: 'hospitals', icon: 'local_hospital', label: 'Nearby Hospitals' },
@@ -59,6 +61,7 @@ function HealthAgentContent() {
       {/* Tab Content */}
       <div className="flex-1 min-h-0">
         {activeTab === 'chatbot' && <MedicalChatbot />}
+        {activeTab === 'diagnostic' && <DiagnosticScanner />}
         {activeTab === 'prescription' && <PrescriptionScanner />}
         {activeTab === 'expiry' && <ExpiryScanner />}
         {activeTab === 'hospitals' && <HospitalLocator />}
