@@ -74,6 +74,15 @@ export default function Sidebar({ currentTab, setCurrentTab }) {
           <span className="font-body-md text-body-md">{t("AI Health Agent")}</span>
         </button>
         <button 
+          onClick={() => setCurrentTab('diagnostic-imaging')}
+          className={`w-full flex items-center gap-sm px-sm py-xs font-bold rounded-xl transition-all duration-200 ${
+            currentTab === 'diagnostic-imaging' ? 'bg-surface-container-high text-on-surface scale-[0.99]' : 'text-on-surface-variant hover:bg-surface-container-low'
+          }`}
+        >
+          <span className="material-symbols-outlined" data-icon="radiology">radiology</span>
+          <span className="font-body-md text-body-md">{t("Diagnostic Imaging")}</span>
+        </button>
+        <button 
           onClick={() => setCurrentTab('settings')}
           className={`w-full flex items-center gap-sm px-sm py-xs font-bold rounded-xl transition-all duration-200 ${
             currentTab === 'settings' ? 'bg-surface-container-high text-on-surface scale-[0.99]' : 'text-on-surface-variant hover:bg-surface-container-low'
