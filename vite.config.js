@@ -53,4 +53,7 @@ function googleTTSProxy() {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), googleTTSProxy()],
+  build: {
+    chunkSizeWarningLimit: 1500,
+  },
 })

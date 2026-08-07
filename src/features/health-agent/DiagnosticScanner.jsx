@@ -31,50 +31,12 @@ const SEVERITY_CONFIG = {
 };
 
 function buildDiagnosticPrompt(imagingType, bodyRegion, patientAge, patientGender, clinicalHistory) {
-  return `You are a senior radiologist with 25+ years of experience analyzing medical imaging. You are acting as an AI Clinical Decision Support System (CDSS) to assist doctors — NOT to replace them.
+  return `Senior radiologist CDSS analysis. Scan: ${imagingType}, Region: ${bodyRegion}${patientAge ? `, Age: ${patientAge}` : ''}${patientGender ? `, Gender: ${patientGender}` : ''}${clinicalHistory ? `, History: ${clinicalHistory}` : ''}.
 
-IMAGING CONTEXT:
-- Imaging Type: ${imagingType}
-- Body Region: ${bodyRegion}
-- Patient Age: ${patientAge || 'Not provided'}
-- Patient Gender: ${patientGender || 'Not provided'}
-- Clinical History: ${clinicalHistory || 'Not provided'}
+Return JSON:
+{"overallAssessment":"Normal|Abnormal|Indeterminate","confidenceScore":0-100,"summary":"2-3 sentence clinical summary","findings":[{"id":1,"title":"finding name","description":"radiological description","severity":"Critical|High|Moderate|Low","confidence":0-100,"locationDescription":"anatomical location","relativeX":0.0-1.0,"relativeY":0.0-1.0,"differentialDiagnosis":["condition1","condition2"],"recommendedAction":"next step"}],"normalFindings":["healthy observations"],"recommendations":"next steps","limitations":"what AI couldn't assess","indianContext":"India-specific notes: TB, tropical infections, govt hospital tests like CBNAAT"}
 
-TASK: Analyze this medical image with the highest possible accuracy. Identify ALL abnormalities, measure confidence levels, and provide precise localization.
-
-Return a valid JSON object with this EXACT structure:
-{
-  "overallAssessment": "Normal" | "Abnormal" | "Indeterminate",
-  "confidenceScore": <number 0-100>,
-  "summary": "<2-3 sentence clinical summary of key findings>",
-  "findings": [
-    {
-      "id": <number>,
-      "title": "<short finding title, e.g. 'Left Lower Lobe Consolidation'>",
-      "description": "<detailed radiological description of the finding>",
-      "severity": "Critical" | "High" | "Moderate" | "Low",
-      "confidence": <number 0-100>,
-      "locationDescription": "<anatomical location on the image>",
-      "relativeX": <number 0.0-1.0, horizontal position on image>,
-      "relativeY": <number 0.0-1.0, vertical position on image>,
-      "differentialDiagnosis": ["<possible condition 1>", "<possible condition 2>"],
-      "recommendedAction": "<what the doctor should consider doing>"
-    }
-  ],
-  "normalFindings": ["<list of normal/healthy observations, e.g. 'Heart size is within normal limits'>"],
-  "recommendations": "<next steps: additional imaging, lab tests, specialist referral>",
-  "limitations": "<what this AI analysis could NOT assess — e.g. 'Cannot evaluate soft tissue contrast on plain X-ray'>",
-  "indianContext": "<India-specific clinical notes: consider TB prevalence in endemic zones, tropical infections, malnutrition patterns, recommend tests available in govt. hospitals like RNTCP CBNAAT for TB, etc.>"
-}
-
-RULES:
-- If the image appears NORMAL, set overallAssessment to "Normal", confidenceScore high (85-99), and findings to an empty array. Still list normalFindings.
-- If the image is NOT a valid medical scan (e.g., a photo of food, a selfie, etc.), set overallAssessment to "Indeterminate", confidenceScore to 0, and explain in summary.
-- For each finding, relativeX and relativeY MUST be between 0.0 and 1.0, representing the normalized position on the image (0,0 = top-left, 1,1 = bottom-right). Be as accurate as possible.
-- Provide AT LEAST 2 differential diagnoses per finding.
-- Consider India-specific conditions: tuberculosis, tropical infections, silicosis, asbestosis, rheumatic heart disease, malnutrition effects.
-- Be thorough — do not miss subtle findings. Doctors depend on this as a safety net.
-- Return ONLY the JSON object, no additional text.`;
+Rules: Normal scan=empty findings array,high confidence. Invalid image=Indeterminate,confidence 0. relativeX/relativeY are normalized 0-1 image coordinates (0,0=top-left). Min 2 differential diagnoses per finding. Consider TB, tropical infections, silicosis, rheumatic heart disease, malnutrition. Be thorough—doctors depend on this.`;
 }
 
 // ─── Sub-Components ──────────────────────────────────────────────────────────
