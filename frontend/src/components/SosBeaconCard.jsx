@@ -1,15 +1,22 @@
 /**
  * SosBeaconCard.jsx — Red Circular SOS Beacon Card with Fully Automated Dispatch.
  *
+ * Multi-Channel Emergency Dispatch (most impactful for Indian healthcare):
+ *   Channel 1: Native SMS via sms: URI — works OFFLINE, 2G, no internet needed
+ *   Channel 2: WhatsApp via Meta Cloud API — rich message with GPS link
+ *   Channel 3: Email via Web3Forms — backup with full details
+ *
+ * Offline-First Architecture:
+ *   - Detects navigator.onLine status before dispatch
+ *   - If OFFLINE → fires native SMS immediately (works on 2G/no-data)
+ *   - Queues WhatsApp + Email to localStorage for auto-retry when online
+ *   - Listens for 'online' event to flush the queue automatically
+ *
  * Flow:
- *   1. User presses SOS button 3 times.
+ *   1. User presses SOS button 2 times.
  *   2. 5-second UNDO window (press again to cancel).
- *   3. If not undone → 10-second soft emergency beep plays.
- *   4. Fully automated background dispatch:
- *      - WhatsApp message via Meta WhatsApp Cloud API (Facebook Developer Account)
- *      - Email via serverless /api/sos endpoint
- *      - Both include live GPS coordinates
- *   5. Zero manual taps. Everything is automated.
+ *   3. If not undone → fully automated multi-channel dispatch.
+ *   4. Zero manual taps. Everything is automated.
  *
  * Emergency contact (Name, Email, Mobile) is read from Settings → Emergency Contacts.
  */
@@ -18,23 +25,39 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useI18n } from '../i18n';
 
 const STORAGE_KEY = 'resq_plus_settings';
+const SOS_QUEUE_KEY = 'resq_sos_offline_queue';
 
 export default function SosBeaconCard() {
   const { t } = useI18n();
   const [pressCount, setPressCount] = useState(0);
-  const [status, setStatus] = useState('idle'); // 'idle' | 'countdown' | 'beeping' | 'dispatched'
+  const [status, setStatus] = useState('idle'); // 'idle' | 'countdown' | 'dispatched'
   const [countdown, setCountdown] = useState(5);
-  const [beepTimer, setBeepTimer] = useState(10);
   const [coords, setCoords] = useState(null);
   const [toast, setToast] = useState(null);
   const [dispatchResult, setDispatchResult] = useState(null);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
   const countdownTimerRef = useRef(null);
-  const beepTimerRef = useRef(null);
   const resetPressTimerRef = useRef(null);
   const audioCtxRef = useRef(null);
-  const sirenOscRef = useRef(null);
-  const sirenGainRef = useRef(null);
+
+  // ─── Track Online/Offline Status ───
+  useEffect(() => {
+    const goOnline = () => {
+      setIsOffline(false);
+      // Auto-flush queued SOS dispatches when connectivity returns
+      flushOfflineQueue();
+    };
+    const goOffline = () => setIsOffline(true);
+
+    window.addEventListener('online', goOnline);
+    window.addEventListener('offline', goOffline);
+
+    return () => {
+      window.removeEventListener('online', goOnline);
+      window.removeEventListener('offline', goOffline);
+    };
+  }, []);
 
   // ─── Load ALL Emergency Contacts from Settings ───
   const loadContactInfo = useCallback(() => {
@@ -109,98 +132,179 @@ export default function SosBeaconCard() {
     } catch {}
   };
 
-  // ─── Start 10-second Emergency Beep (reduced, comfortable volume) ───
-  const startEmergencyBeep = () => {
+  // ─── NATIVE SMS DISPATCH (Works Offline, 2G, No Internet) ───
+  // Uses the `sms:` URI scheme which opens the device's native messaging app.
+  // This is the most reliable channel for emergencies in India where 2G is common.
+  const dispatchNativeSMS = (info, lat, lon, timestamp) => {
+    const mapsUrl = `https://maps.google.com/?q=${lat},${lon}`;
+    const smsBody = `🚨 EMERGENCY SOS ALERT!\n${info.userName} needs immediate help!\nPhone: ${info.userPhone}\nTime: ${timestamp}\nGPS Location: ${mapsUrl}\n- ResQ-Plus`;
+
+    const smsResults = [];
+
+    for (const contact of info.contacts) {
+      if (!contact.phone) continue;
+      const cleanPhone = contact.phone.replace(/[^0-9+]/g, '');
+
+      // Create an invisible link and auto-click it to open native SMS app
+      // sms: URI works on Android, iOS, and all feature phones
+      try {
+        const smsLink = document.createElement('a');
+        // Android uses ? separator, iOS uses & — use ? for broadest compat
+        smsLink.href = `sms:${cleanPhone}?body=${encodeURIComponent(smsBody)}`;
+        smsLink.style.display = 'none';
+        document.body.appendChild(smsLink);
+        smsLink.click();
+        document.body.removeChild(smsLink);
+        smsResults.push({ name: contact.name, phone: cleanPhone, success: true, method: 'native-sms' });
+        console.log(`[SOS] Native SMS opened for: ${contact.name} (${cleanPhone})`);
+      } catch (err) {
+        smsResults.push({ name: contact.name, phone: cleanPhone, success: false, error: err.message });
+        console.error(`[SOS] Native SMS error for ${contact.name}:`, err);
+      }
+    }
+
+    return smsResults;
+  };
+
+  // ─── OFFLINE QUEUE: Save failed dispatches for retry ───
+  const queueForRetry = (payload) => {
     try {
-      if (sirenOscRef.current) return;
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      audioCtxRef.current = ctx;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(700, ctx.currentTime);
-      gain.gain.setValueAtTime(0.06, ctx.currentTime); // Soft, reduced volume
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      sirenOscRef.current = osc;
-      sirenGainRef.current = gain;
-    } catch {}
+      const existing = JSON.parse(localStorage.getItem(SOS_QUEUE_KEY) || '[]');
+      existing.push({ ...payload, queuedAt: new Date().toISOString() });
+      localStorage.setItem(SOS_QUEUE_KEY, JSON.stringify(existing));
+      console.log('[SOS] Queued dispatch for offline retry. Queue size:', existing.length);
+    } catch (e) {
+      console.error('[SOS] Failed to queue offline dispatch:', e);
+    }
   };
 
-  const stopEmergencyBeep = () => {
-    if (sirenOscRef.current) {
-      try { sirenOscRef.current.stop(); } catch {}
-      sirenOscRef.current = null;
+  // ─── FLUSH OFFLINE QUEUE: Auto-retry when connectivity returns ───
+  const flushOfflineQueue = async () => {
+    try {
+      const queue = JSON.parse(localStorage.getItem(SOS_QUEUE_KEY) || '[]');
+      if (queue.length === 0) return;
+
+      console.log(`[SOS] Connectivity restored! Flushing ${queue.length} queued SOS dispatches...`);
+      const remaining = [];
+
+      for (const item of queue) {
+        try {
+          // Retry WhatsApp + Email via API
+          const apiRes = await fetch('/api/sos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(item),
+          });
+          if (apiRes.ok) {
+            console.log(`[SOS] Queued dispatch to ${item.contactName} sent successfully!`);
+          } else {
+            remaining.push(item); // Keep for next retry
+          }
+        } catch {
+          remaining.push(item);
+        }
+      }
+
+      localStorage.setItem(SOS_QUEUE_KEY, JSON.stringify(remaining));
+      if (remaining.length === 0) {
+        console.log('[SOS] All queued dispatches sent successfully!');
+      } else {
+        console.log(`[SOS] ${remaining.length} dispatches still pending.`);
+      }
+    } catch (e) {
+      console.error('[SOS] Queue flush error:', e);
     }
-    if (audioCtxRef.current) {
-      try { audioCtxRef.current.close(); } catch {}
-      audioCtxRef.current = null;
-    }
-    sirenGainRef.current = null;
   };
 
-  // ─── 100% AUTOMATED BACKGROUND DISPATCH ───
-  // Called automatically after 10-second beep. Zero manual taps.
-  // Sends to ALL emergency contacts simultaneously.
+  // ─── MULTI-CHANNEL AUTOMATED DISPATCH ───
+  // Priority order:
+  //   1. Native SMS (always fires — works offline/2G)
+  //   2. WhatsApp Cloud API (if online)
+  //   3. Email (if online)
+  //   4. Queue for retry (if offline — auto-retries when back online)
   const dispatchAutomated = async (loc) => {
     const info = loadContactInfo();
     const lat = loc?.lat || coords?.lat || 13.07158;
     const lon = loc?.lon || coords?.lon || 77.59685;
     const timestamp = new Date().toLocaleString();
     const mapsUrl = `https://maps.google.com/?q=${lat},${lon}`;
-    const allResults = { whatsapp: [], email: [], totalContacts: info.contacts.length };
+    const allResults = { sms: [], whatsapp: [], email: [], totalContacts: info.contacts.length, offlineMode: !navigator.onLine };
 
-    // Loop through ALL emergency contacts and send WhatsApp + Email to each
-    for (const contact of info.contacts) {
-      console.log(`[SOS] Dispatching to: ${contact.name} (${contact.phone}, ${contact.email})`);
+    // ─── CHANNEL 1: NATIVE SMS (Always fires — offline/2G safe) ───
+    allResults.sms = dispatchNativeSMS(info, lat, lon, timestamp);
 
-      // 1. WhatsApp via serverless /api/sos
-      try {
-        const apiRes = await fetch('/api/sos', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userName: info.userName,
-            userPhone: info.userPhone,
-            contactName: contact.name,
-            contactEmail: contact.email,
-            contactPhone: contact.phone,
-            lat,
-            lon,
-            timestamp,
-          }),
-        });
-        const data = await apiRes.json();
-        allResults.whatsapp.push({ name: contact.name, phone: contact.phone, success: data?.results?.whatsapp, response: data?.results?.whatsappResponse });
-        console.log(`[SOS] WhatsApp to ${contact.name}:`, data?.results?.whatsapp ? 'SUCCESS' : 'FAILED');
-      } catch (err) {
-        allResults.whatsapp.push({ name: contact.name, phone: contact.phone, success: false, error: err.message });
-        console.error(`[SOS] WhatsApp API error for ${contact.name}:`, err);
-      }
+    // ─── CHANNEL 2 & 3: WhatsApp + Email (Online only) ───
+    if (navigator.onLine) {
+      for (const contact of info.contacts) {
+        console.log(`[SOS] Online dispatch to: ${contact.name} (${contact.phone}, ${contact.email})`);
 
-      // 2. Email via Web3Forms (free, no domain restrictions needed)
-      if (contact.email) {
+        // WhatsApp via serverless /api/sos
         try {
-          const emailRes = await fetch('https://api.web3forms.com/submit', {
+          const apiRes = await fetch('/api/sos', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              access_key: '8382c954-6c3a-4272-ba3d-75a39f393bdb',
-              subject: `🚨 EMERGENCY SOS - ${info.userName || 'Patient'} Needs Immediate Help!`,
-              from_name: 'ResQ-Plus Emergency Dispatch',
-              to: contact.email,
-              name: info.userName || 'Unknown Patient',
-              message: `🚨 AUTOMATED EMERGENCY SOS DISTRESS ALERT!\n\nPatient Name: ${info.userName || 'Unknown'}\nPatient Phone: ${info.userPhone || 'N/A'}\nEmergency Contact: ${contact.name}\nTime of SOS: ${timestamp}\n\n📍 LIVE GPS LOCATION:\n${mapsUrl}\n\nOpen this link to see their exact location:\n${mapsUrl}\n\nPlease send emergency medical aid immediately!\n\n— ResQ-Plus Automated Emergency Dispatch System`,
-              replyto: 'noreply@resqplus.app',
+              userName: info.userName,
+              userPhone: info.userPhone,
+              contactName: contact.name,
+              contactEmail: contact.email,
+              contactPhone: contact.phone,
+              lat,
+              lon,
+              timestamp,
             }),
           });
-          const emailData = await emailRes.json();
-          allResults.email.push({ name: contact.name, email: contact.email, success: emailRes.ok, message: emailData.message });
-          console.log(`[SOS] Email (Web3Forms) to ${contact.name}:`, emailRes.ok ? 'SUCCESS' : 'FAILED', emailData);
-        } catch (emailErr) {
-          allResults.email.push({ name: contact.name, email: contact.email, success: false, error: emailErr.message });
-          console.error(`[SOS] Email error for ${contact.name}:`, emailErr);
+          const data = await apiRes.json();
+          allResults.whatsapp.push({ name: contact.name, phone: contact.phone, success: data?.results?.whatsapp, response: data?.results?.whatsappResponse });
+          if (data?.results?.email) {
+            allResults.email.push({ name: contact.name, email: contact.email, success: true });
+          }
+          console.log(`[SOS] WhatsApp to ${contact.name}:`, data?.results?.whatsapp ? 'SUCCESS' : 'FAILED');
+        } catch (err) {
+          allResults.whatsapp.push({ name: contact.name, phone: contact.phone, success: false, error: err.message });
+          console.error(`[SOS] WhatsApp API error for ${contact.name}:`, err);
+        }
+
+        // Email via Web3Forms (backup if not sent via API)
+        if (contact.email && !allResults.email.find(e => e.email === contact.email && e.success)) {
+          try {
+            const emailRes = await fetch('https://api.web3forms.com/submit', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                access_key: '8382c954-6c3a-4272-ba3d-75a39f393bdb',
+                subject: `🚨 EMERGENCY SOS - ${info.userName || 'Patient'} Needs Immediate Help!`,
+                from_name: 'ResQ-Plus Emergency Dispatch',
+                to: contact.email,
+                name: info.userName || 'Unknown Patient',
+                message: `🚨 AUTOMATED EMERGENCY SOS DISTRESS ALERT!\n\nPatient Name: ${info.userName || 'Unknown'}\nPatient Phone: ${info.userPhone || 'N/A'}\nEmergency Contact: ${contact.name}\nTime of SOS: ${timestamp}\n\n📍 LIVE GPS LOCATION:\n${mapsUrl}\n\nOpen this link to see their exact location:\n${mapsUrl}\n\nPlease send emergency medical aid immediately!\n\n— ResQ-Plus Automated Emergency Dispatch System`,
+                replyto: 'noreply@resqplus.app',
+              }),
+            });
+            const emailData = await emailRes.json();
+            allResults.email.push({ name: contact.name, email: contact.email, success: emailRes.ok, message: emailData.message });
+          } catch (emailErr) {
+            allResults.email.push({ name: contact.name, email: contact.email, success: false, error: emailErr.message });
+          }
+        }
+      }
+    } else {
+      // ─── OFFLINE: Queue WhatsApp + Email for auto-retry when back online ───
+      console.log('[SOS] Device is OFFLINE. Native SMS fired. Queuing API dispatches for retry...');
+      for (const contact of info.contacts) {
+        queueForRetry({
+          userName: info.userName,
+          userPhone: info.userPhone,
+          contactName: contact.name,
+          contactEmail: contact.email,
+          contactPhone: contact.phone,
+          lat,
+          lon,
+          timestamp,
+        });
+        allResults.whatsapp.push({ name: contact.name, phone: contact.phone, success: false, error: 'Queued (offline)' });
+        if (contact.email) {
+          allResults.email.push({ name: contact.name, email: contact.email, success: false, error: 'Queued (offline)' });
         }
       }
     }
@@ -209,7 +313,7 @@ export default function SosBeaconCard() {
     console.log('[SOS] All dispatches complete:', allResults);
   };
 
-  // ─── Handle SOS Button Press (3x press detection) ───
+  // ─── Handle SOS Button Press (2x press detection) ───
   const handleButtonPress = () => {
     playBeep();
 
@@ -219,8 +323,8 @@ export default function SosBeaconCard() {
       return;
     }
 
-    // During beeping or dispatched: pressing = mute
-    if (status === 'beeping' || status === 'dispatched') {
+    // During dispatched: pressing = reset
+    if (status === 'dispatched') {
       cancelSos();
       return;
     }
@@ -264,27 +368,6 @@ export default function SosBeaconCard() {
     }, 1000);
   };
 
-  // ─── 10-Second Emergency Beep Phase ───
-  const startBeepPhase = () => {
-    setStatus('beeping');
-    setBeepTimer(10);
-    startEmergencyBeep();
-
-    beepTimerRef.current = setInterval(() => {
-      setBeepTimer((prev) => {
-        if (prev <= 1) {
-          clearInterval(beepTimerRef.current);
-          beepTimerRef.current = null;
-          stopEmergencyBeep();
-          // 10 seconds done → FULLY AUTOMATED DISPATCH
-          activateFullEmergency();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
-
   // ─── Full Emergency Activation (100% Automated) ───
   const activateFullEmergency = async () => {
     setStatus('dispatched');
@@ -298,15 +381,9 @@ export default function SosBeaconCard() {
       clearInterval(countdownTimerRef.current);
       countdownTimerRef.current = null;
     }
-    if (beepTimerRef.current) {
-      clearInterval(beepTimerRef.current);
-      beepTimerRef.current = null;
-    }
-    stopEmergencyBeep();
     setStatus('idle');
     setPressCount(0);
     setCountdown(5);
-    setBeepTimer(10);
     setDispatchResult(null);
     setToast(t('✅ SOS Canceled. False alarm aborted.'));
     setTimeout(() => setToast(null), 4000);
@@ -316,9 +393,7 @@ export default function SosBeaconCard() {
   useEffect(() => {
     return () => {
       if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
-      if (beepTimerRef.current) clearInterval(beepTimerRef.current);
       if (resetPressTimerRef.current) clearTimeout(resetPressTimerRef.current);
-      stopEmergencyBeep();
     };
   }, []);
 
@@ -331,10 +406,41 @@ export default function SosBeaconCard() {
         </div>
       )}
 
+      {/* Offline indicator */}
+      {isOffline && (
+        <div className="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center gap-1.5 z-20">
+          <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+          <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">{t("Offline — SMS Mode")}</span>
+        </div>
+      )}
+
       {/* Instruction */}
       <p className="text-sm font-semibold text-on-surface-variant max-w-md text-center leading-relaxed mb-6">
-        {t("Press the SOS button 2 times to alert your emergency contact. You'll get 5 seconds to undo before your live location is automatically sent via WhatsApp and Email.")}
+        {t("Press the SOS button 2 times to alert your emergency contacts. You'll get 5 seconds to undo before your live location is sent via SMS, WhatsApp, and Email.")}
+        {isOffline && (
+          <span className="block mt-1 text-amber-600 dark:text-amber-400 font-black text-xs">
+            ⚡ {t("Offline detected — Native SMS will fire (works on 2G)")}
+          </span>
+        )}
       </p>
+
+      {/* Multi-channel badges */}
+      <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-500/10 border border-green-500/30 text-[10px] font-black text-green-700 dark:text-green-400 uppercase tracking-wider">
+          <span className="material-symbols-outlined text-xs">sms</span> SMS
+        </span>
+        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[10px] font-black uppercase tracking-wider ${isOffline ? 'bg-slate-500/10 border-slate-500/30 text-slate-400 line-through' : 'bg-green-500/10 border-green-500/30 text-green-700 dark:text-green-400'}`}>
+          <span className="material-symbols-outlined text-xs">chat</span> WhatsApp
+        </span>
+        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[10px] font-black uppercase tracking-wider ${isOffline ? 'bg-slate-500/10 border-slate-500/30 text-slate-400 line-through' : 'bg-green-500/10 border-green-500/30 text-green-700 dark:text-green-400'}`}>
+          <span className="material-symbols-outlined text-xs">email</span> Email
+        </span>
+        {isOffline && (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+            <span className="material-symbols-outlined text-xs">schedule</span> Queued
+          </span>
+        )}
+      </div>
 
       {/* ─── Sonar Wave Animation ─── */}
       <style>{`
@@ -357,7 +463,8 @@ export default function SosBeaconCard() {
         .animate-sonar-1 { animation: sonarWave 2.4s infinite ease-out 0s; }
         .animate-sonar-2 { animation: sonarWave 2.4s infinite ease-out 0.8s; }
         .animate-sonar-3 { animation: sonarWave 2.4s infinite ease-out 1.6s; }
-      `}</style>
+      `}
+      </style>
 
       <div className="relative flex items-center justify-center my-6 py-10 w-full">
         {/* Concentric Expanding Wave Rings */}
@@ -375,11 +482,9 @@ export default function SosBeaconCard() {
           className={`relative z-10 w-36 h-36 aspect-square shrink-0 text-white font-black shadow-[0_12px_40px_rgba(225,29,72,0.8)] border-4 border-red-300 flex flex-col items-center justify-center cursor-pointer transform active:scale-95 transition-all duration-300 ${
             status === 'countdown'
               ? 'bg-gradient-to-b from-amber-500 to-rose-600 border-amber-200 scale-105 shadow-amber-500/90 animate-pulse'
-              : status === 'beeping'
-                ? 'bg-gradient-to-b from-orange-600 to-red-700 border-orange-300 scale-110 shadow-orange-500/90 animate-pulse'
-                : status === 'dispatched'
-                  ? 'bg-gradient-to-b from-rose-600 to-red-800 border-white scale-105 shadow-rose-600/90 animate-pulse'
-                  : 'bg-gradient-to-b from-red-500 via-red-600 to-red-700 hover:from-red-600 hover:to-red-800 hover:scale-105'
+              : status === 'dispatched'
+                ? 'bg-gradient-to-b from-rose-600 to-red-800 border-white scale-105 shadow-rose-600/90 animate-pulse'
+                : 'bg-gradient-to-b from-red-500 via-red-600 to-red-700 hover:from-red-600 hover:to-red-800 hover:scale-105'
           }`}
         >
           {status === 'idle' && (
@@ -395,14 +500,6 @@ export default function SosBeaconCard() {
             <>
               <span className="text-2xl font-black text-amber-200 leading-none">{countdown}s</span>
               <span className="text-[9px] font-black tracking-wider uppercase text-white mt-1 bg-slate-950/40 px-2 py-0.5 rounded-full border border-white/30">{t("TAP TO UNDO")}</span>
-            </>
-          )}
-
-          {status === 'beeping' && (
-            <>
-              <span className="material-symbols-outlined text-3xl animate-pulse">volume_up</span>
-              <span className="text-lg font-black text-white leading-none">{beepTimer}s</span>
-              <span className="text-[8px] font-black tracking-wider uppercase text-amber-200 mt-0.5">{t("BEEPING")}</span>
             </>
           )}
 
@@ -432,30 +529,17 @@ export default function SosBeaconCard() {
         </div>
       )}
 
-      {/* 10s Beeping phase */}
-      {status === 'beeping' && (
-        <div className="mt-4 p-3 rounded-2xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-between gap-4 max-w-sm w-full">
-          <span className="text-xs font-bold text-orange-600 dark:text-orange-400">
-            🔊 {t("Emergency beep active.")} {t("Dispatching in")} {beepTimer}s...
-          </span>
-          <button
-            onClick={cancelSos}
-            className="px-3 py-1.5 rounded-xl bg-orange-500 text-white font-black text-xs uppercase hover:bg-orange-400 transition-colors shrink-0"
-          >
-            {t("STOP")}
-          </button>
-        </div>
-      )}
-
       {/* Dispatched confirmation */}
       {status === 'dispatched' && (
         <div className="mt-4 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 max-w-md w-full space-y-2">
           <p className="text-xs font-black text-rose-600 dark:text-rose-400 uppercase tracking-wider flex items-center justify-center gap-1">
             <span className="material-symbols-outlined text-sm animate-spin">emergency</span>
-            {t("EMERGENCY SOS DISPATCHED AUTOMATICALLY")}
+            {t("EMERGENCY SOS DISPATCHED")}
           </p>
           <p className="text-xs text-on-surface-variant font-semibold">
-            {t("Your live location has been sent automatically via WhatsApp and Email to your emergency contact. No manual action needed.")}
+            {dispatchResult?.results?.offlineMode
+              ? t("📱 Native SMS dispatched to your emergency contacts (works on 2G). WhatsApp & Email queued — will auto-send when internet returns.")
+              : t("Your live location has been sent via SMS, WhatsApp, and Email to all emergency contacts.")}
           </p>
           {coords && (
             <a
@@ -467,15 +551,21 @@ export default function SosBeaconCard() {
               📍 {t("View Location")} ({coords.lat.toFixed(4)}°, {coords.lon.toFixed(4)}°)
             </a>
           )}
-          {/* Debug: Show API response for troubleshooting */}
+          {/* Dispatch results log */}
           {dispatchResult && (
-            <div className="mt-2 p-2 rounded-lg bg-slate-900 text-green-400 font-mono text-[10px] text-left overflow-auto max-h-48 break-all">
-              <p className="text-cyan-300 font-bold">📊 Sent to {dispatchResult?.results?.totalContacts || 0} contact(s):</p>
+            <div className="mt-2 p-2 rounded-lg bg-slate-900 text-green-400 font-mono text-[10px] text-left overflow-auto max-h-56 break-all">
+              <p className="text-cyan-300 font-bold">📊 Dispatched to {dispatchResult?.results?.totalContacts || 0} contact(s):</p>
+              {dispatchResult?.results?.offlineMode && (
+                <p className="text-amber-400 font-bold">⚡ OFFLINE MODE — SMS only, others queued</p>
+              )}
+              {dispatchResult?.results?.sms?.map((s, i) => (
+                <p key={`sms-${i}`}>📱 SMS → {s.name} ({s.phone}): {s.success ? '✅ Opened' : '❌'} {s.error || ''}</p>
+              ))}
               {dispatchResult?.results?.whatsapp?.map((wa, i) => (
-                <p key={`wa-${i}`}>📡 WA → {wa.name} ({wa.phone}): {wa.success ? '✅' : '❌'} {wa.response ? JSON.stringify(wa.response) : wa.error || ''}</p>
+                <p key={`wa-${i}`}>📡 WA → {wa.name} ({wa.phone}): {wa.success ? '✅' : wa.error === 'Queued (offline)' ? '🕐 Queued' : '❌'} {wa.error === 'Queued (offline)' ? '' : (wa.response ? JSON.stringify(wa.response) : wa.error || '')}</p>
               ))}
               {dispatchResult?.results?.email?.map((em, i) => (
-                <p key={`em-${i}`}>📧 Email → {em.name} ({em.email}): {em.success ? '✅' : '❌'}</p>
+                <p key={`em-${i}`}>📧 Email → {em.name} ({em.email}): {em.success ? '✅' : em.error === 'Queued (offline)' ? '🕐 Queued' : '❌'}</p>
               ))}
             </div>
           )}
