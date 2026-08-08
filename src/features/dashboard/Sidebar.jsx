@@ -39,13 +39,13 @@ export default function Sidebar({ currentTab, setCurrentTab }) {
           <span className="font-body-md text-body-md">{t("Health Vault")}</span>
         </button>
         <button 
-          onClick={() => setCurrentTab('fleet')}
+          onClick={() => setCurrentTab('diagnostic-imaging')}
           className={`w-full flex items-center gap-sm px-sm py-xs font-bold rounded-xl transition-all duration-200 ${
-            currentTab === 'fleet' ? 'bg-surface-container-high text-on-surface scale-[0.99]' : 'text-on-surface-variant hover:bg-surface-container-low'
+            currentTab === 'diagnostic-imaging' ? 'bg-surface-container-high text-on-surface scale-[0.99]' : 'text-on-surface-variant hover:bg-surface-container-low'
           }`}
         >
-          <span className="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
-          <span className="font-body-md text-body-md">{t("Fleet Status")}</span>
+          <span className="material-symbols-outlined" data-icon="radiology">radiology</span>
+          <span className="font-body-md text-body-md">{t("Diagnostic Imaging")}</span>
         </button>
         <button 
           onClick={() => setCurrentTab('parental-monitoring')}
@@ -73,15 +73,6 @@ export default function Sidebar({ currentTab, setCurrentTab }) {
         >
           <span className="material-symbols-outlined" data-icon="smart_toy">smart_toy</span>
           <span className="font-body-md text-body-md">{t("AI Health Agent")}</span>
-        </button>
-        <button 
-          onClick={() => setCurrentTab('diagnostic-imaging')}
-          className={`w-full flex items-center gap-sm px-sm py-xs font-bold rounded-xl transition-all duration-200 ${
-            currentTab === 'diagnostic-imaging' ? 'bg-surface-container-high text-on-surface scale-[0.99]' : 'text-on-surface-variant hover:bg-surface-container-low'
-          }`}
-        >
-          <span className="material-symbols-outlined" data-icon="radiology">radiology</span>
-          <span className="font-body-md text-body-md">{t("Diagnostic Imaging")}</span>
         </button>
         <button 
           onClick={() => setCurrentTab('settings')}

@@ -4,7 +4,6 @@ import TopHeader from './TopHeader';
 import KPIDashboard from './KPIDashboard';
 import HealthVaultTable from './HealthVaultTable';
 import LiveRouteMap from './LiveRouteMap';
-import FleetStatus from './FleetStatus';
 import PatientFlow from './PatientFlow';
 import Login from './Login';
 import NotFound from './NotFound';
@@ -67,12 +66,6 @@ export default function DashboardLayout({ session }) {
       {currentTab === 'parental-monitoring' && (
         <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
           <ParentalMonitoring session={session} />
-        </main>
-      )}
-      
-      {currentTab === 'fleet' && (
-        <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
-          <FleetStatus />
         </main>
       )}
       
