@@ -2,3 +2,6 @@ backend
 node_modules
 node_modules/
 main
+dist/
+.env
+Smart-Traffic-Management-System-for-Emergency-Services/

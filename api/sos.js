@@ -1,11 +1,13 @@
 /**
- * api/sos.js — Vercel Serverless Edge Function for 100% Automated Emergency SOS Dispatch.
+ * api/sos.js — Vercel Serverless Function for 100% Automated Emergency SOS Dispatch.
  * 
- * When the user presses SOS 3 times and doesn't undo within 5 seconds:
- *   1. Sends WhatsApp message via Meta WhatsApp Cloud API (Facebook Developer Account)
- *   2. Sends automated email via EmailJS REST API (no mailto: prompts)
+ * 3-Channel Fully Automated Dispatch (zero manual taps):
+ *   Channel 1: WhatsApp via Meta WhatsApp Cloud API
+ *   Channel 2: Email via EmailJS / Web3Forms
+ *   Channel 3: SMS via Fast2SMS (Indian gateway) or Twilio
  * 
- * Everything is background — zero manual taps from the user.
+ * All 3 channels fire from the SERVER — works from any device (laptop, phone, tablet).
+ * No sms: URI, no manual send button. Everything is cloud-automated.
  */
 
 export default async function handler(req, res) {
@@ -34,7 +36,7 @@ export default async function handler(req, res) {
 
     const mapsUrl = `https://maps.google.com/?q=${lat || 13.07158},${lon || 77.59685}`;
     const formattedTime = timestamp || new Date().toISOString();
-    const results = { whatsapp: false, email: false };
+    const results = { whatsapp: false, email: false, sms: false };
 
     // ─── 1. AUTOMATED WHATSAPP MESSAGE via Meta Cloud API ───
     const waToken = whatsappToken || process.env.WHATSAPP_TOKEN;
@@ -116,7 +118,6 @@ export default async function handler(req, res) {
             template_id: emailTemplateId,
             user_id: emailPublicKey,
             template_params: {
-              // Default Contact Us template variables
               to_email: contactEmail || 'emergency@resqplus.app',
               to_name: contactName || 'Emergency Contact',
               from_name: 'ResQ-Plus Emergency Dispatch',
@@ -124,7 +125,6 @@ export default async function handler(req, res) {
               email: contactEmail || 'emergency@resqplus.app',
               title: `🚨 EMERGENCY SOS - ${userName || 'Patient'} Needs Help!`,
               subject: `🚨 EMERGENCY SOS ALERT - ${userName || 'Patient'} Needs Immediate Help!`,
-              // Custom template variables
               patient_name: userName || 'Unknown',
               patient_phone: userPhone || 'N/A',
               timestamp: formattedTime,
@@ -162,9 +162,89 @@ export default async function handler(req, res) {
       }
     }
 
+    // ─── 3. AUTOMATED SMS via Fast2SMS (Indian Gateway) or Twilio ───
+    // Fast2SMS: Free Indian SMS API — sends real SMS to any Indian mobile number
+    // Sign up at https://www.fast2sms.com and get your API key
+    const fast2smsKey = process.env.FAST2SMS_API_KEY;
+    const twilioSid = process.env.TWILIO_ACCOUNT_SID;
+    const twilioAuth = process.env.TWILIO_AUTH_TOKEN;
+    const twilioFrom = process.env.TWILIO_PHONE_NUMBER;
+
+    // Extract just the 10-digit Indian mobile number (strip country code)
+    const smsRecipient = recipientPhone.replace(/^91/, '').replace(/^0+/, '').slice(-10);
+    const smsMessage = `SOS ALERT! ${userName || 'Patient'} needs help! Phone: ${userPhone || 'N/A'} Time: ${formattedTime} GPS: ${mapsUrl} -ResQ-Plus`;
+
+    // Priority 1: Fast2SMS (free for Indian numbers)
+    if (fast2smsKey && smsRecipient.length === 10) {
+      try {
+        console.log('[SOS API] Sending SMS via Fast2SMS to:', smsRecipient);
+        const smsRes = await fetch('https://www.fast2sms.com/dev/bulkV2', {
+          method: 'POST',
+          headers: {
+            'authorization': fast2smsKey,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            route: 'q',
+            message: smsMessage,
+            language: 'english',
+            flash: 0,
+            numbers: smsRecipient,
+          }),
+        });
+        const smsData = await smsRes.json();
+        results.sms = smsData.return === true;
+        results.smsResponse = smsData;
+        results.smsProvider = 'Fast2SMS';
+        console.log('[SOS API] Fast2SMS response:', JSON.stringify(smsData));
+      } catch (smsErr) {
+        console.error('[SOS API] Fast2SMS error:', smsErr.message);
+        results.smsError = smsErr.message;
+      }
+    }
+
+    // Priority 2: Twilio (global SMS, paid but has free trial)
+    if (!results.sms && twilioSid && twilioAuth && twilioFrom) {
+      try {
+        console.log('[SOS API] Sending SMS via Twilio to:', recipientPhone);
+        const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`;
+        const twilioBody = new URLSearchParams({
+          To: `+${recipientPhone}`,
+          From: twilioFrom,
+          Body: smsMessage,
+        });
+        const smsRes = await fetch(twilioUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Basic ' + Buffer.from(`${twilioSid}:${twilioAuth}`).toString('base64'),
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: twilioBody.toString(),
+        });
+        const smsData = await smsRes.json();
+        results.sms = smsRes.ok || smsData.status === 'queued';
+        results.smsResponse = { sid: smsData.sid, status: smsData.status };
+        results.smsProvider = 'Twilio';
+        console.log('[SOS API] Twilio response:', smsData.status, smsData.sid);
+      } catch (smsErr) {
+        console.error('[SOS API] Twilio error:', smsErr.message);
+        results.smsError = smsErr.message;
+      }
+    }
+
+    if (!results.sms && !fast2smsKey && !twilioSid) {
+      console.log('[SOS API] SMS not configured. Set FAST2SMS_API_KEY or TWILIO_ACCOUNT_SID in Vercel env vars.');
+      results.smsError = 'SMS provider not configured';
+    }
+
     return res.status(200).json({
       success: true,
-      message: 'Automated emergency SOS dispatch completed.',
+      message: 'Automated 3-channel emergency SOS dispatch completed.',
+      channels: {
+        whatsapp: results.whatsapp ? '✅ Sent' : '❌ Failed',
+        email: results.email ? '✅ Sent' : '❌ Failed',
+        sms: results.sms ? '✅ Sent' : (results.smsError === 'SMS provider not configured' ? '⚠️ Not configured' : '❌ Failed'),
+      },
       results,
       timestamp: formattedTime,
       mapsUrl,
