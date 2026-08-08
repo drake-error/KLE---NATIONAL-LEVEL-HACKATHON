@@ -53,4 +53,21 @@ function googleTTSProxy() {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), googleTTSProxy()],
+  build: {
+    chunkSizeWarningLimit: 3500,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('mapbox-gl') || id.includes('leaflet')) {
+              return 'vendor-maps';
+            }
+            if (id.includes('react')) {
+              return 'vendor-react';
+            }
+          }
+        },
+      },
+    },
+  },
 })

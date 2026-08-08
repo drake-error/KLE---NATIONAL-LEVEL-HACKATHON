@@ -11,8 +11,10 @@ const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models
 const MODEL = 'gemini-2.5-flash';
 
 function getApiKey() {
-  const key = import.meta.env.VITE_GEMINI_API_KEY;
-  if (!key) throw new Error('VITE_GEMINI_API_KEY is not set. Add it to your .env file.');
+  const key = import.meta.env.VITE_GEMINI_API_KEY ||
+              import.meta.env.VITE_GEMINI_API_KEY_1 ||
+              import.meta.env.VITE_GEMINI_API_KEY1;
+  if (!key) throw new Error('Gemini API key is not set. Add VITE_GEMINI_API_KEY or VITE_GEMINI_API_KEY_1 to your environment variables.');
   return key;
 }
 
