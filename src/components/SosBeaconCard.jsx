@@ -132,12 +132,10 @@ export default function SosBeaconCard() {
     } catch {}
   };
 
-  // ─── MULTI-CHANNEL AUTOMATED DISPATCH (All 3 channels via server) ───
-  // The /api/sos endpoint handles ALL 3 channels from the cloud:
-  //   1. SMS via Fast2SMS (Indian gateway) — delivered to recipient's phone as regular text
-  //   2. WhatsApp via Meta Cloud API — rich message with GPS link
-  //   3. Email via Web3Forms / EmailJS — full emergency details
-  // Everything is server-side. Works from laptop, phone, tablet — any device.
+  // ─── MULTI-CHANNEL AUTOMATED DISPATCH (All 3 channels) ───
+  // Strategy: Call /api/sos for WhatsApp + server-side SMS + server-side Email,
+  // PLUS always fire direct client-side Email (Web3Forms) and client-side SMS (Fast2SMS)
+  // as guaranteed fallbacks. This ensures delivery even if server config is incomplete.
   const dispatchAutomated = async (loc) => {
     const info = loadContactInfo();
     const lat = loc?.lat || coords?.lat || 13.07158;
@@ -147,10 +145,10 @@ export default function SosBeaconCard() {
     const allResults = { sms: [], whatsapp: [], email: [], totalContacts: info.contacts.length, offlineMode: !navigator.onLine };
 
     if (navigator.onLine) {
-      // ─── ONLINE: Fire all 3 channels via single API call per contact ───
       for (const contact of info.contacts) {
         console.log(`[SOS] Dispatching to: ${contact.name} (${contact.phone}, ${contact.email})`);
 
+        // ─── CHANNEL 1: WhatsApp + Server SMS via /api/sos ───
         try {
           const apiRes = await fetch('/api/sos', {
             method: 'POST',
@@ -167,24 +165,72 @@ export default function SosBeaconCard() {
             }),
           });
           const data = await apiRes.json();
-
-          // Parse server-side results for all 3 channels
           allResults.whatsapp.push({ name: contact.name, phone: contact.phone, success: data?.results?.whatsapp });
-          allResults.email.push({ name: contact.name, email: contact.email, success: data?.results?.email });
-          allResults.sms.push({
-            name: contact.name,
-            phone: contact.phone,
-            success: data?.results?.sms,
-            provider: data?.results?.smsProvider || 'N/A',
-            error: data?.results?.smsError || null,
-          });
-
-          console.log(`[SOS] 3-Channel dispatch to ${contact.name}:`, data?.channels);
+          // If server sent SMS successfully, record it
+          if (data?.results?.sms) {
+            allResults.sms.push({ name: contact.name, phone: contact.phone, success: true, provider: data?.results?.smsProvider });
+          }
+          // If server sent email successfully, record it
+          if (data?.results?.email) {
+            allResults.email.push({ name: contact.name, email: contact.email, success: true, provider: 'server' });
+          }
+          console.log(`[SOS] Server dispatch to ${contact.name}:`, data?.channels);
         } catch (err) {
           allResults.whatsapp.push({ name: contact.name, phone: contact.phone, success: false, error: err.message });
-          allResults.email.push({ name: contact.name, email: contact.email, success: false, error: err.message });
-          allResults.sms.push({ name: contact.name, phone: contact.phone, success: false, error: err.message });
           console.error(`[SOS] API error for ${contact.name}:`, err);
+        }
+
+        // ─── CHANNEL 2: DIRECT Email via Web3Forms (guaranteed fallback) ───
+        if (contact.email && !allResults.email.find(e => e.email === contact.email && e.success)) {
+          try {
+            const emailRes = await fetch('https://api.web3forms.com/submit', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                access_key: '8382c954-6c3a-4272-ba3d-75a39f393bdb',
+                subject: `🚨 EMERGENCY SOS - ${info.userName || 'Patient'} Needs Immediate Help!`,
+                from_name: 'ResQ-Plus Emergency Dispatch',
+                to: contact.email,
+                name: info.userName || 'Unknown Patient',
+                message: `🚨 AUTOMATED EMERGENCY SOS DISTRESS ALERT!\n\nPatient Name: ${info.userName || 'Unknown'}\nPatient Phone: ${info.userPhone || 'N/A'}\nEmergency Contact: ${contact.name}\nTime of SOS: ${timestamp}\n\n📍 LIVE GPS LOCATION:\n${mapsUrl}\n\nOpen this link to see their exact location:\n${mapsUrl}\n\nPlease send emergency medical aid immediately!\n\n— ResQ-Plus Automated Emergency Dispatch System`,
+                replyto: 'noreply@resqplus.app',
+              }),
+            });
+            allResults.email.push({ name: contact.name, email: contact.email, success: emailRes.ok, provider: 'Web3Forms' });
+            console.log(`[SOS] Direct Email to ${contact.name}:`, emailRes.ok ? 'SUCCESS' : 'FAILED');
+          } catch (emailErr) {
+            allResults.email.push({ name: contact.name, email: contact.email, success: false, error: emailErr.message });
+          }
+        }
+
+        // ─── CHANNEL 3: DIRECT SMS via Fast2SMS (client-side backup) ───
+        if (contact.phone && !allResults.sms.find(s => s.phone === contact.phone && s.success)) {
+          const cleanNum = contact.phone.replace(/[^0-9]/g, '').replace(/^91/, '').slice(-10);
+          if (cleanNum.length === 10) {
+            try {
+              const smsMsg = `SOS ALERT! ${info.userName || 'Patient'} needs help! Phone: ${info.userPhone || 'N/A'} Time: ${timestamp} GPS: ${mapsUrl} -ResQ-Plus`;
+              const smsRes = await fetch('https://www.fast2sms.com/dev/bulkV2', {
+                method: 'POST',
+                headers: {
+                  'authorization': 'sBf9xTKSVFE3Rjqzh4yOvL2t61kerZX8cpC0AoH5aUbQWMGwd7eyOf9Q2gWAtwIocmCKLpViD805MnrF',
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  route: 'q',
+                  message: smsMsg,
+                  language: 'english',
+                  flash: 0,
+                  numbers: cleanNum,
+                }),
+              });
+              const smsData = await smsRes.json();
+              allResults.sms.push({ name: contact.name, phone: cleanNum, success: smsData.return === true, provider: 'Fast2SMS', response: smsData.message });
+              console.log(`[SOS] Direct SMS to ${contact.name}:`, smsData.return ? 'SUCCESS' : 'FAILED', smsData.message);
+            } catch (smsErr) {
+              allResults.sms.push({ name: contact.name, phone: cleanNum, success: false, error: smsErr.message });
+              console.error(`[SOS] SMS error for ${contact.name}:`, smsErr);
+            }
+          }
         }
       }
     } else {
@@ -210,6 +256,7 @@ export default function SosBeaconCard() {
     setDispatchResult({ results: allResults, mapsUrl, timestamp });
     console.log('[SOS] All dispatches complete:', allResults);
   };
+
 
   const queueForRetry = (payload) => {
     try {
