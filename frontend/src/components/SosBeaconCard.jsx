@@ -234,11 +234,11 @@ export default function SosBeaconCard() {
       if (status === 'idle') setPressCount(0);
     }, 3000);
 
-    if (nextCount >= 3) {
-      // 3X Press reached → Start 5-second UNDO window
+    if (nextCount >= 2) {
+      // 2X Press reached → Start 5-second UNDO window
       startCountdown();
     } else {
-      setToast(t(`Press ${3 - nextCount} more time(s) to trigger SOS`));
+      setToast(t(`Press ${2 - nextCount} more time(s) to trigger SOS`));
       setTimeout(() => setToast(null), 2500);
     }
   };
@@ -254,8 +254,8 @@ export default function SosBeaconCard() {
         if (prev <= 1) {
           clearInterval(countdownTimerRef.current);
           countdownTimerRef.current = null;
-          // 5 seconds elapsed without cancel → start 10s emergency beep
-          startBeepPhase();
+          // 5 seconds elapsed without cancel → FULLY AUTOMATED DISPATCH
+          activateFullEmergency();
           return 0;
         }
         playBeep();
@@ -333,7 +333,7 @@ export default function SosBeaconCard() {
 
       {/* Instruction */}
       <p className="text-sm font-semibold text-on-surface-variant max-w-md text-center leading-relaxed mb-6">
-        {t("Press the SOS button 3 times to alert your emergency contact. You'll get 5 seconds to undo, then a 10-second beep before your live location is automatically sent via WhatsApp and Email.")}
+        {t("Press the SOS button 2 times to alert your emergency contact. You'll get 5 seconds to undo before your live location is automatically sent via WhatsApp and Email.")}
       </p>
 
       {/* ─── Sonar Wave Animation ─── */}
@@ -386,7 +386,7 @@ export default function SosBeaconCard() {
             <>
               <span className="text-4xl font-black tracking-widest leading-none drop-shadow-md">SOS</span>
               <span className="text-[10px] font-black tracking-wider uppercase opacity-95 mt-2 bg-red-950/50 px-2.5 py-0.5 rounded-full border border-red-300/40">
-                {pressCount > 0 ? `PRESS (${pressCount}/3)` : 'PRESS 3X'}
+                {pressCount > 0 ? `PRESS (${pressCount}/2)` : 'PRESS 2X'}
               </span>
             </>
           )}
