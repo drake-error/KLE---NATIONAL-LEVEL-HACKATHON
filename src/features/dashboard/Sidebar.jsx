@@ -2,6 +2,7 @@ import React from 'react';
 import { Logo } from '../../components/Logo';
 import { useI18n } from '../../i18n';
 
+// Sidebar Navigation Component — ResQ-Plus Emergency Command Center
 export default function Sidebar({ currentTab, setCurrentTab }) {
   const { t } = useI18n();
   return (
