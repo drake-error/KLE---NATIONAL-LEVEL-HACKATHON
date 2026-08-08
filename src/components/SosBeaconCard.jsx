@@ -555,7 +555,7 @@ export default function SosBeaconCard() {
                 <p className="text-amber-400 font-bold">⚡ OFFLINE MODE — SMS only, others queued</p>
               )}
               {dispatchResult?.results?.sms?.map((s, i) => (
-                <p key={`sms-${i}`}>📱 SMS → {s.name} ({s.phone}): {s.success ? '✅ Opened' : '❌'} {s.error || ''}</p>
+                <p key={`sms-${i}`}>📱 SMS → {s.name} ({s.phone}): {s.success ? '✅ Sent' : '❌'} {s.error || ''}</p>
               ))}
               {dispatchResult?.results?.whatsapp?.map((wa, i) => (
                 <p key={`wa-${i}`}>📡 WA → {wa.name} ({wa.phone}): {wa.success ? '✅' : wa.error === 'Queued (offline)' ? '🕐 Queued' : '❌'} {wa.error === 'Queued (offline)' ? '' : (wa.response ? JSON.stringify(wa.response) : wa.error || '')}</p>
