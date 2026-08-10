@@ -7,6 +7,7 @@ import LiveRouteMap from './LiveRouteMap';
 import PatientFlow from './PatientFlow';
 import Login from './Login';
 import NotFound from './NotFound';
+import FleetStatus from './FleetStatus';
 
 import HealthVault from '../health-vault/HealthVault';
 import ParentalMonitoring from '../parental-monitoring/ParentalMonitoring';
@@ -70,14 +71,12 @@ export default function DashboardLayout({ session }) {
         </main>
       )}
       
- frontend
       {currentTab === 'fleet' && (
         <main className="md:ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
           <FleetStatus />
         </main>
       )}
-      
- main
+
       {currentTab === 'patient-flow' && (
         <main className="md:ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
           <PatientFlow />
