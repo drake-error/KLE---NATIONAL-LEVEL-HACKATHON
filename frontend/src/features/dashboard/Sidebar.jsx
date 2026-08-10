@@ -2,7 +2,11 @@ import React from 'react';
 import { Logo } from '../../components/Logo';
 import { useI18n } from '../../i18n';
 
+frontend
 export default function Sidebar({ currentTab, setCurrentTab, isMobileMenuOpen, setIsMobileMenuOpen }) {
+// Sidebar Navigation Component — ResQ-Plus Emergency Command Center
+export default function Sidebar({ currentTab, setCurrentTab }) {
+ main
   const { t } = useI18n();
 
   const handleTabClick = (tab) => {
@@ -55,13 +59,19 @@ export default function Sidebar({ currentTab, setCurrentTab, isMobileMenuOpen, s
           <span className="font-body-md text-body-md">{t("Health Vault")}</span>
         </button>
         <button 
+ frontend
           onClick={() => handleTabClick('fleet')}
           className={`w-full flex items-center gap-sm px-sm py-xs font-bold rounded-xl transition-all duration-200 ${
             currentTab === 'fleet' ? 'bg-gradient-to-r from-primary/10 to-transparent border-l-4 border-primary text-primary scale-[0.99] shadow-inner' : 'text-on-surface-variant hover:bg-surface-container-low'
+
+          onClick={() => setCurrentTab('diagnostic-imaging')}
+          className={`w-full flex items-center gap-sm px-sm py-xs font-bold rounded-xl transition-all duration-200 ${
+            currentTab === 'diagnostic-imaging' ? 'bg-surface-container-high text-on-surface scale-[0.99]' : 'text-on-surface-variant hover:bg-surface-container-low'
+ main
           }`}
         >
-          <span className="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
-          <span className="font-body-md text-body-md">{t("Fleet Status")}</span>
+          <span className="material-symbols-outlined" data-icon="radiology">radiology</span>
+          <span className="font-body-md text-body-md">{t("Diagnostic Imaging")}</span>
         </button>
         <button 
           onClick={() => handleTabClick('parental-monitoring')}
