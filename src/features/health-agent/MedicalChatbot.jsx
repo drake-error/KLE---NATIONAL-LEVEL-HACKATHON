@@ -12,7 +12,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useI18n } from '../../i18n';
 import { chatCompletion, isApiKeyConfigured } from '../../lib/geminiClient';
-import { createMedicalEngine } from '../../lib/octochains';
 import { useHealthAgent } from '../../lib/healthAgentStore';
 
 // Emergency keywords that trigger SOS overlay
@@ -46,23 +45,17 @@ export default function MedicalChatbot() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showSOS, setShowSOS] = useState(false);
-  const [useOctochains, setUseOctochains] = useState(false);
-  const [agentTraces, setAgentTraces] = useState([]);
-  const [activeAgents, setActiveAgents] = useState([]);
   const messagesEndRef = useRef(null);
-  const inputRef = useRef(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatMessages, agentTraces]);
+  }, [chatMessages]);
 
   const handleSend = useCallback(async () => {
     const text = input.trim();
     if (!text || isLoading) return;
 
     setInput('');
-    setAgentTraces([]);
-    setActiveAgents([]);
     addChatMessage({ role: 'user', content: text });
 
     // Check for emergency
@@ -72,43 +65,19 @@ export default function MedicalChatbot() {
 
     setIsLoading(true);
     try {
-      if (useOctochains) {
-        // Octochains Multi-Agent Mode
-        const engine = createMedicalEngine();
-        setActiveAgents(engine.agents.map(a => ({ role: a.role, icon: a.icon, color: a.color, status: 'running' })));
+      const history = chatMessages.slice(-10).map(m => ({
+        role: m.role === 'user' ? 'user' : 'model',
+        parts: [{ text: m.content }],
+      }));
 
-        const result = await engine.run(text, (agentResult) => {
-          // Live update: mark agent as complete
-          setActiveAgents(prev => prev.map(a =>
-            a.role === agentResult.role ? { ...a, status: agentResult.status } : a
-          ));
-          setAgentTraces(prev => [...prev, agentResult]);
-        });
-
-        addChatMessage({
-          role: 'assistant',
-          content: result.consensus,
-          isOctochains: true,
-          traces: result.traces.map(t => ({ role: t.role, status: t.status, durationMs: t.durationMs })),
-          totalMs: result.totalMs,
-        });
-      } else {
-        // Quick Mode — single agent
-        const history = chatMessages.slice(-10).map(m => ({
-          role: m.role === 'user' ? 'user' : 'model',
-          parts: [{ text: m.content }],
-        }));
-
-        const response = await chatCompletion(QUICK_SYSTEM_PROMPT, text, history);
-        addChatMessage({ role: 'assistant', content: response });
-      }
+      const response = await chatCompletion(QUICK_SYSTEM_PROMPT, text, history);
+      addChatMessage({ role: 'assistant', content: response });
     } catch (err) {
       addChatMessage({ role: 'assistant', content: `⚠️ Error: ${err.message}`, isError: true });
     } finally {
       setIsLoading(false);
-      setActiveAgents([]);
     }
-  }, [input, isLoading, useOctochains, chatMessages, addChatMessage]);
+  }, [input, isLoading, chatMessages, addChatMessage]);
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -170,36 +139,7 @@ export default function MedicalChatbot() {
         </div>
       )}
 
-      {/* Mode Toggle */}
-      <div className="flex items-center gap-3 mb-4 p-3 rounded-2xl bg-surface-container-lowest border border-outline-variant">
-        <button
-          onClick={() => setUseOctochains(false)}
-          className={`flex-1 py-2 px-4 rounded-xl font-bold text-sm transition-all ${
-            !useOctochains ? 'bg-primary text-on-primary shadow-md' : 'text-on-surface-variant hover:bg-surface-container'
-          }`}
-        >
-          <span className="material-symbols-outlined text-sm align-middle mr-1">bolt</span>
-          {t("Quick Mode")}
-        </button>
-        <button
-          onClick={() => setUseOctochains(true)}
-          className={`flex-1 py-2 px-4 rounded-xl font-bold text-sm transition-all ${
-            useOctochains ? 'bg-primary text-on-primary shadow-md' : 'text-on-surface-variant hover:bg-surface-container'
-          }`}
-        >
-          <span className="material-symbols-outlined text-sm align-middle mr-1">hub</span>
-          {t("Octochains Deep Analysis")}
-        </button>
-      </div>
 
-      {useOctochains && (
-        <div className="mb-3 p-3 rounded-xl bg-violet-500/10 border border-violet-500/30">
-          <p className="text-xs font-bold text-violet-600 dark:text-violet-400 flex items-center gap-1">
-            <span className="material-symbols-outlined text-sm">psychology</span>
-            {t("3 specialists analyze in parallel isolation → Synthesizer merges consensus")}
-          </p>
-        </div>
-      )}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-1">
@@ -220,39 +160,12 @@ export default function MedicalChatbot() {
                   ? 'bg-error/10 border border-error/30 rounded-bl-sm'
                   : 'bg-surface-container-lowest border border-outline-variant rounded-bl-sm'
             }`}>
-              {msg.isOctochains && (
-                <div className="flex items-center gap-2 mb-2 pb-2 border-b border-outline-variant/30">
-                  <span className="material-symbols-outlined text-sm text-violet-500">hub</span>
-                  <span className="text-[10px] font-black text-violet-500 uppercase">{t("Octochains Consensus")}</span>
-                  {msg.totalMs && <span className="text-[10px] text-on-surface-variant ml-auto">{(msg.totalMs / 1000).toFixed(1)}s</span>}
-                </div>
-              )}
               <div className="text-sm font-semibold whitespace-pre-wrap leading-relaxed">{msg.content}</div>
             </div>
           </div>
         ))}
 
-        {/* Live Agent Progress */}
-        {isLoading && useOctochains && activeAgents.length > 0 && (
-          <div className="p-4 rounded-2xl bg-surface-container-lowest border border-outline-variant">
-            <p className="text-xs font-black text-on-surface-variant uppercase mb-3">{t("Parallel Agent Execution")}</p>
-            <div className="space-y-2">
-              {activeAgents.map((a, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <span className={`material-symbols-outlined text-sm ${a.status === 'success' ? 'text-emerald-500' : a.status === 'error' ? 'text-rose-500' : 'text-on-surface-variant animate-pulse'}`}>
-                    {a.status === 'success' ? 'check_circle' : a.status === 'error' ? 'error' : 'pending'}
-                  </span>
-                  <span className="text-xs font-bold text-on-surface">{a.role}</span>
-                  <span className="text-[10px] text-on-surface-variant ml-auto">
-                    {a.status === 'running' ? t('Analyzing...') : a.status === 'success' ? '✓' : '✗'}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {isLoading && !useOctochains && (
+        {isLoading && (
           <div className="flex justify-start">
             <div className="p-4 rounded-2xl bg-surface-container-lowest border border-outline-variant rounded-bl-sm">
               <div className="flex items-center gap-2">
@@ -274,7 +187,6 @@ export default function MedicalChatbot() {
         </button>
         <div className="flex-1 relative">
           <textarea
-            ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
