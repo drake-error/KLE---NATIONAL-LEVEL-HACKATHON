@@ -35,7 +35,7 @@ export default function HealthVaultTable() {
   };
 
   return (
-    <div className="col-span-8 flex flex-col gap-gutter relative">
+    <div className="lg:col-span-8 flex flex-col gap-gutter relative">
       {/* System Topology & AI Agents */}
       <section className="bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm">
         <div className="flex justify-between items-center mb-md">
@@ -48,7 +48,7 @@ export default function HealthVaultTable() {
             <span className="font-label-sm text-label-sm text-on-surface-variant">{t("All Nodes Optimal")}</span>
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-sm">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-sm">
           {/* Silk Board Node */}
           <div className="p-sm bg-surface-container-low rounded-xl border border-outline-variant/30">
             <div className="flex justify-between items-start mb-sm">

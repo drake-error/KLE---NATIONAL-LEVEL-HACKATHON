@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { useI18n } from '../../i18n';
 import { LanguageSwitcher } from '../../components/LanguageSwitcher';
 
-export default function TopHeader({ currentTab, setCurrentTab, session, theme, setTheme, searchQuery, setSearchQuery }) {
+export default function TopHeader({ currentTab, setCurrentTab, session, theme, setTheme, searchQuery, setSearchQuery, isMobileMenuOpen, setIsMobileMenuOpen }) {
   const { t } = useI18n();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -27,9 +27,16 @@ export default function TopHeader({ currentTab, setCurrentTab, session, theme, s
   const userAvatar = user?.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/adventurer/svg?seed=${userName}&backgroundColor=e2e8f0`;
 
   return (
-    <header className="h-16 fixed top-0 right-0 w-[calc(100%-16rem)] bg-surface border-b border-outline-variant z-40 flex justify-between items-center px-margin-desktop">
-      <div className="flex items-center gap-md flex-1">
-        <div className="relative w-full max-w-md">
+    <header className="h-16 fixed top-0 right-0 w-full md:w-[calc(100%-16rem)] bg-surface border-b border-outline-variant z-40 flex justify-between items-center px-sm md:px-margin-desktop">
+      <div className="flex items-center gap-sm md:gap-md flex-1">
+        <button 
+          className="md:hidden p-xs text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors active:scale-95"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          title="Toggle Menu"
+        >
+          <span className="material-symbols-outlined">menu</span>
+        </button>
+        <div className="relative w-full max-w-md hidden md:block">
           <span className="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline" data-icon="search">search</span>
           <input 
             className="w-full pl-xl pr-sm py-xs bg-surface-container-low border-none focus:ring-2 focus:ring-primary rounded-xl text-body-sm font-body-sm" 

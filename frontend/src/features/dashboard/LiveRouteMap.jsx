@@ -63,7 +63,7 @@ export default function LiveRouteMap({ theme }) {
   }, [safePanTo]);
 
   return (
-    <div className="col-span-4 flex flex-col gap-4 h-full pb-4 text-slate-100 font-sans">
+    <div className="lg:col-span-4 flex flex-col gap-4 h-full pb-4 text-slate-100 font-sans">
       {/* Header & Status Card */}
       <div className="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 shadow-2xl flex flex-col shrink-0 backdrop-blur-md">
         <div className="flex items-center justify-between flex-wrap gap-2">

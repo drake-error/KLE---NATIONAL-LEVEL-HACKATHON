@@ -4,7 +4,7 @@ import { useI18n } from '../../i18n';
 export default function KPIDashboard() {
   const { t } = useI18n();
   return (
-    <div className="grid grid-cols-4 gap-gutter">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
       <div className="bg-surface-container-lowest p-sm rounded-xl border border-outline-variant shadow-sm flex items-center gap-sm">
         <div className="w-12 h-12 rounded-xl bg-primary-fixed flex items-center justify-center text-primary">
           <span className="material-symbols-outlined text-[28px]" data-icon="health_and_safety">health_and_safety</span>

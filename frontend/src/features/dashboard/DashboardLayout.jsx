@@ -21,6 +21,7 @@ export default function DashboardLayout({ session }) {
   const [currentTab, setCurrentTab] = useState('dashboard');
   const [theme, setTheme] = useState(document.documentElement.classList.contains('dark') ? 'dark' : 'light');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // If no session exists, render the Login/Signup screen full-width
   if (!session) {
@@ -32,21 +33,21 @@ export default function DashboardLayout({ session }) {
   }
 
   return (
-    <div className="bg-background text-on-surface font-body-md overflow-hidden min-h-screen">
+    <div className="bg-background text-on-surface font-body-md overflow-x-hidden min-h-screen">
       {/* Fixed Left Navigation Bar */}
-      <Sidebar currentTab={currentTab} setCurrentTab={setCurrentTab} />
+      <Sidebar currentTab={currentTab} setCurrentTab={setCurrentTab} isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />
       
       {/* Fixed Top Control Bar */}
-      <TopHeader currentTab={currentTab} setCurrentTab={setCurrentTab} session={session} theme={theme} setTheme={setTheme} searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+      <TopHeader currentTab={currentTab} setCurrentTab={setCurrentTab} session={session} theme={theme} setTheme={setTheme} searchQuery={searchQuery} setSearchQuery={setSearchQuery} isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen} />
       
       {/* Dynamic Tab Switch Content Canvas */}
       {currentTab === 'dashboard' && (
-        <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
+        <main className="md:ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
           {/* Top KPI Metrics Row */}
           <KPIDashboard />
           
           {/* Dashboard Body: Two-column grid assembling telemetry, charts, and interactive map */}
-          <div className="flex-1 grid grid-cols-12 gap-gutter">
+          <div className="flex-1 flex flex-col lg:grid lg:grid-cols-12 gap-gutter">
             {/* Left Section (8 cols): Topology & Analytics */}
             <HealthVaultTable />
             
@@ -57,61 +58,61 @@ export default function DashboardLayout({ session }) {
       )}
       
       {currentTab === 'health-vault' && (
-        <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
+        <main className="md:ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
           <HealthVault searchQuery={searchQuery} />
         </main>
       )}
 
       {currentTab === 'parental-monitoring' && (
-        <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
+        <main className="md:ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
           <ParentalMonitoring session={session} />
         </main>
       )}
       
       {currentTab === 'fleet' && (
-        <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
+        <main className="md:ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
           <FleetStatus />
         </main>
       )}
       
       {currentTab === 'patient-flow' && (
-        <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
+        <main className="md:ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
           <PatientFlow />
         </main>
       )}
 
       {currentTab === 'not-found' && (
-        <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
+        <main className="md:ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
           <NotFound setCurrentTab={setCurrentTab} />
         </main>
       )}
 
       {currentTab === 'settings' && (
-        <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
+        <main className="md:ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
           <SettingsPage session={session} theme={theme} setTheme={setTheme} />
         </main>
       )}
 
       {currentTab === 'support' && (
-        <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
+        <main className="md:ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
           <SupportPage session={session} setCurrentTab={setCurrentTab} />
         </main>
       )}
 
       {currentTab === 'system-status' && (
-        <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
+        <main className="md:ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
           <SystemStatusPage setCurrentTab={setCurrentTab} />
         </main>
       )}
 
       {currentTab === 'awareness' && (
-        <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
+        <main className="md:ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
           <RoadAccidentAwarenessPage />
         </main>
       )}
 
       {currentTab === 'health-agent' && (
-        <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
+        <main className="md:ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
           <HealthAgentPage />
         </main>
       )}
