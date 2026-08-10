@@ -35,7 +35,7 @@ export default function HealthVaultTable() {
   };
 
   return (
-    <div className="col-span-8 flex flex-col gap-gutter relative">
+    <div className="lg:col-span-8 flex flex-col gap-gutter relative">
       {/* System Topology & AI Agents */}
       <section className="bg-surface-container-lowest p-md rounded-xl border border-outline-variant shadow-sm">
         <div className="flex justify-between items-center mb-md">
@@ -48,15 +48,16 @@ export default function HealthVaultTable() {
             <span className="font-label-sm text-label-sm text-on-surface-variant">{t("All Nodes Optimal")}</span>
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-sm">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-sm">
           {/* Silk Board Node */}
-          <div className="p-sm bg-surface-container-low rounded-xl border border-outline-variant/30">
-            <div className="flex justify-between items-start mb-sm">
+          <div className="group p-sm bg-surface-container-low rounded-xl border border-outline-variant/30 hover:bg-surface-container-high hover:border-primary/40 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-12 h-12 bg-secondary/5 rounded-bl-full group-hover:bg-secondary/10 transition-colors"></div>
+            <div className="flex justify-between items-start mb-sm relative z-10">
               <div>
                 <h4 className="font-label-md text-label-md text-on-surface">Silk Board Node</h4>
                 <p className="text-[10px] font-telemetry-mono text-on-surface-variant uppercase">ID: BLR-SB-01</p>
               </div>
-              <span className="material-symbols-outlined text-secondary text-[20px] pulse-emerald" data-icon="check_circle">check_circle</span>
+              <span className="material-symbols-outlined text-secondary text-[20px] pulse-emerald drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" data-icon="check_circle">check_circle</span>
             </div>
             <div className="space-y-xs">
               <div className="flex justify-between text-[11px]">
@@ -72,13 +73,14 @@ export default function HealthVaultTable() {
             </div>
           </div>
           {/* HSR Layout Relay */}
-          <div className="p-sm bg-surface-container-low rounded-xl border border-outline-variant/30">
-            <div className="flex justify-between items-start mb-sm">
+          <div className="group p-sm bg-surface-container-low rounded-xl border border-outline-variant/30 hover:bg-surface-container-high hover:border-primary/40 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-12 h-12 bg-secondary/5 rounded-bl-full group-hover:bg-secondary/10 transition-colors"></div>
+            <div className="flex justify-between items-start mb-sm relative z-10">
               <div>
                 <h4 className="font-label-md text-label-md text-on-surface">HSR Layout Relay</h4>
                 <p className="text-[10px] font-telemetry-mono text-on-surface-variant uppercase">ID: BLR-HSR-04</p>
               </div>
-              <span className="material-symbols-outlined text-secondary text-[20px]" data-icon="check_circle">check_circle</span>
+              <span className="material-symbols-outlined text-secondary text-[20px] drop-shadow-[0_0_8px_rgba(16,185,129,0.2)] group-hover:drop-shadow-[0_0_8px_rgba(16,185,129,0.5)] transition-all" data-icon="check_circle">check_circle</span>
             </div>
             <div className="space-y-xs">
               <div className="flex justify-between text-[11px]">
@@ -95,13 +97,14 @@ export default function HealthVaultTable() {
             </div>
           </div>
           {/* JP Nagar Critical */}
-          <div className="p-sm bg-surface-container-low rounded-xl border border-status-emergency/30">
-            <div className="flex justify-between items-start mb-sm">
+          <div className="group p-sm bg-surface-container-low rounded-xl border border-status-emergency/30 hover:bg-error-container/10 hover:border-status-emergency/60 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-12 h-12 bg-status-emergency/10 rounded-bl-full group-hover:bg-status-emergency/20 transition-colors"></div>
+            <div className="flex justify-between items-start mb-sm relative z-10">
               <div>
                 <h4 className="font-label-md text-label-md text-on-surface">JP Nagar Critical</h4>
                 <p className="text-[10px] font-telemetry-mono text-on-surface-variant uppercase">ID: BLR-JPN-02</p>
               </div>
-              <span className="material-symbols-outlined text-status-emergency text-[20px] animate-pulse" data-icon="warning">warning</span>
+              <span className="material-symbols-outlined text-status-emergency text-[20px] animate-pulse drop-shadow-[0_0_12px_rgba(220,38,38,0.6)]" data-icon="warning">warning</span>
             </div>
             <div className="space-y-xs">
               <div className="flex justify-between text-[11px]">
@@ -138,8 +141,8 @@ export default function HealthVaultTable() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-gutter h-auto min-h-[16rem]">
           {/* The Problem */}
-          <div className="flex flex-col p-6 bg-error-container/10 rounded-xl border border-error/20 relative overflow-hidden shadow-sm">
-            <div className="absolute -right-8 -top-8 text-error/5 rotate-12 pointer-events-none">
+          <div className="group flex flex-col p-6 bg-error-container/10 rounded-xl border border-error/20 hover:border-error/40 hover:bg-error-container/15 hover:shadow-xl hover:-translate-y-1 transition-all duration-500 relative overflow-hidden shadow-sm backdrop-blur-sm">
+            <div className="absolute -right-8 -top-8 text-error/5 rotate-12 pointer-events-none group-hover:scale-110 group-hover:-rotate-12 transition-transform duration-700">
               <span className="material-symbols-outlined text-[160px]">warning</span>
             </div>
             <p className="font-label-lg font-bold text-error mb-4 relative z-10 flex items-center gap-2">
@@ -161,8 +164,8 @@ export default function HealthVaultTable() {
           </div>
 
           {/* The Solution */}
-          <div className="flex flex-col p-6 bg-primary-container/10 rounded-xl border border-primary/20 relative overflow-hidden shadow-sm">
-            <div className="absolute -right-8 -top-8 text-primary opacity-5 rotate-12 pointer-events-none">
+          <div className="group flex flex-col p-6 bg-primary-container/10 rounded-xl border border-primary/20 hover:border-primary/40 hover:bg-primary-container/15 hover:shadow-xl hover:-translate-y-1 transition-all duration-500 relative overflow-hidden shadow-sm backdrop-blur-sm">
+            <div className="absolute -right-8 -top-8 text-primary opacity-5 rotate-12 pointer-events-none group-hover:scale-110 group-hover:rotate-[24deg] transition-transform duration-700">
               <span className="material-symbols-outlined text-[160px]">health_and_safety</span>
             </div>
             <p className="font-label-lg font-bold text-primary mb-4 relative z-10 flex items-center gap-2">
