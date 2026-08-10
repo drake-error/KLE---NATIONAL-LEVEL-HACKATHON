@@ -30,7 +30,7 @@ export default function Sidebar({ currentTab, setCurrentTab, isMobileMenuOpen, s
         <button 
           onClick={() => handleTabClick('dashboard')}
           className={`w-full flex items-center gap-sm px-sm py-xs font-bold rounded-xl transition-all duration-200 ${
-            currentTab === 'dashboard' ? 'bg-surface-container-high text-on-surface scale-[0.99]' : 'text-on-surface-variant hover:bg-surface-container-low'
+            currentTab === 'dashboard' ? 'bg-gradient-to-r from-primary/10 to-transparent border-l-4 border-primary text-primary scale-[0.99] shadow-inner' : 'text-on-surface-variant hover:bg-surface-container-low'
           }`}
         >
           <span className="material-symbols-outlined" data-icon="dashboard">dashboard</span>
@@ -39,7 +39,7 @@ export default function Sidebar({ currentTab, setCurrentTab, isMobileMenuOpen, s
         <button 
           onClick={() => handleTabClick('patient-flow')}
           className={`w-full flex items-center gap-sm px-sm py-xs font-bold rounded-xl transition-all duration-200 ${
-            currentTab === 'patient-flow' ? 'bg-surface-container-high text-on-surface scale-[0.99]' : 'text-on-surface-variant hover:bg-surface-container-low'
+            currentTab === 'patient-flow' ? 'bg-gradient-to-r from-primary/10 to-transparent border-l-4 border-primary text-primary scale-[0.99] shadow-inner' : 'text-on-surface-variant hover:bg-surface-container-low'
           }`}
         >
           <span className="material-symbols-outlined" data-icon="emergency">emergency</span>
@@ -48,7 +48,7 @@ export default function Sidebar({ currentTab, setCurrentTab, isMobileMenuOpen, s
         <button 
           onClick={() => handleTabClick('health-vault')}
           className={`w-full flex items-center gap-sm px-sm py-xs font-bold rounded-xl transition-all duration-200 ${
-            currentTab === 'health-vault' ? 'bg-surface-container-high text-on-surface scale-[0.99]' : 'text-on-surface-variant hover:bg-surface-container-low'
+            currentTab === 'health-vault' ? 'bg-gradient-to-r from-primary/10 to-transparent border-l-4 border-primary text-primary scale-[0.99] shadow-inner' : 'text-on-surface-variant hover:bg-surface-container-low'
           }`}
         >
           <span className="material-symbols-outlined" data-icon="folder_shared">folder_shared</span>
@@ -57,7 +57,7 @@ export default function Sidebar({ currentTab, setCurrentTab, isMobileMenuOpen, s
         <button 
           onClick={() => handleTabClick('fleet')}
           className={`w-full flex items-center gap-sm px-sm py-xs font-bold rounded-xl transition-all duration-200 ${
-            currentTab === 'fleet' ? 'bg-surface-container-high text-on-surface scale-[0.99]' : 'text-on-surface-variant hover:bg-surface-container-low'
+            currentTab === 'fleet' ? 'bg-gradient-to-r from-primary/10 to-transparent border-l-4 border-primary text-primary scale-[0.99] shadow-inner' : 'text-on-surface-variant hover:bg-surface-container-low'
           }`}
         >
           <span className="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
@@ -66,7 +66,7 @@ export default function Sidebar({ currentTab, setCurrentTab, isMobileMenuOpen, s
         <button 
           onClick={() => handleTabClick('parental-monitoring')}
           className={`w-full flex items-center gap-sm px-sm py-xs font-bold rounded-xl transition-all duration-200 ${
-            currentTab === 'parental-monitoring' ? 'bg-surface-container-high text-on-surface scale-[0.99]' : 'text-on-surface-variant hover:bg-surface-container-low'
+            currentTab === 'parental-monitoring' ? 'bg-gradient-to-r from-primary/10 to-transparent border-l-4 border-primary text-primary scale-[0.99] shadow-inner' : 'text-on-surface-variant hover:bg-surface-container-low'
           }`}
         >
           <span className="material-symbols-outlined" data-icon="supervisor_account">supervisor_account</span>
@@ -75,7 +75,7 @@ export default function Sidebar({ currentTab, setCurrentTab, isMobileMenuOpen, s
         <button 
           onClick={() => handleTabClick('awareness')}
           className={`w-full flex items-center gap-sm px-sm py-xs font-bold rounded-xl transition-all duration-200 ${
-            currentTab === 'awareness' ? 'bg-surface-container-high text-on-surface scale-[0.99]' : 'text-on-surface-variant hover:bg-surface-container-low'
+            currentTab === 'awareness' ? 'bg-gradient-to-r from-primary/10 to-transparent border-l-4 border-primary text-primary scale-[0.99] shadow-inner' : 'text-on-surface-variant hover:bg-surface-container-low'
           }`}
         >
           <span className="material-symbols-outlined" data-icon="health_and_safety">health_and_safety</span>
@@ -84,7 +84,7 @@ export default function Sidebar({ currentTab, setCurrentTab, isMobileMenuOpen, s
         <button 
           onClick={() => handleTabClick('health-agent')}
           className={`w-full flex items-center gap-sm px-sm py-xs font-bold rounded-xl transition-all duration-200 ${
-            currentTab === 'health-agent' ? 'bg-surface-container-high text-on-surface scale-[0.99]' : 'text-on-surface-variant hover:bg-surface-container-low'
+            currentTab === 'health-agent' ? 'bg-gradient-to-r from-primary/10 to-transparent border-l-4 border-primary text-primary scale-[0.99] shadow-inner' : 'text-on-surface-variant hover:bg-surface-container-low'
           }`}
         >
           <span className="material-symbols-outlined" data-icon="smart_toy">smart_toy</span>
@@ -93,7 +93,7 @@ export default function Sidebar({ currentTab, setCurrentTab, isMobileMenuOpen, s
         <button 
           onClick={() => handleTabClick('settings')}
           className={`w-full flex items-center gap-sm px-sm py-xs font-bold rounded-xl transition-all duration-200 ${
-            currentTab === 'settings' ? 'bg-surface-container-high text-on-surface scale-[0.99]' : 'text-on-surface-variant hover:bg-surface-container-low'
+            currentTab === 'settings' ? 'bg-gradient-to-r from-primary/10 to-transparent border-l-4 border-primary text-primary scale-[0.99] shadow-inner' : 'text-on-surface-variant hover:bg-surface-container-low'
           }`}
         >
           <span className="material-symbols-outlined" data-icon="settings">settings</span>
@@ -107,7 +107,7 @@ export default function Sidebar({ currentTab, setCurrentTab, isMobileMenuOpen, s
         <button
           onClick={() => handleTabClick('support')}
           className={`w-full flex items-center gap-sm px-sm py-xs rounded-xl font-bold transition-all duration-200 ${
-            currentTab === 'support' ? 'bg-surface-container-high text-on-surface scale-[0.99]' : 'text-on-surface-variant hover:bg-surface-container-low'
+            currentTab === 'support' ? 'bg-gradient-to-r from-primary/10 to-transparent border-l-4 border-primary text-primary scale-[0.99] shadow-inner' : 'text-on-surface-variant hover:bg-surface-container-low'
           }`}
         >
           <span className="material-symbols-outlined" data-icon="help">help</span>
@@ -116,7 +116,7 @@ export default function Sidebar({ currentTab, setCurrentTab, isMobileMenuOpen, s
         <button
           onClick={() => handleTabClick('system-status')}
           className={`w-full flex items-center gap-sm px-sm py-xs rounded-xl font-bold transition-all duration-200 ${
-            currentTab === 'system-status' ? 'bg-surface-container-high text-on-surface scale-[0.99]' : 'text-on-surface-variant hover:bg-surface-container-low'
+            currentTab === 'system-status' ? 'bg-gradient-to-r from-primary/10 to-transparent border-l-4 border-primary text-primary scale-[0.99] shadow-inner' : 'text-on-surface-variant hover:bg-surface-container-low'
           }`}
         >
           <span className="material-symbols-outlined" data-icon="pulse">switch_account</span>
