@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -7,12 +8,22 @@ import http from "node:http";
 import path from "node:path";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
+import dotenv from "dotenv";
 import { Server as SocketIOServer } from "socket.io";
 import { createTrafficSystem, constants } from "shared";
 import { createApiRouter } from "./routes.js";
 import { persistEvent, loadRecentEvents } from "./db.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Load environment variables from backend/.env securely at startup
+const envPath = path.join(__dirname, "..", ".env");
+if (fs.existsSync(envPath)) {
+  dotenv.config({ path: envPath });
+} else {
+  dotenv.config();
+}
+
 const PORT = process.env.PORT || 4000;
 
 // Defaults to wide open ("*") for zero-config demo/eval convenience; a real
@@ -53,7 +64,7 @@ app.use(
 );
 app.use(compression());
 app.use(cors({ origin: allowedOrigins }));
-app.use(express.json());
+app.use(express.json({ limit: "15mb" }));
 app.use(
   "/api",
   rateLimit({ windowMs: 60_000, limit: 300, standardHeaders: true, legacyHeaders: false }),

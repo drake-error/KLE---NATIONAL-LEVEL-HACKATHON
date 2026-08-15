@@ -2,6 +2,8 @@ import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { listIntersectionIds, listRegions } from "shared";
 import { requireApiKey } from "./auth.js";
+import { handleIngredientExtraction } from "./ingredientScanner.js";
+import { handleBarcodeLookup } from "./barcodeLookup.js";
 
 // Real-hardware-facing and signal-affecting endpoints get a tighter limit
 // than the read-only dashboard polling endpoints (those are covered by the
@@ -18,6 +20,9 @@ export function createApiRouter({ engine, simulator, loadRecentEvents }) {
   const router = Router();
 
   router.get("/health", (req, res) => res.json({ ok: true, uptime: process.uptime() }));
+
+  router.post("/ingredient-scanner/extract", writeLimiter, handleIngredientExtraction);
+  router.get("/ingredient-scanner/barcode/:barcode", writeLimiter, handleBarcodeLookup);
 
   router.get("/regions", (req, res) => {
     res.json({ activeRegionId: engine.network.regionId, regions: listRegions() });

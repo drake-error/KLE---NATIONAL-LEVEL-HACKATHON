@@ -53,6 +53,19 @@ function googleTTSProxy() {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), googleTTSProxy()],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:4000',
+        changeOrigin: true,
+        bypass(req) {
+          if (req.url?.startsWith('/api/tts')) {
+            return req.url;
+          }
+        },
+      },
+    },
+  },
   build: {
     chunkSizeWarningLimit: 3500,
     rollupOptions: {

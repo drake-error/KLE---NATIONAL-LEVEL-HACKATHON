@@ -16,6 +16,7 @@ import SystemStatusPage from '../support/SystemStatusPage';
 import RoadAccidentAwarenessPage from '../awareness/RoadAccidentAwarenessPage';
 import HealthAgentPage from '../health-agent/HealthAgentPage';
 import DiagnosticScanner from '../health-agent/DiagnosticScanner';
+import IngredientScannerPage from '../ingredient-scanner/IngredientScannerPage';
 import { HealthAgentProvider } from '../../lib/healthAgentStore';
 
 export default function DashboardLayout({ session }) {
@@ -121,10 +122,16 @@ export default function DashboardLayout({ session }) {
       )}
 
       {currentTab === 'diagnostic-imaging' && (
-        <main className="ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
+        <main className="md:ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
           <HealthAgentProvider>
             <DiagnosticScanner />
           </HealthAgentProvider>
+        </main>
+      )}
+
+      {currentTab === 'ingredient-scanner' && (
+        <main className="md:ml-64 mt-16 p-md flex flex-col gap-gutter min-h-[calc(100vh-4rem)]">
+          <IngredientScannerPage />
         </main>
       )}
     </div>
