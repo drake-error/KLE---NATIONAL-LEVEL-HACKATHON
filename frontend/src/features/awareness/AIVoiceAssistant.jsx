@@ -221,7 +221,7 @@ export default function AIVoiceAssistant() {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-24 right-8 z-50 bg-gradient-to-tr from-violet-600 via-purple-600 to-fuchsia-500 text-white p-4 rounded-full shadow-2xl border-2 border-white/30 flex items-center justify-center hover:scale-110 active:scale-90 transition-all duration-300 group ring-4 ring-purple-500/30"
+        className="fixed bottom-24 right-8 z-50 bg-sky-500 text-white p-4 rounded-full shadow-2xl border-2 border-white/30 flex items-center justify-center hover:scale-110 active:scale-90 transition-all duration-300 group ring-4 ring-sky-500/30"
         title={l.title}
       >
         <span className="material-symbols-outlined text-2xl font-black">record_voice_over</span>
@@ -235,7 +235,7 @@ export default function AIVoiceAssistant() {
   return (
     <div className="fixed bottom-24 right-8 z-50 w-[420px] max-h-[600px] bg-surface border border-outline-variant rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-fadeIn">
       {/* Header */}
-      <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-500 px-5 py-4 flex items-center justify-between text-white">
+      <div className="bg-sky-500 px-5 py-4 flex items-center justify-between text-white">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center">
             <span className="material-symbols-outlined text-xl">record_voice_over</span>
@@ -259,15 +259,15 @@ export default function AIVoiceAssistant() {
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-xs leading-relaxed ${
               msg.role === 'user'
-                ? 'bg-purple-600 text-white rounded-tr-none'
+                ? 'bg-sky-500 text-white rounded-tr-none'
                 : 'bg-surface-container-low border border-outline-variant/50 text-on-surface rounded-tl-none'
             }`}>
               {msg.role === 'assistant' && (
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[9px] uppercase tracking-wider font-black text-purple-500">AI {l.title}</span>
+                  <span className="text-[9px] uppercase tracking-wider font-black text-sky-500">AI {l.title}</span>
                   <button
                     onClick={() => isSpeaking ? stopSpeaking() : speakText(msg.content)}
-                    className="text-[9px] flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-purple-500/10 text-purple-500 hover:bg-purple-500/20 transition-colors font-bold"
+                    className="text-[9px] flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-sky-500/10 text-sky-500 hover:bg-sky-500/20 transition-colors font-bold"
                   >
                     <span className="material-symbols-outlined text-[12px]">{isSpeaking ? 'stop' : 'volume_up'}</span>
                     {isSpeaking ? l.stopBtn : l.speakBtn}
@@ -290,7 +290,7 @@ export default function AIVoiceAssistant() {
               <button
                 key={i}
                 onClick={() => handleSend(q)}
-                className="text-[10px] px-2.5 py-1.5 rounded-full bg-surface-container border border-outline-variant/60 text-on-surface hover:bg-surface-container-high hover:border-purple-500/40 transition-all font-bold"
+                className="text-[10px] px-2.5 py-1.5 rounded-full bg-surface-container border border-outline-variant/60 text-on-surface hover:bg-surface-container-high hover:border-sky-500/40 transition-all font-bold"
               >
                 {q}
               </button>
@@ -319,12 +319,12 @@ export default function AIVoiceAssistant() {
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
           placeholder={l.placeholder}
           disabled={isListening}
-          className="flex-1 bg-surface-container-lowest border border-outline-variant rounded-xl px-3 py-2.5 text-xs text-on-surface focus:outline-none focus:border-purple-500 font-semibold disabled:opacity-50"
+          className="flex-1 bg-surface-container-lowest border border-outline-variant rounded-xl px-3 py-2.5 text-xs text-on-surface focus:outline-none focus:border-sky-500 font-semibold disabled:opacity-50"
         />
         <button
           onClick={() => handleSend()}
           disabled={!userInput.trim() || isListening}
-          className="w-10 h-10 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:bg-purple-900 disabled:text-purple-400 text-white flex items-center justify-center transition-all active:scale-95 flex-shrink-0"
+          className="w-10 h-10 rounded-xl bg-sky-500 hover:bg-sky-400 disabled:bg-sky-900 disabled:text-sky-400 text-white flex items-center justify-center transition-all active:scale-95 flex-shrink-0"
         >
           <span className="material-symbols-outlined text-lg">send</span>
         </button>
