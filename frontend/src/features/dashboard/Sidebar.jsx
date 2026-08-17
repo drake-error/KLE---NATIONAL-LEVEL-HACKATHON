@@ -24,7 +24,7 @@ export default function Sidebar({ currentTab, setCurrentTab, isMobileMenuOpen, s
     { id: 'patient-flow', icon: 'emergency', label: 'Patient Flow' },
     { id: 'health-vault', icon: 'folder_shared', label: 'Health Vault' },
     { id: 'diagnostic-imaging', icon: 'radiology', label: 'Diagnostic Imaging' },
-    { id: 'ingredient-scanner', icon: 'qr_code_scanner', label: 'Ingre Scan' },
+    { id: 'ingredient-scanner', icon: 'qr_code_scanner', label: 'Ingredient Scanner' },
     { id: 'parental-monitoring', icon: 'supervisor_account', label: 'Parental Monitoring' },
     { id: 'awareness', icon: 'health_and_safety', label: 'Safety Hub' },
     { id: 'health-agent', icon: 'smart_toy', label: 'AI Health Agent' },
