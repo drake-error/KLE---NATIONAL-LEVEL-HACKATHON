@@ -13,8 +13,8 @@ export default function Sidebar({ currentTab, setCurrentTab, isMobileMenuOpen, s
 
   const getTabClass = (tabName) => {
     const base = 'w-full flex items-center gap-sm px-sm py-xs font-bold rounded-xl transition-all duration-200';
-    const active = 'bg-gradient-to-r from-primary/10 to-transparent border-l-4 border-primary text-primary scale-[0.99] shadow-inner';
-    const inactive = 'text-on-surface-variant hover:bg-surface-container-low';
+    const active = 'bg-primary text-white shadow-md';
+    const inactive = 'text-on-surface-variant hover:bg-surface-container-low hover:text-primary';
     return `${base} ${currentTab === tabName ? active : inactive}`;
   };
 
@@ -24,7 +24,7 @@ export default function Sidebar({ currentTab, setCurrentTab, isMobileMenuOpen, s
     { id: 'patient-flow', icon: 'emergency', label: 'Patient Flow' },
     { id: 'health-vault', icon: 'folder_shared', label: 'Health Vault' },
     { id: 'diagnostic-imaging', icon: 'radiology', label: 'Diagnostic Imaging' },
-    { id: 'ingredient-scanner', icon: 'qr_code_scanner', label: 'Ingredient Scanner' },
+    { id: 'ingredient-scanner', icon: 'qr_code_scanner', label: 'Ingre Scan' },
     { id: 'parental-monitoring', icon: 'supervisor_account', label: 'Parental Monitoring' },
     { id: 'awareness', icon: 'health_and_safety', label: 'Safety Hub' },
     { id: 'health-agent', icon: 'smart_toy', label: 'AI Health Agent' },
@@ -47,7 +47,7 @@ export default function Sidebar({ currentTab, setCurrentTab, isMobileMenuOpen, s
         <div className="mb-lg px-xs">
           <Logo />
         </div>
-        <nav className="flex-1 space-y-1">
+        <nav className="flex-1 overflow-y-auto custom-scrollbar space-y-1 pr-2 pb-4">
           {mainTabs.map((tab) => (
             <button 
               key={tab.id}
@@ -55,13 +55,15 @@ export default function Sidebar({ currentTab, setCurrentTab, isMobileMenuOpen, s
               className={getTabClass(tab.id)}
             >
               <span className="material-symbols-outlined" data-icon={tab.icon}>{tab.icon}</span>
-              <span className="font-body-md text-body-md">{t(tab.label)}</span>
+              <span className="font-body-md text-body-md text-left truncate">{t(tab.label)}</span>
             </button>
           ))}
         </nav>
-        <button className="mb-lg w-full py-sm bg-primary text-on-primary rounded-xl font-label-md text-label-md shadow-md active:scale-95 transition-transform">
-          {t("New Dispatch")}
-        </button>
+        <div className="pt-4 pb-4">
+          <button className="w-full py-sm bg-primary text-on-primary rounded-xl font-label-md text-label-md shadow-md active:scale-95 transition-transform">
+            {t("New Dispatch")}
+          </button>
+        </div>
         <div className="space-y-1 pt-sm border-t border-outline-variant">
           <button
             onClick={() => handleTabClick('support')}

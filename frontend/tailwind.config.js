@@ -60,10 +60,16 @@ export default {
         "surface-container-high": "var(--color-surface-container-high)"
       },
       borderRadius: {
-        "DEFAULT": "0.125rem",
-        "lg": "0.25rem",
-        "xl": "0.5rem",
+        "DEFAULT": "0.25rem",
+        "md": "0.375rem",
+        "lg": "0.5rem",
+        "xl": "0.75rem",
+        "2xl": "1rem",
+        "3xl": "1.5rem",
         "full": "9999px"
+      },
+      boxShadow: {
+        "clinical": "0 10px 40px -10px rgba(0, 0, 0, 0.08)",
       },
       spacing: {
         "md": "24px",
